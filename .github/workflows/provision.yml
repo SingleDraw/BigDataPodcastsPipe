@@ -36,6 +36,12 @@ jobs:
       run: terraform init
       working-directory: infra/main
 
+    - name: Run conditional import script
+      run: ../scripts/import.sh
+      working-directory: infra/main
+      shell: bash
+
+
     - name: Terraform Plan
       run: terraform plan
       working-directory: infra/main
