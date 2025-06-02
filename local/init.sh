@@ -1,20 +1,34 @@
 #!/bin/bash
 
+# Force UTF-8 encoding
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
 # read environment variables from .env file
 set -o allexport
 # shellcheck disable=SC1091
 source .env
 set +o allexport
 
-function create_service_principal() {
-    # Creates a service principal with the name "gha-terraform"
-    # and assigns it the Contributor role for the specified subscription.
-    echo "Creating service principal with Contributor role for subscription $AZURE_SUBSCRIPTION_ID..."
+function create_json_credentials() {
+    # Creates a JSON object with the required fields for GitHub Actions
+    # to authenticate with Azure.
+    echo "Creating JSON credentials for GitHub Actions..."
     az ad sp create-for-rbac \
         --name "gha-terraform" \
         --role "Contributor" \
         --scopes "$SCOPES" \
-        --query "{clientId: appId, clientSecret: password, tenantId: tenant, subscriptionId: '$AZURE_SUBSCRIPTION_ID'}"
+        --sdk-auth \
+        --output json > azure-credentials.json
+}
+
+function create_service_principal() {
+    echo "Creating service principal..."
+    az ad sp create-for-rbac \
+        --name "gha-terraform" \
+        --role "Contributor" \
+        --scopes "$SCOPES" \
+        --sdk-auth
 }
 
 function manually_set_guide_prompt() {
@@ -85,11 +99,30 @@ fi
 
 echo "All prerequisites are met. Proceeding with service principal creation..."
 
+# create_json_credentials
+# exit 0
+
+# Write to temp file first
+create_service_principal > temp_creds.json
+# Remove windows-style line endings if present
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+    sed -i 's/\r$//' temp_creds.json
+fi
+
+# Verify the JSON is valid
+echo "Generated JSON:"
+cat temp_creds.json
+echo ""
+
 # Create the service principal and set it as a GitHub secret
 echo "Setting GitHub secret AZURE_CREDENTIALS..."
 gh secret set AZURE_CREDENTIALS \
-    --body "$(create_service_principal)" \
+    --body-file temp_creds.json \
     --repo "$GITHUB_REPOSITORY" 
+
+# Clean up
+rm temp_creds.json
+
 if [ $? -ne 0 ]; then
     echo "Error: Failed to set GitHub secret AZURE_CREDENTIALS. Please check your permissions and try again."
     manually_set_guide_prompt

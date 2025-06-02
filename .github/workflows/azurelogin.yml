@@ -1,0 +1,28 @@
+name: Test Azure Login
+# descriptiion: This workflow tests Azure login functionality using GitHub Actions.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Test Azure CLI
+      run: |
+        echo "Testing Azure authentication..."
+        az account show
+        az group list --output table
+        echo "✅ Azure authentication successful!"
