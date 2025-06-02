@@ -1,17 +1,40 @@
-# This file defines the variables used in the Terraform configuration for Azure resources.
-# To use this file in local development, ensure you have the necessary variables set in your environment or provide them in a `terraform.tfvars` file.
-# To use this file in CI/CD, ensure the variables are set as environment variables in github actions workflow as follows:
-# env:
-#   TF_VAR_resource_group_name: ${{ secrets.TF_VAR_resource_group_name }}
-#  TF_VAR_location: ${{ secrets.TF_VAR_location }}
-# 
-# where all variables defined in this file are prefixed with `TF_VAR_` in the GitHub Actions workflow and the values are stored in GitHub Secrets.
-variable "resource_group_name" {}
-variable "location" {}
-variable "storage_account_name" {}
-variable "container_registry_name" {}
-variable "container_app_environment_name" {}
+# GitHub provider configuration
+variable "github_token" {
+  description = "GitHub Personal Access Token"
+  type        = string
+  sensitive   = true
+}
+variable "github_owner" {
+  description = "GitHub owner (username or organization)"
+  type        = string
+}
+variable "github_repository" {
+  description = "GitHub repository name"
+  type        = string
+}
+# Azure provider configuration
 variable "subscription_id" {
   description = "Azure subscription ID"
   type        = string
 }
+variable "location" {
+    description = "Azure region for resources"
+    type        = string
+}
+variable "resource_group_name" {
+    description = "Name of the resource group"
+    type        = string
+}
+variable "storage_account_name" {
+    description = "Name of the Azure Storage Account"
+    type        = string
+}
+# variable "container_registry_name" {
+#     description = "Name of the Azure Container Registry"
+#     type        = string
+# }
+# variable "container_app_environment_name" {
+#     description = "Name of the Azure Container App Environment"
+#     type        = string
+# }
+

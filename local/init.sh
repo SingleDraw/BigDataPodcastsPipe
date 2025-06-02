@@ -117,9 +117,13 @@ AZURE_SECRETS=(
     TF_VAR_RESOURCE_GROUP_NAME      
     TF_VAR_LOCATION                 
     TF_VAR_STORAGE_ACCOUNT_NAME     
-    TF_VAR_CONTAINER_REGISTRY_NAME  
-    TF_VAR_CONTAINER_APP_ENVIRONMENT_NAME  
+    TF_VAR_SUBSCRIPTION_ID
+    TF_VAR_GITHUB_OWNER
+    TF_VAR_GITHUB_REPOSITORY
+    GH_PAT_TOKEN
 )
+#   TF_VAR_CONTAINER_REGISTRY_NAME  
+#   TF_VAR_CONTAINER_APP_ENVIRONMENT_NAME  
 
 for secret in "${AZURE_SECRETS[@]}"; do
     echo "Setting GitHub secret $secret..."
@@ -133,15 +137,3 @@ for secret in "${AZURE_SECRETS[@]}"; do
     fi
     echo "GitHub secret $secret has been set successfully."
 done
-
-# Set TF_VAR_SUBSCRIPTION_ID secret
-echo "Setting GitHub secret TF_VAR_SUBSCRIPTION_ID..."
-gh secret set TF_VAR_SUBSCRIPTION_ID \
-    --body "$AZURE_SUBSCRIPTION_ID" \
-    --repo "$GITHUB_REPOSITORY"
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to set GitHub secret TF_VAR_SUBSCRIPTION_ID. Please check your permissions and try again."
-    manually_set_guide_prompt
-    exit 1
-fi
-echo "GitHub secret TF_VAR_SUBSCRIPTION_ID has been set successfully."

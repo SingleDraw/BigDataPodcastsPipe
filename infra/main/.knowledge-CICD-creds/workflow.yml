@@ -1,0 +1,104 @@
+# .github/workflows/deploy.yml
+
+name: Deploy Infrastructure and Application
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+jobs:
+  terraform:
+    name: 'Terraform Infrastructure'
+    runs-on: ubuntu-latest
+    outputs:
+      acr_login_server: ${{ steps.terraform_output.outputs.acr_login_server }}
+      acr_username: ${{ steps.terraform_output.outputs.acr_admin_username }}
+      acr_password: ${{ steps.terraform_output.outputs.acr_admin_password }}
+      resource_group_name: ${{ steps.terraform_output.outputs.resource_group_name }}
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_wrapper: false
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Plan
+      run: terraform plan
+
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/main'
+      run: terraform apply -auto-approve
+
+    - name: Get Terraform Outputs
+      id: terraform_output
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "acr_login_server=$(terraform output -raw acr_login_server)" >> $GITHUB_OUTPUT
+        echo "acr_admin_username=$(terraform output -raw acr_admin_username)" >> $GITHUB_OUTPUT
+        echo "acr_admin_password=$(terraform output -raw acr_admin_password)" >> $GITHUB_OUTPUT
+        echo "resource_group_name=$(terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
+
+  build-and-push:
+    name: 'Build and Push Docker Image'
+    runs-on: ubuntu-latest
+    needs: terraform
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Login to Azure Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ needs.terraform.outputs.acr_login_server }}
+        username: ${{ needs.terraform.outputs.acr_username }}
+        password: ${{ needs.terraform.outputs.acr_password }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: |
+          ${{ needs.terraform.outputs.acr_login_server }}/myapp:latest
+          ${{ needs.terraform.outputs.acr_login_server }}/myapp:${{ github.sha }}
+
+  deploy-app:
+    name: 'Deploy Application'
+    runs-on: ubuntu-latest
+    needs: [terraform, build-and-push]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: |
+          {
+            "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+            "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+            "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
+            "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
+          }
+
+    - name: Deploy to Azure Container Apps (example)
+      run: |
+        az containerapp update \
+          --name my-app \
+          --resource-group ${{ needs.terraform.outputs.resource_group_name }} \
+          --image ${{ needs.terraform.outputs.acr_login_server }}/myapp:${{ github.sha }}

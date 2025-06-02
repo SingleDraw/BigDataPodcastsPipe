@@ -1,51 +1,69 @@
-# 1. RESOURCE GROUP
-import {
-  to = azurerm_resource_group.rg
-  id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
+# terraform/providers.tf
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>3.0"
+    }
+    github = {
+      source  = "integrations/github"
+      version = "~> 5.0"
+    }
+  }
 }
 
+provider "azurerm" {
+  features {}
+}
+
+# GitHub provider configuration
+provider "github" {
+  token = var.github_token
+  owner = var.github_owner  # Your GitHub username or org
+}
+
+# terraform/variables.tf
+variable "github_token" {
+  description = "GitHub Personal Access Token"
+  type        = string
+  sensitive   = true
+}
+
+variable "github_owner" {
+  description = "GitHub owner (username or organization)"
+  type        = string
+}
+
+variable "github_repository" {
+  description = "GitHub repository name"
+  type        = string
+}
+
+variable "resource_group_name" {
+  description = "Resource group name"
+  type        = string
+}
+
+# terraform/main.tf - Your existing resources
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
-  location = var.location
-}
-
-# 2. STORAGE ACCOUNT
-import {
-  to = azurerm_storage_account.storage
-  id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${var.storage_account_name}"
-}
-
-resource "azurerm_storage_account" "storage" {
-  name                     = var.storage_account_name
-  resource_group_name      = azurerm_resource_group.rg.name
-  location                 = azurerm_resource_group.rg.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  account_kind             = "StorageV2"  
-  public_network_access_enabled   = true                                        # for access from remote machines outside azure
-  allow_nested_items_to_be_public = false
-  is_hns_enabled           = true                                               # Enables Data Lake Gen2 (ABFS)
-}
-
-
-# 3. CONTAINER REGISTRY
-import {
-  to = azurerm_container_registry.acr
-  id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.ContainerRegistry/registries/${var.resource_group_name}acr"
+  location = "East US"
 }
 
 resource "azurerm_container_registry" "acr" {
   name                = "${var.resource_group_name}acr"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  sku                 = "Basic"                                                 # cheapers option
-  admin_enabled       = true                                                    # Enables username/password access
+  sku                 = "Standard"
+  admin_enabled       = true
 }
 
-# 4. KEY VAULT
-import {
-  to = azurerm_key_vault.kv
-  id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.KeyVault/vaults/${var.resource_group_name}-kv"
+resource "azurerm_storage_account" "storage" {
+  name                     = "${var.resource_group_name}storage"
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = azurerm_resource_group.rg.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
 }
 
 resource "azurerm_key_vault" "kv" {
@@ -54,7 +72,7 @@ resource "azurerm_key_vault" "kv" {
   resource_group_name = azurerm_resource_group.rg.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
   sku_name            = "standard"
-
+  
   access_policy {
     tenant_id = data.azurerm_client_config.current.tenant_id
     object_id = data.azurerm_client_config.current.object_id
@@ -64,7 +82,7 @@ resource "azurerm_key_vault" "kv" {
   }
 }
 
-# 5. Store secrets in Key Vault
+# Store secrets in Key Vault
 resource "azurerm_key_vault_secret" "acr_username" {
   name         = "acr-admin-username"
   value        = azurerm_container_registry.acr.admin_username
@@ -83,29 +101,25 @@ resource "azurerm_key_vault_secret" "blob_connection_string" {
   key_vault_id = azurerm_key_vault.kv.id
 }
 
-## 6. Automatically set GitHub secrets
-
-# A. Container Registry Login Server
+# AUTOMATICALLY SET GITHUB SECRETS
 resource "github_actions_secret" "acr_login_server" {
   repository      = var.github_repository
   secret_name     = "ACR_LOGIN_SERVER"
   plaintext_value = azurerm_container_registry.acr.login_server
 }
 
-# B. Key Vault Credentials
 resource "github_actions_secret" "acr_username" {
-  repository = var.github_repository
-  secret_name = "ACR_USERNAME"
-  plaintext_value = azurerm_key_vault_secret.acr_username.value
+  repository      = var.github_repository
+  secret_name     = "ACR_USERNAME"
+  plaintext_value = azurerm_container_registry.acr.admin_username
 }
 
 resource "github_actions_secret" "acr_password" {
-  repository = var.github_repository
-  secret_name = "ACR_PASSWORD"
-  plaintext_value = azurerm_key_vault_secret.acr_password.value
+  repository      = var.github_repository
+  secret_name     = "ACR_PASSWORD"
+  plaintext_value = azurerm_container_registry.acr.admin_password
 }
 
-# C. Resources names
 resource "github_actions_secret" "resource_group_name" {
   repository      = var.github_repository
   secret_name     = "AZURE_RESOURCE_GROUP"
@@ -125,4 +139,3 @@ resource "github_actions_secret" "storage_account_name" {
 }
 
 data "azurerm_client_config" "current" {}
-

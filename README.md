@@ -27,13 +27,19 @@ or run usin GitHubCLI (gh):
 gh secret set AZURE_CREDENTIALS --body '{"clientId":"<your-client-id>","clientSecret":"<your-client-secret>","subscriptionId":"<your-subscription-id>","tenantId":"<your-tenant-id>"}'
 ```
 
+
+
 ### or run from your local machine init.sh with propely populated .env file (read REAMDE from local directory)
+## GitHub Token (Required for setting other secrets):
+- `GH_PAT_TOKEN` - GitHub Personal Access Token with repo and admin:repo_hook permissions
 
-
-
-
-
-
+## How to create GitHub Personal Access Token:
+1. Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Click "Generate new token (classic)"
+3. Select scopes:
+   - `repo` (Full control of private repositories)
+   - `admin:repo_hook` (Admin repo hooks)
+4. Copy the token and add it as `GH_PAT_TOKEN` secret and paste it in .env file
 
 
 
@@ -48,3 +54,6 @@ gh secret set AZURE_CREDENTIALS --body '{"clientId":"<your-client-id>","clientSe
 .github/workflows/          # GitHub Actions CI/CD workflows
 README.md
 ```
+
+
+
