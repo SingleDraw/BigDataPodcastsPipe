@@ -22,3 +22,32 @@ if az storage account show --name "$STORAGE_ACCOUNT_NAME" --resource-group "$RES
 else
   echo "Storage account does not exist. Skipping import."
 fi
+
+# Import storage container (tfstate)
+CONTAINER_NAME="tfstate"
+CONTAINER_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/$CONTAINER_NAME"
+
+# Check if the container exists using Azure CLI
+if az storage container show --name "$CONTAINER_NAME" \
+    --account-name "$STORAGE_ACCOUNT_NAME" \
+    --auth-mode login &>/dev/null; then
+  echo "Importing existing storage container..."
+  terraform import azurerm_storage_container.tfstate "$CONTAINER_ID"
+else
+  echo "Storage container does not exist. Skipping import."
+fi
+
+# Import storage container (tfstate)
+CONTAINER_NAME="whisperer"
+CONTAINER_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/$CONTAINER_NAME"
+
+# Check if the container exists using Azure CLI
+if az storage container show --name "$CONTAINER_NAME" \
+    --account-name "$STORAGE_ACCOUNT_NAME" \
+    --auth-mode login &>/dev/null; then
+  echo "Importing existing storage container..."
+  terraform import azurerm_storage_container.whisperer "$CONTAINER_ID"
+else
+  echo "Storage container does not exist. Skipping import."
+fi
+
