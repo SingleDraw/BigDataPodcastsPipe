@@ -1,18 +1,30 @@
-# 1. Read existing storage account and resource group
-data "azurerm_resource_group" "rg" {
-  name = var.resource_group_name
+
+resource "azurerm_resource_group" "rg" {
+  name     = var.resource_group_name
+  location = var.location
 }
 
-data "azurerm_storage_account" "storage" {
-  name                = var.storage_account_name
-  resource_group_name = var.resource_group_name
+# 2. STORAGE ACCOUNT
+resource "azurerm_storage_account" "storage" {
+  name                     = var.storage_account_name
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = azurerm_resource_group.rg.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  account_kind             = "StorageV2"  
+  public_network_access_enabled   = true                                        # for access from remote machines outside azure
+  allow_nested_items_to_be_public = false
+  is_hns_enabled           = true                                               # Enables Data Lake Gen2 (ABFS)
 }
+
+
+
 
 # 3. CONTAINER REGISTRY
 resource "azurerm_container_registry" "acr" {
   name                = var.container_registry_name
-  resource_group_name = data.azurerm_resource_group.rg.name
-  location            = data.azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
   sku                 = "Basic"                                                 # cheapers option
   admin_enabled       = true                                                    # Enables username/password access
 }
@@ -20,8 +32,8 @@ resource "azurerm_container_registry" "acr" {
 # 4. KEY VAULT
 resource "azurerm_key_vault" "kv" {
   name                = "${var.resource_group_name}-kv"
-  resource_group_name = data.azurerm_resource_group.rg.name
-  location            = data.azurerm_resource_group.rg.location
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
   sku_name            = "standard"
 
@@ -49,8 +61,7 @@ resource "azurerm_key_vault_secret" "acr_password" {
 
 resource "azurerm_key_vault_secret" "blob_connection_string" {
   name         = "blob-storage-connection-string"
-  # value        = azurerm_storage_account.storage.primary_connection_string
-  value        = data.azurerm_storage_account.storage.primary_connection_string
+  value        = azurerm_storage_account.storage.primary_connection_string
   key_vault_id = azurerm_key_vault.kv.id
 }
 
