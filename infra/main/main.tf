@@ -9,6 +9,10 @@ terraform {
 
 provider "azurerm" {
   features {}
+
+  # Specify Azure subscription
+  subscription_id = var.subscription_id
+  # tenant_id and client_id will be picked up from Azure CLI login
 }
 
 # 1. RESOURCE GROUP

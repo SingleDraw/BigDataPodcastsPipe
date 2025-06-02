@@ -133,3 +133,15 @@ for secret in "${AZURE_SECRETS[@]}"; do
     fi
     echo "GitHub secret $secret has been set successfully."
 done
+
+# Set TF_VAR_SUBSCRIPTION_ID secret
+echo "Setting GitHub secret TF_VAR_SUBSCRIPTION_ID..."
+gh secret set TF_VAR_SUBSCRIPTION_ID \
+    --body "$AZURE_SUBSCRIPTION_ID" \
+    --repo "$GITHUB_REPOSITORY"
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to set GitHub secret TF_VAR_SUBSCRIPTION_ID. Please check your permissions and try again."
+    manually_set_guide_prompt
+    exit 1
+fi
+echo "GitHub secret TF_VAR_SUBSCRIPTION_ID has been set successfully."

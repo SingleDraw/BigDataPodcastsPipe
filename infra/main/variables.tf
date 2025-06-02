@@ -11,3 +11,7 @@ variable "location" {}
 variable "storage_account_name" {}
 variable "container_registry_name" {}
 variable "container_app_environment_name" {}
+variable "subscription_id" {
+  description = "Azure subscription ID"
+  type        = string
+}

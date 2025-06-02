@@ -33,4 +33,5 @@ jobs:
         TF_VAR_storage_account_name: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
         TF_VAR_container_registry_name: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
         TF_VAR_container_app_environment_name: ${{ secrets.TF_VAR_CONTAINER_APP_ENVIRONMENT_NAME }}
+        TF_VAR_subscription_id: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
         
