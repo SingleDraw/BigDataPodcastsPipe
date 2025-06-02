@@ -1,0 +1,1 @@
+Creates resource group, storage account, containers registry.
