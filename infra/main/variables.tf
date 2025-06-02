@@ -10,4 +10,4 @@ variable "resource_group_name" {}
 variable "location" {}
 variable "storage_account_name" {}
 variable "container_registry_name" {}
-variable "container_app_environment_name" {}
+# variable "container_app_environment_name" {}

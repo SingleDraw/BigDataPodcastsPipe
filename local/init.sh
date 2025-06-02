@@ -23,7 +23,6 @@ function create_json_credentials() {
 }
 
 function create_service_principal() {
-    echo "Creating service principal..."
     az ad sp create-for-rbac \
         --name "gha-terraform" \
         --role "Contributor" \
@@ -99,29 +98,11 @@ fi
 
 echo "All prerequisites are met. Proceeding with service principal creation..."
 
-# create_json_credentials
-# exit 0
-
-# Write to temp file first
-create_service_principal > temp_creds.json
-# Remove windows-style line endings if present
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
-    sed -i 's/\r$//' temp_creds.json
-fi
-
-# Verify the JSON is valid
-echo "Generated JSON:"
-cat temp_creds.json
-echo ""
-
 # Create the service principal and set it as a GitHub secret
 echo "Setting GitHub secret AZURE_CREDENTIALS..."
 gh secret set AZURE_CREDENTIALS \
-    --body-file temp_creds.json \
+    --body "$(create_service_principal)" \
     --repo "$GITHUB_REPOSITORY" 
-
-# Clean up
-rm temp_creds.json
 
 if [ $? -ne 0 ]; then
     echo "Error: Failed to set GitHub secret AZURE_CREDENTIALS. Please check your permissions and try again."
