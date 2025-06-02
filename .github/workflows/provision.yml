@@ -11,6 +11,7 @@ env:
     TF_VAR_github_owner: ${{ github.repository_owner }}
     TF_VAR_github_repository: ${{ github.event.repository.name }}
     TF_VAR_resource_group_name: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} 
+    TF_VAR_container_registry_name: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
     TF_VAR_location: ${{ secrets.TF_VAR_LOCATION }}                       
     TF_VAR_storage_account_name: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
     TF_VAR_subscription_id: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}

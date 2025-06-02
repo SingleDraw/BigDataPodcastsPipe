@@ -31,11 +31,11 @@ resource "azurerm_storage_account" "storage" {
 # 3. CONTAINER REGISTRY
 # import {
 #   to = azurerm_container_registry.acr
-#   id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.ContainerRegistry/registries/${var.resource_group_name}acr"
+#   id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.ContainerRegistry/registries/${var.container_registry_name}"
 # }
 
 resource "azurerm_container_registry" "acr" {
-  name                = "${var.resource_group_name}acr"
+  name                = var.container_registry_name
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   sku                 = "Basic"                                                 # cheapers option

@@ -4,8 +4,8 @@ name: Provision Azure Infrastructure
 
 on:
   workflow_dispatch:  # Manual trigger only
-  push:
-    branches: [ main ]  # Also trigger on push to main
+#   push:
+#     branches: [ main ]  # Also trigger on push to main
 
 env:
   TF_LOG: DEBUG
