@@ -23,6 +23,21 @@ jobs:
       run: terraform init
       working-directory: infra/main
 
+
+    - name: Import Existing Resource Group
+      run: |
+        # Import the existing resource group into Terraform state
+        terraform import azurerm_resource_group.rg /subscriptions/${{ secrets.TF_VAR_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
+      working-directory: infra/main
+      env:
+        TF_VAR_resource_group_name: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
+        TF_VAR_location: ${{ secrets.TF_VAR_LOCATION }}
+        TF_VAR_storage_account_name: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
+        TF_VAR_container_registry_name: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
+        TF_VAR_container_app_environment_name: ${{ secrets.TF_VAR_CONTAINER_APP_ENVIRONMENT_NAME }}
+        TF_VAR_subscription_id: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
+      continue-on-error: true  # In case it's already imported
+
     - name: Terraform Apply
       run: terraform apply -auto-approve
       working-directory: infra/main
