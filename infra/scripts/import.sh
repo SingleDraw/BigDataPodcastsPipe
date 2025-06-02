@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-RESOURCE_GROUP_NAME="$TF_VAR_resource_group_name"
-SUBSCRIPTION_ID="$TF_VAR_subscription_id"
+# RESOURCE_GROUP_NAME="$TF_VAR_resource_group_name"
+# SUBSCRIPTION_ID="$TF_VAR_subscription_id"
 # RG_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME"
 
 # # Check if the resource group exists
@@ -23,22 +23,22 @@ SUBSCRIPTION_ID="$TF_VAR_subscription_id"
 #   echo "Storage account does not exist. Skipping import."
 # fi
 
-CONTAINER_REGISTRY_NAME="$TF_VAR_container_registry_name"
-CONTAINER_REGISTRY_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.ContainerRegistry/registries/$CONTAINER_REGISTRY_NAME"
-# Check if the container registry exists
-if az acr show --name "$CONTAINER_REGISTRY_NAME" --resource-group "$RESOURCE_GROUP_NAME" --subscription "$SUBSCRIPTION_ID" &>/dev/null; then
-  echo "Importing existing container registry..."
-  terraform import azurerm_container_registry.acr "$CONTAINER_REGISTRY_ID"
-else
-  echo "Container registry does not exist. Skipping import."
-fi
+# CONTAINER_REGISTRY_NAME="$TF_VAR_container_registry_name"
+# CONTAINER_REGISTRY_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.ContainerRegistry/registries/$CONTAINER_REGISTRY_NAME"
+# # Check if the container registry exists
+# if az acr show --name "$CONTAINER_REGISTRY_NAME" --resource-group "$RESOURCE_GROUP_NAME" --subscription "$SUBSCRIPTION_ID" &>/dev/null; then
+#   echo "Importing existing container registry..."
+#   terraform import azurerm_container_registry.acr "$CONTAINER_REGISTRY_ID"
+# else
+#   echo "Container registry does not exist. Skipping import."
+# fi
 
-KEY_VAULT_NAME="${RESOURCE_GROUP_NAME}-kv"
-KEY_VAULT_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.KeyVault/vaults/$KEY_VAULT_NAME"
-# Check if the key vault exists
-if az keyvault show --name "$KEY_VAULT_NAME" --resource-group "$RESOURCE_GROUP_NAME" --subscription "$SUBSCRIPTION_ID" &>/dev/null; then
-  echo "Importing existing key vault..."
-  terraform import azurerm_key_vault.kv "$KEY_VAULT_ID"
-else
-  echo "Key vault does not exist. Skipping import."
-fi
+# KEY_VAULT_NAME="${RESOURCE_GROUP_NAME}-kv"
+# KEY_VAULT_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.KeyVault/vaults/$KEY_VAULT_NAME"
+# # Check if the key vault exists
+# if az keyvault show --name "$KEY_VAULT_NAME" --resource-group "$RESOURCE_GROUP_NAME" --subscription "$SUBSCRIPTION_ID" &>/dev/null; then
+#   echo "Importing existing key vault..."
+#   terraform import azurerm_key_vault.kv "$KEY_VAULT_ID"
+# else
+#   echo "Key vault does not exist. Skipping import."
+# fi
