@@ -24,13 +24,6 @@ resource "azurerm_storage_container" "tfstate" {
   container_access_type = "private"
 }
 
-# 4. CONTAINER REGISTRY SECRET
-resource "azurerm_key_vault_secret" "blob_connection_string" {
-  name         = "blob-storage-connection-string"
-  value        = azurerm_storage_account.storage.primary_connection_string
-  key_vault_id = azurerm_key_vault.kv.id
-}
-
 ## 5. Automatically set GitHub secrets
 resource "github_actions_secret" "resource_group_name" {
   repository      = var.github_repository
