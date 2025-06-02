@@ -11,8 +11,8 @@ data "azurerm_storage_account" "storage" {
 # 3. CONTAINER REGISTRY
 resource "azurerm_container_registry" "acr" {
   name                = var.container_registry_name
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  resource_group_name = data.azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location
   sku                 = "Basic"                                                 # cheapers option
   admin_enabled       = true                                                    # Enables username/password access
 }
@@ -20,8 +20,8 @@ resource "azurerm_container_registry" "acr" {
 # 4. KEY VAULT
 resource "azurerm_key_vault" "kv" {
   name                = "${var.resource_group_name}-kv"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = data.azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location
   tenant_id           = data.azurerm_client_config.current.tenant_id
   sku_name            = "standard"
 
@@ -49,7 +49,8 @@ resource "azurerm_key_vault_secret" "acr_password" {
 
 resource "azurerm_key_vault_secret" "blob_connection_string" {
   name         = "blob-storage-connection-string"
-  value        = azurerm_storage_account.storage.primary_connection_string
+  # value        = azurerm_storage_account.storage.primary_connection_string
+  value        = data.azurerm_storage_account.storage.primary_connection_string
   key_vault_id = azurerm_key_vault.kv.id
 }
 
