@@ -16,10 +16,6 @@ provider "azurerm" {
 }
 
 # 1. RESOURCE GROUP
-import {
-  to = azurerm_resource_group.rg
-  id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
-}
 
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
