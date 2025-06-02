@@ -44,14 +44,14 @@ function manually_set_guide_prompt() {
 
 
 # Check if AZURE_SUBSCRIPTION_ID is set
-if [ -z "$AZURE_SUBSCRIPTION_ID" ]; then
-  echo "Error: AZURE_SUBSCRIPTION_ID is not set as an environment variable."
+if [ -z "$TF_VAR_SUBSCRIPTION_ID" ]; then
+  echo "Error: Azure Subscription Id TF_VAR_SUBSCRIPTION_ID is not set as an environment variable."
   manually_set_guide_prompt
   exit 1
 fi
 
-if [ -z "$GITHUB_REPOSITORY" ]; then
-  echo "Error: GITHUB_REPOSITORY is not set as an environment variable. It should be in the format 'owner/repo'."
+if [ -z "$TF_VAR_GITHUB_REPOSITORY" ]; then
+  echo "Error: TF_VAR_GITHUB_REPOSITORY is not set as an environment variable. It should be in the format 'owner/repo'."
   manually_set_guide_prompt
   exit 1
 fi
@@ -61,10 +61,10 @@ if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
     echo "Running in GitBash or Cygwin environment."
     # set alias for az command to az.cmd
     alias az=az.cmd
-    SCOPES="\/subscriptions\/$AZURE_SUBSCRIPTION_ID"
+    SCOPES="\/subscriptions\/$TF_VAR_SUBSCRIPTION_ID"
 else
     echo "Running in a Unix-like environment."
-    SCOPES="/subscriptions/$AZURE_SUBSCRIPTION_ID"
+    SCOPES="/subscriptions/$TF_VAR_SUBSCRIPTION_ID"
 fi
 
 
@@ -102,7 +102,7 @@ echo "All prerequisites are met. Proceeding with service principal creation..."
 echo "Setting GitHub secret AZURE_CREDENTIALS..."
 gh secret set AZURE_CREDENTIALS \
     --body "$(create_service_principal)" \
-    --repo "$GITHUB_REPOSITORY" 
+    --repo "$TF_VAR_GITHUB_REPOSITORY" 
 
 if [ $? -ne 0 ]; then
     echo "Error: Failed to set GitHub secret AZURE_CREDENTIALS. Please check your permissions and try again."
@@ -129,7 +129,7 @@ for secret in "${AZURE_SECRETS[@]}"; do
     echo "Setting GitHub secret $secret..."
     gh secret set "$secret" \
         --body "${!secret}" \
-        --repo "$GITHUB_REPOSITORY"
+        --repo "$TF_VAR_GITHUB_REPOSITORY"
     if [ $? -ne 0 ]; then
         echo "Error: Failed to set GitHub secret $secret. Please check your permissions and try again."
         manually_set_guide_prompt

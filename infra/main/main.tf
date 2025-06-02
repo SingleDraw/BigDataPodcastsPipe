@@ -1,8 +1,8 @@
 # 1. RESOURCE GROUP
-import {
-  to = azurerm_resource_group.rg
-  id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
-}
+# import {
+#   to = azurerm_resource_group.rg
+#   id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
+# }
 
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
@@ -10,10 +10,10 @@ resource "azurerm_resource_group" "rg" {
 }
 
 # 2. STORAGE ACCOUNT
-import {
-  to = azurerm_storage_account.storage
-  id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${var.storage_account_name}"
-}
+# import {
+#   to = azurerm_storage_account.storage
+#   id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${var.storage_account_name}"
+# }
 
 resource "azurerm_storage_account" "storage" {
   name                     = var.storage_account_name
@@ -29,10 +29,10 @@ resource "azurerm_storage_account" "storage" {
 
 
 # 3. CONTAINER REGISTRY
-import {
-  to = azurerm_container_registry.acr
-  id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.ContainerRegistry/registries/${var.resource_group_name}acr"
-}
+# import {
+#   to = azurerm_container_registry.acr
+#   id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.ContainerRegistry/registries/${var.resource_group_name}acr"
+# }
 
 resource "azurerm_container_registry" "acr" {
   name                = "${var.resource_group_name}acr"
@@ -43,10 +43,11 @@ resource "azurerm_container_registry" "acr" {
 }
 
 # 4. KEY VAULT
-import {
-  to = azurerm_key_vault.kv
-  id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.KeyVault/vaults/${var.resource_group_name}-kv"
-}
+# import {
+#   count = var.import_existing_key_vault ? 1 : 0
+#   to = azurerm_key_vault.kv
+#   id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.KeyVault/vaults/${var.resource_group_name}-kv"
+# }
 
 resource "azurerm_key_vault" "kv" {
   name                = "${var.resource_group_name}-kv"
