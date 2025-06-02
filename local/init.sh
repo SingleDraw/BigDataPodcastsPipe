@@ -137,3 +137,35 @@ for secret in "${AZURE_SECRETS[@]}"; do
     fi
     echo "GitHub secret $secret has been set successfully."
 done
+
+# Create the infra-ready environment
+if [ -z "$TF_VAR_GITHUB_OWNER" ]; then
+    echo "Error: TF_VAR_GITHUB_OWNER is not set as an environment variable."
+    manually_set_guide_prompt
+    exit 1
+fi
+if [ -z "$TF_VAR_GITHUB_REPOSITORY" ]; then
+    echo "Error: TF_VAR_GITHUB_REPOSITORY is not set as an environment variable."
+    manually_set_guide_prompt
+    exit 1
+fi
+echo "Creating the 'infra-ready' environment in GitHub repository '$TF_VAR_GITHUB_REPOSITORY'..."
+
+gh api \
+  -X PUT \
+  -H "Accept: application/vnd.github+json" \
+  repos/$TF_VAR_GITHUB_REPOSITORY/environments/infra-ready
+
+
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to create the 'infra-ready' environment. Please check your permissions and try again."
+    exit 1
+fi
+
+gh variable set INFRA_READY --env infra-ready --body "false"
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to set the INFRA_READY variable in the 'infra-ready' environment. Please check your permissions and try again."
+    exit 1
+fi
+
+echo "Environment 'infra-ready' has been created successfully."
