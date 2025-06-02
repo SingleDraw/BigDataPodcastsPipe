@@ -16,6 +16,10 @@ provider "azurerm" {
 }
 
 # 1. RESOURCE GROUP
+import {
+  to = azurerm_resource_group.rg
+  id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
+}
 
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
@@ -23,6 +27,10 @@ resource "azurerm_resource_group" "rg" {
 }
 
 # 2. STORAGE ACCOUNT
+import {
+  to = azurerm_storage_account.storage
+  id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${var.storage_account_name}"
+}
 
 resource "azurerm_storage_account" "storage" {
   name                     = var.storage_account_name
@@ -38,6 +46,10 @@ resource "azurerm_storage_account" "storage" {
 
 
 # 3. CONTAINER REGISTRY
+import {
+  to = azurerm_container_registry.acr
+  id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.ContainerRegistry/registries/${var.container_registry_name}"
+}
 
 resource "azurerm_container_registry" "acr" {
   name                = var.container_registry_name

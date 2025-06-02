@@ -24,19 +24,31 @@ jobs:
       working-directory: infra/main
 
 
-    - name: Import Existing Resource Group
-      run: |
-        # Import the existing resource group into Terraform state
-        terraform import azurerm_resource_group.rg /subscriptions/${{ secrets.TF_VAR_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
-      working-directory: infra/main
-      env:
-        TF_VAR_resource_group_name: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
-        TF_VAR_location: ${{ secrets.TF_VAR_LOCATION }}
-        TF_VAR_storage_account_name: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
-        TF_VAR_container_registry_name: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
-        TF_VAR_container_app_environment_name: ${{ secrets.TF_VAR_CONTAINER_APP_ENVIRONMENT_NAME }}
-        TF_VAR_subscription_id: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
-      continue-on-error: true  # In case it's already imported
+    # - name: Import Existing Resources (if they exist)
+    #   run: |
+    #     echo "Importing existing Azure resources if they exist..."
+        
+    #     # Import Resource Group
+    #     terraform import azurerm_resource_group.rg /subscriptions/${{ secrets.TF_VAR_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} || echo "RG import failed (might not exist)"
+        
+    #     # Import Container Registry
+    #     terraform import azurerm_container_registry.acr /subscriptions/${{ secrets.TF_VAR_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}/providers/Microsoft.ContainerRegistry/registries/${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }} || echo "ACR import failed (might not exist)"
+        
+    #     # Import Storage Account
+    #     terraform import azurerm_storage_account.storage /subscriptions/${{ secrets.TF_VAR_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}/providers/Microsoft.Storage/storageAccounts/${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }} || echo "Storage import failed (might not exist)"
+        
+    #     # Import Container App Environment (if you have one)
+    #     terraform import azurerm_container_app_environment.app_env /subscriptions/${{ secrets.TF_VAR_SUBSCRIPTION_ID }}/resourceGroups/${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}/providers/Microsoft.App/managedEnvironments/${{ secrets.TF_VAR_CONTAINER_APP_ENVIRONMENT_NAME }} || echo "App Env import failed (might not exist)"
+        
+    #   working-directory: infra/main
+    #   env:
+    #     TF_VAR_resource_group_name: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
+    #     TF_VAR_location: ${{ secrets.TF_VAR_LOCATION }}
+    #     TF_VAR_storage_account_name: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
+    #     TF_VAR_container_registry_name: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
+    #     TF_VAR_container_app_environment_name: ${{ secrets.TF_VAR_CONTAINER_APP_ENVIRONMENT_NAME }}
+    #     TF_VAR_subscription_id: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
+    #   continue-on-error: true  # In case it's already imported
 
     - name: Terraform Apply
       run: terraform apply -auto-approve
