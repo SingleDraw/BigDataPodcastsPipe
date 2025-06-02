@@ -56,42 +56,71 @@ fi
 
 # Import ACR username secret
 ACR_USERNAME_SECRET_NAME="acr-admin-username"
-ACR_USERNAME_SECRET_URI="https://$KEY_VAULT_NAME.vault.azure.net/secrets/$ACR_USERNAME_SECRET_NAME"
-if az keyvault secret show --name "$ACR_USERNAME_SECRET_NAME" --vault-name "$KEY_VAULT_NAME" --subscription "$SUBSCRIPTION_ID" &>/dev/null; then
-  if ! terraform state show azurerm_key_vault_secret.acr_username &>/dev/null; then
-    echo "Importing existing ACR username secret..."
-    terraform import azurerm_key_vault_secret.acr_username "$ACR_USERNAME_SECRET_URI"
-  else
-    echo "ACR username secret already managed by Terraform. Skipping import."
-  fi
+ACR_USERNAME_SECRET_ID=$(az keyvault secret show \
+  --name "$ACR_USERNAME_SECRET_NAME" \
+  --vault-name "$KEY_VAULT_NAME" \
+  --subscription "$SUBSCRIPTION_ID" \
+  --query "id" -o tsv 2>/dev/null || echo "")
+
+if [[ -n "$ACR_USERNAME_SECRET_ID" ]]; then
+  echo "Importing existing ACR username secret..."
+  terraform import azurerm_key_vault_secret.acr_username "$ACR_USERNAME_SECRET_ID"
 else
   echo "ACR username secret does not exist. Skipping import."
 fi
 
 # Import ACR password secret
+# ACR_PASSWORD_SECRET_NAME="acr-admin-password"
+# ACR_PASSWORD_SECRET_URI="https://$KEY_VAULT_NAME.vault.azure.net/secrets/$ACR_PASSWORD_SECRET_NAME"
+# if az keyvault secret show --name "$ACR_PASSWORD_SECRET_NAME" --vault-name "$KEY_VAULT_NAME" --subscription "$SUBSCRIPTION_ID" &>/dev/null; then
+#   if ! terraform state show azurerm_key_vault_secret.acr_password &>/dev/null; then
+#     echo "Importing existing ACR password secret..."
+#     terraform import azurerm_key_vault_secret.acr_password "$ACR_PASSWORD_SECRET_URI"
+#   else
+#     echo "ACR password secret already managed by Terraform. Skipping import."
+#   fi
+# else
+#   echo "ACR password secret does not exist. Skipping import."
+# fi
+
 ACR_PASSWORD_SECRET_NAME="acr-admin-password"
-ACR_PASSWORD_SECRET_URI="https://$KEY_VAULT_NAME.vault.azure.net/secrets/$ACR_PASSWORD_SECRET_NAME"
-if az keyvault secret show --name "$ACR_PASSWORD_SECRET_NAME" --vault-name "$KEY_VAULT_NAME" --subscription "$SUBSCRIPTION_ID" &>/dev/null; then
-  if ! terraform state show azurerm_key_vault_secret.acr_password &>/dev/null; then
-    echo "Importing existing ACR password secret..."
-    terraform import azurerm_key_vault_secret.acr_password "$ACR_PASSWORD_SECRET_URI"
-  else
-    echo "ACR password secret already managed by Terraform. Skipping import."
-  fi
+ACR_PASSWORD_SECRET_ID=$(az keyvault secret show \
+  --name "$ACR_PASSWORD_SECRET_NAME" \
+  --vault-name "$KEY_VAULT_NAME" \
+  --subscription "$SUBSCRIPTION_ID" \
+  --query "id" -o tsv 2>/dev/null || echo "")
+if [[ -n "$ACR_PASSWORD_SECRET_ID" ]]; then
+  echo "Importing existing ACR password secret..."
+  terraform import azurerm_key_vault_secret.acr_password "$ACR_PASSWORD_SECRET_ID"
 else
   echo "ACR password secret does not exist. Skipping import."
 fi
 
+
+
 # Import blob storage connection string secret
+# BLOB_CONNECTION_STRING_SECRET_NAME="blob-storage-connection-string"
+# BLOB_CONNECTION_STRING_SECRET_URI="https://$KEY_VAULT_NAME.vault.azure.net/secrets/$BLOB_CONNECTION_STRING_SECRET_NAME"
+# if az keyvault secret show --name "$BLOB_CONNECTION_STRING_SECRET_NAME" --vault-name "$KEY_VAULT_NAME" --subscription "$SUBSCRIPTION_ID" &>/dev/null; then
+#   if ! terraform state show azurerm_key_vault_secret.blob_connection_string &>/dev/null; then
+#     echo "Importing existing blob storage connection string secret..."
+#     terraform import azurerm_key_vault_secret.blob_connection_string "$BLOB_CONNECTION_STRING_SECRET_URI"
+#   else
+#     echo "Blob storage connection string secret already managed by Terraform. Skipping import."
+#   fi
+# else
+#   echo "Blob storage connection string secret does not exist. Skipping import."
+# fi
+
 BLOB_CONNECTION_STRING_SECRET_NAME="blob-storage-connection-string"
-BLOB_CONNECTION_STRING_SECRET_URI="https://$KEY_VAULT_NAME.vault.azure.net/secrets/$BLOB_CONNECTION_STRING_SECRET_NAME"
-if az keyvault secret show --name "$BLOB_CONNECTION_STRING_SECRET_NAME" --vault-name "$KEY_VAULT_NAME" --subscription "$SUBSCRIPTION_ID" &>/dev/null; then
-  if ! terraform state show azurerm_key_vault_secret.blob_connection_string &>/dev/null; then
-    echo "Importing existing blob storage connection string secret..."
-    terraform import azurerm_key_vault_secret.blob_connection_string "$BLOB_CONNECTION_STRING_SECRET_URI"
-  else
-    echo "Blob storage connection string secret already managed by Terraform. Skipping import."
-  fi
+BLOB_CONNECTION_STRING_SECRET_ID=$(az keyvault secret show \
+  --name "$BLOB_CONNECTION_STRING_SECRET_NAME" \
+  --vault-name "$KEY_VAULT_NAME" \
+  --subscription "$SUBSCRIPTION_ID" \
+  --query "id" -o tsv 2>/dev/null || echo "")
+if [[ -n "$BLOB_CONNECTION_STRING_SECRET_ID" ]]; then
+  echo "Importing existing blob storage connection string secret..."
+  terraform import azurerm_key_vault_secret.blob_connection_string "$BLOB_CONNECTION_STRING_SECRET_ID"
 else
   echo "Blob storage connection string secret does not exist. Skipping import."
 fi
