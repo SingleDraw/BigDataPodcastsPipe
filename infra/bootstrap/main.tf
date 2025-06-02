@@ -24,6 +24,13 @@ resource "azurerm_storage_container" "tfstate" {
   container_access_type = "private"
 }
 
+# 4. Create a storage container for Whisperer files
+resource "azurerm_storage_container" "whisperer" {
+  name                  = "whisperer"
+  storage_account_id    = azurerm_storage_account.storage.id
+  container_access_type = "private"
+}
+
 ## 5. Automatically set GitHub secrets
 resource "github_actions_secret" "resource_group_name" {
   repository      = var.github_repository

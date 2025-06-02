@@ -1,5 +1,4 @@
-name: Provision Azure Infra
-
+name: Bootstrap Terraform Backend Infra
 on:
   workflow_dispatch:
 #   push:
@@ -51,5 +50,10 @@ jobs:
     - name: Terraform Apply
       run: terraform apply -auto-approve
       working-directory: infra/bootstrap
+
+    - name: Init main Terraform with remote backend
+      run: terraform init -reconfigure
+      working-directory: infra/main
+    
 
         
