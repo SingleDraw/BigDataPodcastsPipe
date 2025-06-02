@@ -114,11 +114,11 @@ echo "GitHub secret AZURE_CREDENTIALS has been set successfully."
 
 # Set other secrets
 AZURE_SECRETS=(
-    TF_VAR_resource_group_name
-    TF_VAR_location
-    TF_VAR_storage_account_name
-    TF_VAR_container_registry_name
-    TF_VAR_container_app_environment_name
+    TF_VAR_RESOURCE_GROUP_NAME      
+    TF_VAR_LOCATION                 
+    TF_VAR_STORAGE_ACCOUNT_NAME     
+    TF_VAR_CONTAINER_REGISTRY_NAME  
+    TF_VAR_CONTAINER_APP_ENVIRONMENT_NAME  
 )
 
 for secret in "${AZURE_SECRETS[@]}"; do
