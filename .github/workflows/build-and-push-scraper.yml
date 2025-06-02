@@ -1,0 +1,79 @@
+name: Build and Push Brick Scraper Docker Image
+
+on:
+  push:       # Trigger when code is pushed to the repository
+    branches:
+      - main  # Only trigger on main branch
+    paths:    # Only trigger when changes are made in the specified path
+      - 'docker/ingest/brick-scraper/**'
+  workflow_dispatch:  # Manual trigger
+
+
+env:
+  TF_LOG: DEBUG
+  REGISTRY: ${{ secrets.ACR_LOGIN_SERVER }}
+  REGISTRY_USERNAME: ${{ secrets.ACR_USERNAME }}
+  REGISTRY_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+  AZURE_RESOURCE_GROUP: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
+  IMAGE_NAME_SCRAPER: bigdata-ingest-brick-scraper
+  APP_NAME_SCRAPER: bigdata-ingest-brick-scraper-app
+
+jobs:
+  check-infra:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if infra not ready
+        run: |
+          if [[ "${{ vars.INFRA_READY }}" != "true" ]]; then
+            echo "Infrastructure is not ready. Please run the bootstrap workflow first."
+            exit 1
+          fi
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: [check-infra]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+
+    - name: Login to Azure Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ env.REGISTRY_USERNAME }}
+        password: ${{ env.REGISTRY_PASSWORD }}
+
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./docker/ingest/brick-scraper
+        file: ./docker/ingest/brick-scraper/Dockerfile
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_SCRAPER }}:latest
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_SCRAPER }}:${{ github.sha }}
+
+
+  deploy-app:
+    name: 'Deploy Application'
+    runs-on: ubuntu-latest
+    # needs: [terraform, build-and-push]
+    needs: [build-and-push]
+    # if: github.ref == 'refs/heads/main'
+            
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
+      - name: Deploy to Azure Container Apps
+        run: |
+          az containerapp update \
+            --name "${{ env.APP_NAME_SCRAPER }}" \
+            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --image "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_SCRAPER }}:${{ github.sha }}"

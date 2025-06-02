@@ -39,3 +39,12 @@ TF_VAR_container_app_environment_name=<container-app-env-name>
 > 🔒 **Note:** `TF_VAR_storage_account_name` must be **globally unique** across all Azure accounts.
 > The other values (e.g., resource group, ACR name) should be unique **within your subscription** to avoid naming conflicts.
 
+
+
+## NEXT: Run bootstrap.sh for provisioning resource group, storage, storage containers and terraform backend configuration.
+# provision.sh runs in chaing afterwards
+Do it once. (but its indempotent anyway)
+
+## Subsequent rebuilds of main infra should be done by provision.sh
+
+## Build and push workflows checks if infra is ready using env var set in github repo 

@@ -2,8 +2,10 @@ name: Provision Azure Infra
 
 on:
   workflow_dispatch:
-#   push:
-#     branches: [ main ]  # Also trigger on push to main
+  workflow_run:                 # Trigger after Bootstrap workflow completes
+    workflows: ["Bootstrap"]    # Name of the workflow to wait for
+    types:
+      - completed
 
 env:
     TF_LOG: DEBUG
@@ -57,5 +59,12 @@ jobs:
     - name: Terraform Apply
       run: terraform apply -auto-approve
       working-directory: infra/main
+
+    - name: Set infra ready flag
+      run: |
+        gh variable set INFRA_READY --env infra-ready --body "true"
+      env:
+        GH_TOKEN: ${{ env.TF_VAR_github_token }}
+
 
         

@@ -1,8 +1,6 @@
-name: Bootstrap Terraform Backend Infra
+name: Bootstrap
 on:
   workflow_dispatch:
-#   push:
-#     branches: [ main ]  # Also trigger on push to main
 
 env:
     TF_LOG: DEBUG
