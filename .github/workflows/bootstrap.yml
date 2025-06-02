@@ -37,11 +37,11 @@ jobs:
       working-directory: infra/bootstrap
 
     - name: Make script executable
-      run: chmod +x ../scripts/import.sh
+      run: chmod +x ../scripts/import-bootstrap.sh
       working-directory: infra/bootstrap
 
     - name: Run conditional import script
-      run: ../scripts/import.sh
+      run: ../scripts/import-bootstrap.sh
       working-directory: infra/bootstrap
       shell: bash
 
