@@ -43,6 +43,17 @@ jobs:
           echo "Generated trigger.json:"
           cat trigger.json
 
+    - name: Disable and delete ADF trigger if it exists
+      run: |
+        if az datafactory trigger show --factory-name "$ADF_NAME" --resource-group "$RESOURCE_GROUP" --name "$TRIGGER_NAME" > /dev/null 2>&1; then
+          echo "Disabling existing trigger..."
+          az datafactory trigger stop --factory-name "$ADF_NAME" --resource-group "$RESOURCE_GROUP" --name "$TRIGGER_NAME"
+          echo "Deleting existing trigger..."
+          az datafactory trigger delete --factory-name "$ADF_NAME" --resource-group "$RESOURCE_GROUP" --name "$TRIGGER_NAME" --yes
+        else
+          echo "Trigger does not exist, skipping disable step."
+        fi
+
     - name: Deploy pipeline to ADF
       run: |
         az datafactory pipeline create \
