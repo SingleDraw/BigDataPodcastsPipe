@@ -49,6 +49,11 @@ resource "null_resource" "register_containerapps" {
   provisioner "local-exec" {
     command = "az provider register -n Microsoft.App --wait"
   }
+
+  triggers = {
+    # always_run = timestamp()  # Ensures this runs every time you apply
+    rg_name = azurerm_resource_group.rg.name # This ensures it runs after the resource group is created
+  }
 }
 
 data "azurerm_client_config" "current" {}

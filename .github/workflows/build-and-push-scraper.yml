@@ -48,6 +48,14 @@ jobs:
         username: ${{ env.REGISTRY_USERNAME }}
         password: ${{ env.REGISTRY_PASSWORD }}
 
+    - name: Check ACR access
+      run: |
+        echo "Pinging ACR: $REGISTRY"
+        echo "$REGISTRY_PASSWORD" | docker login "$REGISTRY" -u "$REGISTRY_USERNAME" --password-stdin || {
+          echo "❌ Failed to authenticate with ACR. Aborting build."
+          exit 1
+        }
+        echo "✅ ACR login successful."
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
