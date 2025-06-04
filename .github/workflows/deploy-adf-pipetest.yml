@@ -12,6 +12,7 @@ env:
   ACR_NAME: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
   IMAGE_NAME: test-app-image
   STORAGE_ACCOUNT_NAME: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
+  STORAGE_ACCOUNT_KEY: ${{ secrets.STORAGE_ACCOUNT_KEY }}
   IDENTITY_RESOURCE_ID: ${{ secrets.IDENTITY_RESOURCE_ID }} # For container identity
   IDENTITY_CLIENT_ID: ${{ secrets.IDENTITY_CLIENT_ID }}     # For ADF authentication
   TRIGGER_NAME: DailyTriggerTest

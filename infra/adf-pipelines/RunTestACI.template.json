@@ -40,7 +40,7 @@
                       },
                       {
                         "name": "AZURE_STORAGE_KEY",
-                        "value": "$AZURE_STORAGE_KEY"
+                        "value": "$STORAGE_ACCOUNT_KEY"
                       },
                       {
                         "name": "AZURE_KEY_VAULT_URL",

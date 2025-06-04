@@ -82,7 +82,10 @@ app = typer.Typer()
 @app.command("write-blob")
 def test_fn():
     try:
-        run_app()
+        # run_app() # Works with public API - Passed !
+        test_blob_write() # Works with Azure Storage Blob using connection string
+        # test_blob_write_two() # Works with Azure Storage Blob using DefaultAzureCredential
+        # test_key_vault() # Works with Key Vault
     except Exception as e:
         typer.echo(f"An error occurred during the test app process: {e}", err=True)
         raise typer.Exit(code=1)

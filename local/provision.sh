@@ -14,6 +14,8 @@ declare -A workflow_map=(
     [infra]="provision.yml"                 # Provisioning resources - triggered by bootstrap workflow too
     [images]="build-and-push-scraper.yml"
     [adf]="deploy-adf-pipeline.yml"
+    [buildtest]="build-and-push-test.yml"
+    [pipetest]="deploy-adf-pipetest.yml"
 )
 
 if [ "$1" != "--env" ] || [ -z "$2" ]; then
