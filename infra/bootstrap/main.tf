@@ -44,5 +44,12 @@ resource "github_actions_secret" "storage_account_name" {
   plaintext_value = azurerm_storage_account.storage.name
 }
 
+# Register the Microsoft.App provider for Container Apps
+resource "null_resource" "register_containerapps" {
+  provisioner "local-exec" {
+    command = "az provider register -n Microsoft.App --wait"
+  }
+}
+
 data "azurerm_client_config" "current" {}
 
