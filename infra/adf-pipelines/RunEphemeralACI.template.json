@@ -39,15 +39,15 @@
                     "environmentVariables": [
                       {
                         "name": "AZURE_CLIENT_ID",
-                        "value": "$APP_CLIENT_ID"
+                        "value": "$AZURE_CLIENT_ID"
                       },
                       {
                         "name": "AZURE_TENANT_ID",
-                        "value": "$APP_TENANT_ID"
+                        "value": "$AZURE_TENANT_ID"
                       },
                       {
                         "name": "AZURE_CLIENT_SECRET",
-                        "value": "$APP_CLIENT_SECRET"
+                        "value": "$AZURE_CLIENT_SECRET"
                       }
                     ]
                   }
