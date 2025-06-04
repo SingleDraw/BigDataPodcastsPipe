@@ -224,15 +224,34 @@ resource "azurerm_data_factory" "adf" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
+  # identity {
+  #   type = "SystemAssigned, UserAssigned"
+  #   identity_ids = [
+  #     azurerm_user_assigned_identity.storage_identity.id,
+  #     azurerm_user_assigned_identity.key_vault_identity.id,
+  #     azurerm_user_assigned_identity.aci_identity.id # ACI identity for pulling images and creating ACI jobs
+  #   ]
+  # }
   identity {
-    type = "UserAssigned"
-    identity_ids = [
-      azurerm_user_assigned_identity.storage_identity.id,
-      azurerm_user_assigned_identity.key_vault_identity.id,
-      azurerm_user_assigned_identity.aci_identity.id # ACI identity for pulling images and creating ACI jobs
-    ]
+    type = "SystemAssigned"
   }
 }
+
+# Allow ADF to pull from ACR
+resource "azurerm_role_assignment" "adf_acr_pull" {
+  scope                = azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_data_factory.adf.identity[0].principal_id
+}
+
+# Allow ADF to create/manage ACI
+resource "azurerm_role_assignment" "adf_aci_contributor" {
+  scope                = azurerm_resource_group.rg.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_data_factory.adf.identity[0].principal_id
+}
+
+
 
 # Store Azure Data Factory name in GitHub secrets
 resource "github_actions_secret" "adf_name" {
@@ -241,20 +260,21 @@ resource "github_actions_secret" "adf_name" {
   plaintext_value = azurerm_data_factory.adf.name
 }
 
-# Loop through user-assigned identities and assign roles
-# This allows the Data Factory to access the resource group and other resources
-locals {
-  user_assigned_identities = {
-    storage   = azurerm_user_assigned_identity.storage_identity.principal_id
-    keyvault  = azurerm_user_assigned_identity.key_vault_identity.principal_id
-  }
-}
-resource "azurerm_role_assignment" "adf_contributors" {
-  for_each             = local.user_assigned_identities
-  scope                = azurerm_resource_group.rg.id
-  role_definition_name = "Contributor"
-  principal_id         = each.value
-}
+# THESE WER USER ASSIGNED IDENTITIES
+# # Loop through user-assigned identities and assign roles
+# # This allows the Data Factory to access the resource group and other resources
+# locals {
+#   user_assigned_identities = {
+#     storage   = azurerm_user_assigned_identity.storage_identity.principal_id
+#     keyvault  = azurerm_user_assigned_identity.key_vault_identity.principal_id
+#   }
+# }
+# resource "azurerm_role_assignment" "adf_contributors" {
+#   for_each             = local.user_assigned_identities
+#   scope                = azurerm_resource_group.rg.id
+#   role_definition_name = "Contributor"
+#   principal_id         = each.value
+# }
 
 # # Role assignment for Data Factory to access the resource group
 # resource "azurerm_role_assignment" "adf_contributor" {
