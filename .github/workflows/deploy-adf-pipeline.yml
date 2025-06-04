@@ -34,7 +34,8 @@ jobs:
       run: |
         cat infra/adf-pipelines/RunEphemeralACI.template.json | envsubst > pipeline.json
         cat infra/adf-triggers/DailyTrigger.json > trigger.json
-
+        echo "Generated trigger.json:"
+        cat trigger.json
     - name: Deploy pipeline to ADF
       run: |
         az datafactory pipeline create \
