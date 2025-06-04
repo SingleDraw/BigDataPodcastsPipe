@@ -16,6 +16,7 @@ env:
   REGISTRY_PASSWORD: ${{ secrets.ACR_PASSWORD }}
   AZURE_RESOURCE_GROUP: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
   IMAGE_NAME_SCRAPER: ${{ secrets.BRICK_PCASTER_IMAGE_NAME }}
+  APP_REPO_PATH: ./docker/ingest/brick-pcaster
   APP_NAME_SCRAPER: brick-pcaster-app
 
 jobs:
@@ -51,8 +52,8 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
       with:
-        context: ./docker/ingest/brick-scraper
-        file: ./docker/ingest/brick-scraper/Dockerfile
+        context: ${{ env.APP_REPO_PATH }}
+        file: ${{ env.APP_REPO_PATH }}/Dockerfile
         push: true
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_SCRAPER }}:latest
