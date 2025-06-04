@@ -57,12 +57,12 @@ jobs:
         }
         echo "✅ ACR login successful."
 
-    - name: Ensure Container App exists
-      run: |
-        if ! az containerapp show --name "${{ env.APP_NAME_SCRAPER }}" --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" &>/dev/null; then
-          echo "❌ Container App does not exist."
-          exit 1
-        fi
+    # - name: Ensure Container App exists
+    #   run: |
+    #     if ! az containerapp show --name "${{ env.APP_NAME_SCRAPER }}" --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" &>/dev/null; then
+    #       echo "❌ Container App does not exist."
+    #       exit 1
+    #     fi
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
