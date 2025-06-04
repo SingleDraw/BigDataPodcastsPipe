@@ -49,7 +49,7 @@ jobs:
           --factory-name "$ADF_NAME" \
           --resource-group "$RESOURCE_GROUP" \
           --name "DailyTrigger" \
-          --trigger "@trigger.json"
+          --properties @"trigger.json"
         
     - name: Start trigger
       run: |
