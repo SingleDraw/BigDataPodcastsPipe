@@ -34,8 +34,10 @@ jobs:
 
     - name: Generate pipeline JSON with env vars and create trigger JSON
       run: |
+        echo "Generating pipeline.json and trigger.json with environment variables..."
+        NOW=$(date -u -d "+2 minutes" +"%Y-%m-%dT%H:%M:%SZ")
         cat infra/adf-pipelines/RunEphemeralACI.template.json | envsubst > pipeline.json
-        cat infra/adf-triggers/DailyTrigger.json > trigger.json
+        cat infra/adf-triggers/DailyTrigger.template.json | envsubst > trigger.json
         echo "Generated trigger.json:"
         cat trigger.json
     - name: Deploy pipeline to ADF
