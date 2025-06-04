@@ -13,6 +13,8 @@ env:
   IMAGE_NAME: ${{ secrets.BRICK_PCASTER_IMAGE_NAME }}
   STORAGE_ACCOUNT_NAME: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
   IDENTITY_RESOURCE_ID: ${{ secrets.IDENTITY_RESOURCE_ID }} # Managed Identity for ADF
+  TRIGGER_NAME: DailyTrigger
+  ADF_PIPELINE_NAME: RunEphemeralACI
 
 jobs:
   deploy:
@@ -41,7 +43,7 @@ jobs:
         az datafactory pipeline create \
           --factory-name $ADF_NAME \
           --resource-group $RESOURCE_GROUP \
-          --name RunEphemeralACI \
+          --name $ADF_PIPELINE_NAME \
           --pipeline @pipeline.json
 
     - name: Deploy ADF trigger
@@ -49,7 +51,7 @@ jobs:
         az datafactory trigger create \
           --factory-name "$ADF_NAME" \
           --resource-group "$RESOURCE_GROUP" \
-          --name "DailyTrigger" \
+          --name "$TRIGGER_NAME" \
           --properties @"trigger.json"
         
     - name: Start trigger
@@ -57,4 +59,4 @@ jobs:
         az datafactory trigger start \
           --factory-name "$ADF_NAME" \
           --resource-group "$RESOURCE_GROUP" \
-          --name "DailyTrigger"
+          --name "$TRIGGER_NAME"

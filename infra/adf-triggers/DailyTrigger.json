@@ -1,23 +1,22 @@
 {
-    "name": "DailyTrigger",
-    "properties": {
-      "type": "ScheduleTrigger",
-      "pipelines": [
-        {
-          "pipelineReference": {
-            "type": "PipelineReference",
-            "referenceName": "RunEphemeralACI"
-          },
-          "parameters": {}
-        }
-      ],
-      "typeProperties": {
-        "recurrence": {
-          "frequency": "Day",
-          "interval": 1,
-          "startTime": "2025-06-04T02:00:00Z",
-          "timeZone": "UTC"
-        }
+  "properties": {
+    "type": "ScheduleTrigger",
+    "pipelines": [
+      {
+        "pipelineReference": {
+          "type": "PipelineReference",
+          "referenceName": "RunEphemeralACI"
+        },
+        "parameters": {}
+      }
+    ],
+    "typeProperties": {
+      "recurrence": {
+        "frequency": "Day",
+        "interval": 1,
+        "startTime": "2025-06-04T02:00:00Z",
+        "timeZone": "UTC"
       }
     }
+  }
 }
