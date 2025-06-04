@@ -10,18 +10,6 @@ set -o allexport
 source .env
 set +o allexport
 
-function create_json_credentials() {
-    # Creates a JSON object with the required fields for GitHub Actions
-    # to authenticate with Azure.
-    echo "Creating JSON credentials for GitHub Actions..."
-    az ad sp create-for-rbac \
-        --name "gha-terraform" \
-        --role "Contributor" \
-        --scopes "$SCOPES" \
-        --sdk-auth \
-        --output json > azure-credentials.json
-}
-
 function create_service_principal() {
     az ad sp create-for-rbac \
         --name "gha-terraform" \
@@ -98,14 +86,48 @@ fi
 
 echo "All prerequisites are met. Proceeding with service principal creation..."
 
+
+
+
+
+
+
 # Create the service principal and set it as a GitHub secret
-echo "Setting GitHub secret AZURE_CREDENTIALS..."
+# echo "Setting GitHub secret AZURE_CREDENTIALS..."
+# gh secret set AZURE_CREDENTIALS \
+#     --body "$(create_service_principal)" \
+#     --repo "$TF_VAR_GITHUB_REPOSITORY" 
+echo "Creating service principal and setting GitHub secret..."
+
+CREDENTIALS_JSON=$(create_service_principal)
+
 gh secret set AZURE_CREDENTIALS \
-    --body "$(create_service_principal)" \
-    --repo "$TF_VAR_GITHUB_REPOSITORY" 
+    --body "$CREDENTIALS_JSON" \
+    --repo "$TF_VAR_GITHUB_REPOSITORY"
+
 
 if [ $? -ne 0 ]; then
-    echo "Error: Failed to set GitHub secret AZURE_CREDENTIALS. Please check your permissions and try again."
+    echo "Error: Failed to set GitHub secret AZURE_CREDENTIALS."
+    manually_set_guide_prompt
+    exit 1
+fi
+
+APP_ID=$(echo "$CREDENTIALS_JSON" | grep -oP '"clientId"\s*:\s*"\K[^"]+')
+
+if [[ -z "$APP_ID" ]]; then
+    echo "Failed to extract appId from service principal output."
+    exit 1
+fi
+
+echo "Assigning 'User Access Administrator' role to the service principal..."
+
+az role assignment create \
+    --assignee "$APP_ID" \
+    --role "User Access Administrator" \
+    --scope "$SCOPES"
+
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to assign 'User Access Administrator' role."
     manually_set_guide_prompt
     exit 1
 fi

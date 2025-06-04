@@ -18,11 +18,35 @@ CR_ID="$RG_ID/providers/Microsoft.ContainerRegistry/registries/$CR_N"
 KV_N="${RG_N}-kv"
 KV_ID="$RG_ID/providers/Microsoft.KeyVault/vaults/$KV_N"
 
+
 declare -a RESOURCES=(
   "azurerm_resource_group.rg|az group show --name \"$RG_N\"|\"$RG_ID\""
   "azurerm_storage_account.storage|az storage account show --name \"$SA_N\" --resource-group \"$RG_N\"|\"$SA_ID\""
   "azurerm_container_registry.acr|az acr show --name \"$CR_N\" --resource-group \"$RG_N\"|\"$CR_ID\""
   "azurerm_key_vault.kv|az keyvault show --name \"$KV_N\" --resource-group \"$RG_N\"|\"$KV_ID\""
+)
+
+# ---------------------------------------------------------
+# Import Azure Data Factory and Managed Identities
+# ----------------------------------------------------------
+
+ADF_N="${RG_N}-adf"
+ADF_ID="$RG_ID/providers/Microsoft.DataFactory/factories/$ADF_N"
+
+ACI_IDENTITY_N="${RG_N}-aci-identity"
+ACI_IDENTITY_ID="$RG_ID/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$ACI_IDENTITY_N"
+
+KV_IDENTITY_N="${RG_N}-key-vault-identity"
+KV_IDENTITY_ID="$RG_ID/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$KV_IDENTITY_N"
+
+STORAGE_IDENTITY_N="${RG_N}-storage-identity"
+STORAGE_IDENTITY_ID="$RG_ID/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$STORAGE_IDENTITY_N"
+
+RESOURCES+=(
+  "azurerm_data_factory.adf|az datafactory factory show --name \"$ADF_N\" --resource-group \"$RG_N\"|\"$ADF_ID\""
+  "azurerm_user_assigned_identity.aci_identity|az identity show --name \"$ACI_IDENTITY_N\" --resource-group \"$RG_N\"|\"$ACI_IDENTITY_ID\""
+  "azurerm_user_assigned_identity.key_vault_identity|az identity show --name \"$KV_IDENTITY_N\" --resource-group \"$RG_N\"|\"$KV_IDENTITY_ID\""
+  "azurerm_user_assigned_identity.storage_identity|az identity show --name \"$STORAGE_IDENTITY_N\" --resource-group \"$RG_N\"|\"$STORAGE_IDENTITY_ID\""
 )
 
 for entry in "${RESOURCES[@]}"; do
@@ -84,4 +108,8 @@ import_kv_secret "acr_password" "$ACR_PASSWORD_SECRET_NAME"
 
 BLOB_CONNECTION_STRING_SECRET_NAME="blob-storage-connection-string"
 import_kv_secret "blob_connection_string" "$BLOB_CONNECTION_STRING_SECRET_NAME"
+
+# Podcast API secrets
+import_kv_secret "podcast_api_key" "PodcastingIndexApiKey"
+import_kv_secret "podcast_api_secret" "PodcastingIndexApiSecret"
 
