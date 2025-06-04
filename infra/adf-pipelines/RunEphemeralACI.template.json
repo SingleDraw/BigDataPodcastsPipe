@@ -1,0 +1,57 @@
+{
+  "name": "RunEphemeralACI",
+  "properties": {
+    "activities": [
+      {
+        "name": "RunACIContainer",
+        "type": "WebActivity",
+        "typeProperties": {
+          "url": "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ContainerInstance/containerGroups/$ACI_NAME?api-version=2021-03-01",
+          "method": "PUT",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "location": "$LOCATION",
+            "identity": {
+              "type": "UserAssigned",
+              "userAssignedIdentities": {
+                "$IDENTITY_RESOURCE_ID": {}
+              }
+            },
+            "properties": {
+              "containers": [
+                {
+                  "name": "$ACI_NAME",
+                  "properties": {
+                    "image": "$ACR_NAME.azurecr.io/$IMAGE_NAME:latest",
+                    "resources": {
+                      "requests": {
+                        "cpu": 1,
+                        "memoryInGb": 1.5
+                      }
+                    },
+                    "command": [
+                      "pcaster",
+                      "--overwrite",
+                      "--azure-storage-account",
+                      "$STORAGE_ACCOUNT_NAME"
+                    ],
+                    "environmentVariables": [
+                      {
+                        "name": "MY_VAR",
+                        "value": "my_value"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "osType": "Linux",
+              "restartPolicy": "Never"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+name: Deploy ADF Pipeline and Trigger
+
+on:
+  workflow_dispatch:
+
+env:
+  ADF_NAME: my-adf # ${{ secrets.ADF_NAME }}
+  RESOURCE_GROUP: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} 
+  LOCATION: westeurope
+  SUBSCRIPTION_ID: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
+  ACI_NAME: ephemeral-job
+  ACR_NAME: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
+  IMAGE_NAME: ${{ secrets.BRICK_PCASTER_IMAGE_NAME }}
+  STORAGE_ACCOUNT_NAME: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
+  IDENTITY_RESOURCE_ID: ${{ secrets.IDENTITY_RESOURCE_ID }} # Managed Identity for ADF
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Generate pipeline JSON with env vars and create trigger JSON
+      run: |
+        cat infra/adf-pipelines/RunEphemeralACI.template.json | envsubst > pipeline.json
+        cat infra/adf-triggers/DailyTrigger.json > trigger.json
+
+    - name: Deploy pipeline to ADF
+      run: |
+        az datafactory pipeline create \
+          --factory-name $ADF_NAME \
+          --resource-group $RESOURCE_GROUP \
+          --name RunEphemeralACI \
+          --pipeline @pipeline.json
+
+    - name: Deploy ADF trigger
+      run: |
+        az datafactory trigger create \
+          --factory-name "$ADF_NAME" \
+          --resource-group "$RESOURCE_GROUP" \
+          --name "DailyTrigger" \
+          --trigger "@trigger.json"
+        
+    - name: Start trigger
+      run: |
+        az datafactory trigger start \
+          --factory-name "$ADF_NAME" \
+          --resource-group "$RESOURCE_GROUP" \
+          --name "DailyTrigger"

@@ -33,8 +33,32 @@ variable "container_registry_name" {
     description = "Name of the Azure Container Registry"
     type        = string
 }
+
+# variable "container_group_name" {
+#     description = "Name of the Azure Container Group for PCaster Scraper App"
+#     type        = string
+# }
+
 # variable "container_app_environment_name" {
 #     description = "Name of the Azure Container App Environment"
 #     type        = string
 # }
 
+# Podcasting Index API configuration
+variable "podcasting_index_api_key" {
+  description = "API key for Podcasting Index"
+  type        = string
+  sensitive   = true
+}
+
+variable "podcasting_index_api_secret" {
+  description = "API secret for Podcasting Index"
+  type        = string
+  sensitive   = true
+}
+
+# Image names for container apps
+variable "brick_pcaster_image_name" {
+  description = "Docker image name for PCaster Scraper App"
+  type        = string
+}

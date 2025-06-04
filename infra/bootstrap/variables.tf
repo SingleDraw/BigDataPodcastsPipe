@@ -12,6 +12,7 @@ variable "github_repository" {
   description = "GitHub repository name"
   type        = string
 }
+
 # Azure provider configuration
 variable "subscription_id" {
   description = "Azure subscription ID"

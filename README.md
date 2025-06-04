@@ -56,4 +56,33 @@ README.md
 ```
 
 
+RUN bootstrap, provision, build-and-push, deploy-adf-pipeline
 
+
+.
+├── .github
+│   └── workflows
+│       ├── azurelogin.yml
+│       ├── build-and-push.yml
+│       └── provision.yml
+├── docker
+│   ├── export
+│   ├── ingest
+│   └── process
+├── infra
+│   ├── main
+│   │   ├── main.tf
+│   │   ├── providers.tf
+│   │   ├── README.md
+│   │   ├── terraform.tfvars
+│   │   └── variables.tf
+│   └── scripts
+│       └── import.sh
+├── local
+│   ├── .env
+│   ├── init.sh
+│   ├── provision.sh
+│   ├── README.md
+│   └── test.sh
+├── .gitignore
+└── README.md

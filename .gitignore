@@ -1,3 +1,5 @@
 .env
 azure-credentials*.json
 .knowledge*.md
+.architecture
+docker/scaffold

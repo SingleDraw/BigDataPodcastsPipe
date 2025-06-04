@@ -1,11 +1,11 @@
-name: Build and Push Brick Scraper Docker Image
+name: Build and Push Brick - Pcaster Scraper App Docker Image
 
 on:
   push:       # Trigger when code is pushed to the repository
     branches:
       - main  # Only trigger on main branch
     paths:    # Only trigger when changes are made in the specified path
-      - 'docker/ingest/brick-scraper/**'
+      - 'docker/ingest/brick-pcaster/**'
   workflow_dispatch:  # Manual trigger
 
 
@@ -15,8 +15,8 @@ env:
   REGISTRY_USERNAME: ${{ secrets.ACR_USERNAME }}
   REGISTRY_PASSWORD: ${{ secrets.ACR_PASSWORD }}
   AZURE_RESOURCE_GROUP: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
-  IMAGE_NAME_SCRAPER: bigdata-ingest-brick-scraper
-  APP_NAME_SCRAPER: bigdata-ingest-brick-scraper-app
+  IMAGE_NAME_SCRAPER: ${{ secrets.BRICK_PCASTER_IMAGE_NAME }}
+  APP_NAME_SCRAPER: brick-pcaster-app
 
 jobs:
   check-infra:
