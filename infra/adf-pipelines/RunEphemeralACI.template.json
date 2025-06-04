@@ -5,6 +5,7 @@
       {
         "name": "RunACIContainer",
         "type": "WebActivity",
+
         "typeProperties": {
           "url": "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ContainerInstance/containerGroups/$ACI_NAME?api-version=2021-03-01",
           "method": "PUT",
@@ -49,6 +50,11 @@
               "osType": "Linux",
               "restartPolicy": "Never"
             }
+          },
+          "authentication": {
+            "type": "MSI",
+            "resource": "https://management.azure.com/",
+            "resourceId": "$IDENTITY_RESOURCE_ID"
           }
         }
       }
