@@ -18,9 +18,6 @@
           },
           "body": {
             "location": "$LOCATION",
-            "identity": {
-              "type": "SystemAssigned"
-            },
             "properties": {
               "containers": [
                 {
@@ -49,7 +46,14 @@
                 }
               ],
               "osType": "Linux",
-              "restartPolicy": "Never"
+              "restartPolicy": "Never",
+              "imageRegistryCredentials": [
+                {
+                  "server": "$ACR_NAME.azurecr.io",
+                  "username": "$ACR_USERNAME",
+                  "password": "$ACR_PASSWORD"
+                }
+              ]
             }
           }
         }
