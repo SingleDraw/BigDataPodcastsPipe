@@ -9,17 +9,15 @@
         "typeProperties": {
           "url": "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ContainerInstance/containerGroups/$ACI_NAME?api-version=2021-03-01",
           "method": "PUT",
+          "authentication": {
+            "type": "MSI",
+            "resource": "https://management.azure.com/"
+          },
           "headers": {
             "Content-Type": "application/json"
           },
           "body": {
             "location": "$LOCATION",
-            "identity": {
-              "type": "UserAssigned",
-              "userAssignedIdentities": {
-                "$IDENTITY_RESOURCE_ID": {}
-              }
-            },
             "properties": {
               "containers": [
                 {
@@ -48,12 +46,13 @@
                 }
               ],
               "osType": "Linux",
-              "restartPolicy": "Never"
+              "restartPolicy": "Never",
+              "imageRegistryCredentials": [
+                {
+                  "server": "$ACR_NAME.azurecr.io"
+                }
+              ]
             }
-          },
-          "authentication": {
-            "authType": "MSI",
-            "resource": "https://management.azure.com/"
           }
         }
       }

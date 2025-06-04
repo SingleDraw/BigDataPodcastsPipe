@@ -242,7 +242,6 @@ data "azurerm_data_factory" "adf" {
 resource "azurerm_role_assignment" "adf_acr_pull" {
   scope                = azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
-  # principal_id         = azurerm_data_factory.adf.identity[0].principal_id
   principal_id         = data.azurerm_data_factory.adf.identity[0].principal_id
 }
 
@@ -250,7 +249,6 @@ resource "azurerm_role_assignment" "adf_acr_pull" {
 resource "azurerm_role_assignment" "adf_aci_contributor" {
   scope                = azurerm_resource_group.rg.id
   role_definition_name = "Contributor"
-  # principal_id         = azurerm_data_factory.adf.identity[0].principal_id
   principal_id         = data.azurerm_data_factory.adf.identity[0].principal_id
 }
 
