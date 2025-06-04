@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  ADF_NAME: my-adf # ${{ secrets.ADF_NAME }}
+  ADF_NAME: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}-adf       # ${{ secrets.ADF_NAME }} # make use of it or remove it
   RESOURCE_GROUP: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} 
   LOCATION: westeurope
   SUBSCRIPTION_ID: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
