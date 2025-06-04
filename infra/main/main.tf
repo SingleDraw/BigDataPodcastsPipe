@@ -91,7 +91,7 @@ resource "azurerm_key_vault_secret" "blob_connection_string" {
 
 
 #-------------------------------------------------------------
-# 7. User-Assigned Managed Identity - Storage Account
+# 7. UIAMs === User-Assigned Managed Identity - Storage Account
 # -----------------------------------------------------------------
 # This identity will be used for read and write to storage account
 # -----------------------------------------------------------------
@@ -145,12 +145,29 @@ resource "azurerm_user_assigned_identity" "aci_identity" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
 }
+
+resource "azurerm_key_vault_access_policy" "aci_identity_policy" {
+  key_vault_id = azurerm_key_vault.kv.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_user_assigned_identity.aci_identity.principal_id
+
+  secret_permissions = ["Get"]
+}
+
 # This role assignment allows the identity to pull images from ACR
 resource "azurerm_role_assignment" "aci_identity_role" {
   scope                = azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_user_assigned_identity.aci_identity.principal_id
 }
+
+# This role assignment allows the identity to read/write to the storage account
+resource "azurerm_role_assignment" "aci_storage_role" {
+  scope                = azurerm_storage_account.storage.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.aci_identity.principal_id
+}
+
 # Add role assignment for ACI identity to create container instances
 resource "azurerm_role_assignment" "aci_identity_contributor" {
   scope                = azurerm_resource_group.rg.id
@@ -159,14 +176,9 @@ resource "azurerm_role_assignment" "aci_identity_contributor" {
   # role_definition_id = data.azurerm_role_definition.aci_contributor.id
   principal_id         = azurerm_user_assigned_identity.aci_identity.principal_id
 }
-# This role assignment allows the identity to read/write to the storage account
-resource "azurerm_role_assignment" "aci_storage_role" {
-  scope                = azurerm_storage_account.storage.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azurerm_user_assigned_identity.aci_identity.principal_id
-}
 
-# Update the GitHub secret to use client ID of the ACI identity
+
+# # # Update the GitHub secret to use client ID of the ACI identity
 resource "github_actions_secret" "aci_identity_client_id" {
   repository      = var.github_repository
   secret_name     = "IDENTITY_CLIENT_ID"

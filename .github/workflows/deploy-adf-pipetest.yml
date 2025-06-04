@@ -1,0 +1,97 @@
+name: Deploy ADF Pipeline and Trigger Test
+
+on:
+  workflow_dispatch:
+
+env:
+  ADF_NAME: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}-adf
+  RESOURCE_GROUP: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} 
+  LOCATION: westeurope
+  SUBSCRIPTION_ID: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
+  ACI_NAME: ephemeral-job-test
+  ACR_NAME: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
+  IMAGE_NAME: test-app-image
+  STORAGE_ACCOUNT_NAME: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
+  IDENTITY_RESOURCE_ID: ${{ secrets.IDENTITY_RESOURCE_ID }} # For container identity
+  IDENTITY_CLIENT_ID: ${{ secrets.IDENTITY_CLIENT_ID }}     # For ADF authentication
+  TRIGGER_NAME: DailyTriggerTest
+  ADF_PIPELINE_NAME: RunTestACI
+  ADF_LINKED_SERVICE_NAME: AzureManagementLSTest
+  ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+  ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+  KEY_VAULT_NAME: ${{ secrets.TF_VAR_KEY_VAULT_NAME }} # For secrets management
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Install jq
+      run: sudo apt-get update && sudo apt-get install -y jq
+
+    - name: Set environment variables for container
+      run: |
+        echo "AZURE_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" >> $GITHUB_ENV
+        echo "AZURE_TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" >> $GITHUB_ENV
+        echo "AZURE_CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" >> $GITHUB_ENV
+
+    - name: Generate pipeline JSON with env vars and create trigger JSON
+      run: |
+          echo "Generating pipeline.json and trigger.json with environment variables..."
+          export NOW=$(date -u -d "+30 seconds" +"%Y-%m-%dT%H:%M:%SZ")
+          export AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+          export AZURE_TENANT_ID=${AZURE_TENANT_ID}
+          export AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+
+          echo "Generated NOW: $NOW"
+          cat infra/adf-pipelines/RunTestACI.template.json | envsubst > pipeline.json
+          cat infra/adf-triggers/TestTrigger.template.json | envsubst > trigger.json
+          echo "Generated trigger.json:"
+          cat trigger.json
+
+    - name: Disable and delete ADF trigger if it exists
+      run: |
+        if az datafactory trigger show --factory-name "$ADF_NAME" --resource-group "$RESOURCE_GROUP" --name "$TRIGGER_NAME" > /dev/null 2>&1; then
+          echo "Disabling existing trigger..."
+          az datafactory trigger stop --factory-name "$ADF_NAME" --resource-group "$RESOURCE_GROUP" --name "$TRIGGER_NAME"
+          echo "Deleting existing trigger..."
+          az datafactory trigger delete --factory-name "$ADF_NAME" --resource-group "$RESOURCE_GROUP" --name "$TRIGGER_NAME" --yes
+        else
+          echo "Trigger does not exist, skipping disable step."
+        fi
+
+    - name: Deploy pipeline to ADF
+      run: |
+        az datafactory pipeline create \
+          --factory-name $ADF_NAME \
+          --resource-group $RESOURCE_GROUP \
+          --name $ADF_PIPELINE_NAME \
+          --pipeline @pipeline.json
+
+    - name: Deploy ADF trigger
+      run: |
+        az datafactory trigger create \
+          --factory-name "$ADF_NAME" \
+          --resource-group "$RESOURCE_GROUP" \
+          --name "$TRIGGER_NAME" \
+          --properties @"trigger.json"
+        
+    - name: Start trigger
+      run: |
+        az datafactory trigger start \
+          --factory-name "$ADF_NAME" \
+          --resource-group "$RESOURCE_GROUP" \
+          --name "$TRIGGER_NAME"
+
+

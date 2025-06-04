@@ -1,5 +1,5 @@
 {
-  "name": "RunEphemeralACI",
+  "name": "RunTestACI",
   "properties": {
     "activities": [
       {
@@ -31,12 +31,21 @@
                       }
                     },
                     "command": [
-                      "pcaster",
-                      "--overwrite",
-                      "--azure-storage-account",
-                      "$STORAGE_ACCOUNT_NAME"
+                      "test"
                     ],
                     "environmentVariables": [
+                      {
+                        "name": "AZURE_STORAGE_ACCOUNT",
+                        "value": "$STORAGE_ACCOUNT_NAME"
+                      },
+                      {
+                        "name": "AZURE_STORAGE_KEY",
+                        "value": "$AZURE_STORAGE_KEY"
+                      },
+                      {
+                        "name": "AZURE_KEY_VAULT_URL",
+                        "value": "https://$KEY_VAULT_NAME.vault.azure.net/"
+                      },
                       {
                         "name": "AZURE_CLIENT_ID",
                         "value": "$AZURE_CLIENT_ID"
@@ -48,12 +57,6 @@
                       {
                         "name": "AZURE_CLIENT_SECRET",
                         "value": "$AZURE_CLIENT_SECRET"
-                      }
-                    ],
-                    "secretEnvironmentVariables": [
-                      {
-                        "name": "MY_SECRET_VAR",
-                        "value": "@Microsoft.KeyVault(SecretUri=https://$KEY_VAULT_NAME.vault.azure.net/secrets/my-secret-var)"
                       }
                     ]
                   }

@@ -1,0 +1,20 @@
+{
+  "type": "ScheduleTrigger",
+  "pipelines": [
+    {
+      "pipelineReference": {
+        "referenceName": "$ADF_PIPELINE_NAME",
+        "type": "PipelineReference"
+      },
+      "parameters": {}
+    }
+  ],
+  "typeProperties": {
+    "recurrence": {
+      "frequency": "Day",
+      "interval": 1,
+      "startTime": "$NOW",
+      "timeZone": "UTC"
+    }
+  }
+}
