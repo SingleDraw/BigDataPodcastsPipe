@@ -16,7 +16,9 @@ def run_app():
         raise
 
 # Test Azure Key Vault access
-def test_key_vault():
+def test_key_vault(
+    secret_name: str = "PodcastingIndexApiKey"
+):
     from azure.identity import DefaultAzureCredential
     try:
         # Initialize SecretClient with DefaultAzureCredential
@@ -25,7 +27,6 @@ def test_key_vault():
         secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
         
         # Access a specific secret
-        secret_name = "PodcastingIndexApiKey"
         secret_value = secret_client.get_secret(secret_name).value
         print(f"Secret '{secret_name}' retrieved successfully: {secret_value}")
     except Exception as e:
@@ -80,12 +81,21 @@ app = typer.Typer()
 
 
 @app.command("write-blob")
-def test_fn():
+def test_fn(
+    write_blob: bool = typer.Option(False, "--write-blob", "-w", help="Write a test blob to Azure Storage Blob", show_default=False),
+    write_blob_two: bool = typer.Option(False, "--write-blob-default", "-w2", help="Write a test blob to Azure Storage Blob using DefaultAzureCredential", show_default=False),
+    key_vault: str = typer.Option(..., "--key-vault", "-k", help="Name of the secret in Azure Key Vault to retrieve", show_default=False, metavar="SECRET_NAME")
+):
     try:
-        # run_app() # Works with public API - Passed !
-        test_blob_write() # Works with Azure Storage Blob using connection string
-        # test_blob_write_two() # Works with Azure Storage Blob using DefaultAzureCredential
-        # test_key_vault() # Works with Key Vault
+        run_app()                   # Works !
+        if write_blob:
+            test_blob_write()       # Works !
+        if write_blob_two:
+            test_blob_write_two()
+        if key_vault:
+            test_key_vault(
+                secret_name=key_vault
+            )
     except Exception as e:
         typer.echo(f"An error occurred during the test app process: {e}", err=True)
         raise typer.Exit(code=1)

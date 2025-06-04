@@ -21,6 +21,7 @@ env:
   ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
   ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
   KEY_VAULT_NAME: ${{ secrets.TF_VAR_KEY_VAULT_NAME }} # For secrets management
+  SECRET_NAME_TO_DISPLAY: blob-storage-connection-string
 
 jobs:
   deploy:

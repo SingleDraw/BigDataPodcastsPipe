@@ -31,7 +31,10 @@
                       }
                     },
                     "command": [
-                      "test"
+                      "test",
+                      "--write-blob",
+                      "--key-vault",
+                      "$SECRET_NAME_TO_DISPLAY"
                     ],
                     "environmentVariables": [
                       {
