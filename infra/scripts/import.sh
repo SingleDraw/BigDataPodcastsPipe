@@ -83,7 +83,7 @@ import_kv_secret() {
     --query "id" -o tsv 2>/dev/null || echo "")
 
   if [[ -z "$secret_id" ]]; then
-    echo "❌ Secret '$secret_name' does not exist. Skipping."
+    echo "❌ Secret '$secret_name' does not exist. Skipping." # RUNS FOR EVERY SECRET - DEBUG THIS
     return
   fi
 

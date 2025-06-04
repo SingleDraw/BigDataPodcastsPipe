@@ -21,6 +21,7 @@ env:
 jobs:
   check-infra:
     runs-on: ubuntu-latest
+    environment: infra-ready  # this is required to access environment-scoped variables
     steps:
       - name: Fail if infra not ready
         run: |
