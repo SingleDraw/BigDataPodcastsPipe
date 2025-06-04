@@ -140,17 +140,31 @@ resource "azurerm_user_assigned_identity" "aci_identity" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
 }
+# This role assignment allows the identity to pull images from ACR
 resource "azurerm_role_assignment" "aci_identity_role" {
   scope                = azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_user_assigned_identity.aci_identity.principal_id
 }
+# Add role assignment for ACI identity to create container instances
+resource "azurerm_role_assignment" "aci_identity_contributor" {
+  scope                = azurerm_resource_group.rg.id
+  role_definition_name = "Container Instance Contributor"
+  principal_id         = azurerm_user_assigned_identity.aci_identity.principal_id
+}
+# This role assignment allows the identity to read/write to the storage account
 resource "azurerm_role_assignment" "aci_storage_role" {
   scope                = azurerm_storage_account.storage.id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.aci_identity.principal_id
 }
 
+# Update the GitHub secret to use client ID of the ACI identity
+resource "github_actions_secret" "aci_identity_client_id" {
+  repository      = var.github_repository
+  secret_name     = "IDENTITY_CLIENT_ID"
+  plaintext_value = azurerm_user_assigned_identity.aci_identity.client_id
+}
 
 
 # 6. Automatically set GitHub secrets
@@ -158,7 +172,7 @@ resource "azurerm_role_assignment" "aci_storage_role" {
 # Ensure you have the GitHub Actions provider configured in your Terraform setup
 #-------------------------------------------------------------
 
-# Aci Identity Resource ID
+# Aci Identity Resource ID for the container identity
 resource "github_actions_secret" "aci_identity_id" {
   repository      = var.github_repository
   secret_name     = "IDENTITY_RESOURCE_ID"
@@ -207,7 +221,8 @@ resource "azurerm_data_factory" "adf" {
     type = "UserAssigned"
     identity_ids = [
       azurerm_user_assigned_identity.storage_identity.id,
-      azurerm_user_assigned_identity.key_vault_identity.id
+      azurerm_user_assigned_identity.key_vault_identity.id,
+      azurerm_user_assigned_identity.aci_identity.id # ACI identity for pulling images and creating ACI jobs
     ]
   }
 }

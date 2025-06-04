@@ -52,9 +52,9 @@
             }
           },
           "authentication": {
-            "type": "MSI",
+            "type": "ManagedServiceIdentity",
             "resource": "https://management.azure.com/",
-            "resourceId": "$IDENTITY_RESOURCE_ID"
+            "resourceId": "$IDENTITY_CLIENT_ID"
           }
         }
       }

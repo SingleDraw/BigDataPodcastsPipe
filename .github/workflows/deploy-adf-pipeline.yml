@@ -12,7 +12,8 @@ env:
   ACR_NAME: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
   IMAGE_NAME: ${{ secrets.BRICK_PCASTER_IMAGE_NAME }}
   STORAGE_ACCOUNT_NAME: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
-  IDENTITY_RESOURCE_ID: ${{ secrets.IDENTITY_RESOURCE_ID }} # Managed Identity for ADF
+  IDENTITY_RESOURCE_ID: ${{ secrets.IDENTITY_RESOURCE_ID }} # For container identity
+  IDENTITY_CLIENT_ID: ${{ secrets.IDENTITY_CLIENT_ID }}     # For ADF authentication
   TRIGGER_NAME: DailyTrigger
   ADF_PIPELINE_NAME: RunEphemeralACI
   ADF_LINKED_SERVICE_NAME: AzureManagementLS
