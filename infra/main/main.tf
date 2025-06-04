@@ -59,13 +59,13 @@ resource "azurerm_key_vault" "kv" {
 resource "azurerm_key_vault_secret" "podcast_api_key" {
   name         = "PodcastingIndexApiKey"
   value        = var.podcasting_index_api_key
-  key_vault_id = azurerm_key_vault.main.id
+  key_vault_id = azurerm_key_vault.kv.id
 }
 
 resource "azurerm_key_vault_secret" "podcast_api_secret" {
   name         = "PodcastingIndexApiSecret"
   value        = var.podcasting_index_api_secret
-  key_vault_id = azurerm_key_vault.main.id
+  key_vault_id = azurerm_key_vault.kv.id
 }
 
 # Store ACR credentials in Key Vault
@@ -212,17 +212,19 @@ resource "azurerm_data_factory" "adf" {
   }
 }
 
+# Store Azure Data Factory name in GitHub secrets
 resource "github_actions_secret" "adf_name" {
   repository      = var.github_repository
   secret_name     = "ADF_NAME"
   plaintext_value = azurerm_data_factory.adf.name
 }
 
-# or
+# Role assignment for Data Factory to access the resource group
 resource "azurerm_role_assignment" "adf_contributor" {
   scope                = azurerm_resource_group.rg.id
   role_definition_name = "Contributor"
-  principal_id         = azurerm_data_factory.adf.identity[0].principal_id
+  # Reference to the User Assigned Identity defined inside the Data Factory resource
+  principal_id         = azurerm_data_factory.adf.identity[0].principal_id 
 }
 
 # resource "azurerm_data_factory_pipeline" "pipeline" {
