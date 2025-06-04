@@ -224,31 +224,34 @@ resource "azurerm_data_factory" "adf" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
-  # identity {
-  #   type = "SystemAssigned, UserAssigned"
-  #   identity_ids = [
-  #     azurerm_user_assigned_identity.storage_identity.id,
-  #     azurerm_user_assigned_identity.key_vault_identity.id,
-  #     azurerm_user_assigned_identity.aci_identity.id # ACI identity for pulling images and creating ACI jobs
-  #   ]
-  # }
   identity {
     type = "SystemAssigned"
   }
+}
+
+# We need to read the Data Factory identity after creation cause its identity is not available until after creation
+# This data source allows us to reference the Data Factory's system-assigned identity thanks to the `depends_on` block
+# This is necessary to ensure the Data Factory is created before we try to read its identity
+data "azurerm_data_factory" "adf" {
+  name                = azurerm_data_factory.adf.name
+  resource_group_name = azurerm_resource_group.rg.name
+  depends_on          = [azurerm_data_factory.adf] # ensures ADF is created before reading
 }
 
 # Allow ADF to pull from ACR
 resource "azurerm_role_assignment" "adf_acr_pull" {
   scope                = azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
-  principal_id         = azurerm_data_factory.adf.identity[0].principal_id
+  # principal_id         = azurerm_data_factory.adf.identity[0].principal_id
+  principal_id         = data.azurerm_data_factory.adf.identity[0].principal_id
 }
 
 # Allow ADF to create/manage ACI
 resource "azurerm_role_assignment" "adf_aci_contributor" {
   scope                = azurerm_resource_group.rg.id
   role_definition_name = "Contributor"
-  principal_id         = azurerm_data_factory.adf.identity[0].principal_id
+  # principal_id         = azurerm_data_factory.adf.identity[0].principal_id
+  principal_id         = data.azurerm_data_factory.adf.identity[0].principal_id
 }
 
 
