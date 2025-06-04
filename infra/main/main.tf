@@ -135,6 +135,11 @@ resource "azurerm_role_assignment" "key_vault_identity_role" {
 #   ACI identity → Storage Blob Data Contributor on your Storage Account
 #   ACI identity → Reader + AcrPull on ACR.
 
+#  ACI identity → Container Instance Contributor on the resource group
+# data "azurerm_role_definition" "aci_contributor" {
+#   name = "f1a07417-d97a-45cb-824c-7a7467783830"
+# }
+
 resource "azurerm_user_assigned_identity" "aci_identity" {
   name                = "${var.resource_group_name}-aci-identity"
   resource_group_name = azurerm_resource_group.rg.name
@@ -149,7 +154,9 @@ resource "azurerm_role_assignment" "aci_identity_role" {
 # Add role assignment for ACI identity to create container instances
 resource "azurerm_role_assignment" "aci_identity_contributor" {
   scope                = azurerm_resource_group.rg.id
-  role_definition_name = "Container Instance Contributor"
+  # role_definition_name = "Container Instance Contributor"
+  role_definition_name = "Contributor"
+  # role_definition_id = data.azurerm_role_definition.aci_contributor.id
   principal_id         = azurerm_user_assigned_identity.aci_identity.principal_id
 }
 # This role assignment allows the identity to read/write to the storage account
