@@ -16,17 +16,17 @@ output "acr_login_server" {
 
 
 
-# and in another module, you can reference it like this:
-module "main" {
-  source = "../main"
-}
+# # and in another module, you can reference it like this:
+# module "main" {
+#   source = "../main"
+# }
 
-module "job_runner" {
-  source = "./"
-  aca_environment_id        = module.main.aca_environment_id
-  aca_identity_id           = module.main.aca_identity_id
-  acr_login_server          = module.main.acr_login_server
-}
+# module "job_runner" {
+#   source = "./"
+#   aca_environment_id        = module.main.aca_environment_id
+#   aca_identity_id           = module.main.aca_identity_id
+#   acr_login_server          = module.main.acr_login_server
+# }
 
 
 

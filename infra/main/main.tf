@@ -23,12 +23,6 @@ resource "azurerm_storage_account" "storage" {
   is_hns_enabled           = true # Enables Data Lake Gen2 (ABFS)
 }
 
-
-# module "acr" {
-#   source = "./modules/acr"
-#   name   = var.adf_name
-# }
-
 # 3. ACR - Azure Container Registry
 # -----------------------------------------------------------------
 resource "azurerm_container_registry" "acr" {
