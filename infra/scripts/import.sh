@@ -76,10 +76,10 @@ import_kv_secret() {
 
 
 # Import ACR username secret
-ACR_USERNAME_SECRET_NAME="acr-admin-username"
+ACR_USERNAME_SECRET_NAME="acr-username"
 import_kv_secret "acr_username" "$ACR_USERNAME_SECRET_NAME"
 
-ACR_PASSWORD_SECRET_NAME="acr-admin-password"
+ACR_PASSWORD_SECRET_NAME="acr-password"
 import_kv_secret "acr_password" "$ACR_PASSWORD_SECRET_NAME"
 
 BLOB_CONNECTION_STRING_SECRET_NAME="blob-storage-connection-string"
