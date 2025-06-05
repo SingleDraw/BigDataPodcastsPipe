@@ -180,6 +180,7 @@ resource "azurerm_role_assignment" "aci_storage_role" {
 
 resource "azurerm_role_assignment" "aci_identity_contributor" {
   # This role assignment allows the ACI identity to create/manage container instances
+  # Useful if want to run or delete ACI from inside the container
   scope                = azurerm_resource_group.rg.id
   role_definition_name = "Contributor"
   principal_id         = azurerm_user_assigned_identity.aci_identity.principal_id

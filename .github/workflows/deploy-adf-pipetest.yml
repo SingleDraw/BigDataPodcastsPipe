@@ -8,7 +8,9 @@ env:
   SUBSCRIPTION_ID: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
   RESOURCE_GROUP: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
 
-  # pipeline WebActivity url build hydration, body properties container name for ACI
+  # pipeline WebActivity 
+  # - url build hydration, 
+  # - body properties container name for ACI
   ACI_NAME: ephemeral-job-test
   # pipeline WebActivity body block variables hydration for ACI
   LOCATION: westeurope
@@ -104,6 +106,15 @@ jobs:
           az datafactory pipeline delete --factory-name "$ADF_NAME" --resource-group "$RESOURCE_GROUP" --name "$ADF_PIPELINE_NAME" --yes
         else
           echo "Pipeline does not exist, skipping removal step."
+        fi
+
+    - name: Remove existing ACI group if it exists
+      run: |
+        if az container show --name "$ACI_NAME" --resource-group "$RESOURCE_GROUP" > /dev/null 2>&1; then
+          echo "Removing existing ACI group..."
+          az container delete --name "$ACI_NAME" --resource-group "$RESOURCE_GROUP" --yes
+        else
+          echo "ACI group does not exist, skipping removal step."
         fi
 
     - name: Deploy pipeline to ADF
