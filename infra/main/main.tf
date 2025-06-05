@@ -68,35 +68,35 @@ resource "azurerm_key_vault" "kv" {
   tenant_id           = data.azurerm_client_config.current.tenant_id
   sku_name            = "standard"
 
-  enable_rbac_authorization = true  # Enable RBAC instead of access policies
+  # enable_rbac_authorization = true  # Enable RBAC instead of access policies
 
   depends_on = [
     azurerm_resource_group.rg
   ]
 
-  # Admin access policy for the current user
-  # access_policy {
-  #   tenant_id = data.azurerm_client_config.current.tenant_id
-  #   object_id = data.azurerm_client_config.current.object_id
-  #   secret_permissions = [
-  #     "Get", "List", "Set", "Delete"
-  #   ]
-  # }
+  Admin access policy for the current user
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+    secret_permissions = [
+      "Get", "List", "Set", "Delete"
+    ]
+  }
 }
 
-# Assign Key Vault Secrets Officer role to the current identity
-resource "azurerm_role_assignment" "kv_secrets_officer" {
-  scope                = azurerm_key_vault.kv.id
-  role_definition_name = "Key Vault Secrets Officer"
-  principal_id         = data.azurerm_client_config.current.object_id
-}
+# # Assign Key Vault Secrets Officer role to the current identity
+# resource "azurerm_role_assignment" "kv_secrets_officer" {
+#   scope                = azurerm_key_vault.kv.id
+#   role_definition_name = "Key Vault Secrets Officer"
+#   principal_id         = data.azurerm_client_config.current.object_id
+# }
 
-# Optional: If GitHub identity have to to read secrets during deployment
-resource "azurerm_role_assignment" "kv_secrets_user_github" {
-  scope                = azurerm_key_vault.kv.id
-  role_definition_name = "Key Vault Secrets User"
-  principal_id         = data.azuread_service_principal.github_oidc.object_id
-}
+# # Optional: If GitHub identity have to to read secrets during deployment
+# resource "azurerm_role_assignment" "kv_secrets_user_github" {
+#   scope                = azurerm_key_vault.kv.id
+#   role_definition_name = "Key Vault Secrets User"
+#   principal_id         = data.azuread_service_principal.github_oidc.object_id
+# }
 
 # Podcasting Index Api Secrets
 resource "azurerm_key_vault_secret" "podcast_api_key" {
