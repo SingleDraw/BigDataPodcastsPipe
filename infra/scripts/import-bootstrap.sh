@@ -116,6 +116,12 @@ if [[ -n "$APP_OBJECT_ID" ]]; then
     # terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_ID/federatedIdentityCredentials/<federated-cred-name>"
     terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_ID/federatedIdentityCredentials/$FED_CRED_NAME"
     
+
+    echo ">>> VERIFYING IMPORT OF FEDERATED IDENTITY CREDENTIAL"
+    terraform state show azuread_application_federated_identity_credential.github_actions
+    ##########################################################################################
+    echo ">>> Federated Identity Credential ID: $FED_CRED_ID"
+
   else
     echo "Federated Identity Credential does not exist. Skipping import."
   fi
