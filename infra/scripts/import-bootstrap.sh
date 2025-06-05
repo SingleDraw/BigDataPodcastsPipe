@@ -102,7 +102,7 @@ if [[ -n "$APP_OBJECT_ID" ]]; then
   SP_ID=$(az ad sp list --display-name "$APP_NAME" --query "[0].id" -o tsv)
   if [[ -n "$SP_ID" ]]; then
     echo "Importing existing Service Principal..."
-    terraform import azuread_service_principal.github_actions "$SP_ID"
+    terraform import azuread_service_principal.github_actions "/servicePrincipals/$SP_ID"
   else
     echo "Service Principal does not exist. Skipping import."
   fi
