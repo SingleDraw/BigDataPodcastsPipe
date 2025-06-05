@@ -81,7 +81,8 @@ fi
 
 APP_NAME="github-actions-app"
 
-app_id=$(az ad app list --display-name "$APP_NAME" --query "[0].appId" -o tsv)
+app_id=$(az ad app list --display-name "$APP_NAME" --query "[0].appId" -o tsv) # bc44d180-5b11-4c63-bd56-2012b7567d8f
+
 
 if [ -z "$app_id" ]; then
   echo "App not found. Creating..."
@@ -92,7 +93,7 @@ else
 fi
 
 
-FED_CRED_NAME="github-actions-federated-credential"
+# FED_CRED_NAME="github-actions-federated-credential"
 ROLE_NAME="Contributor"
 
 # Ensure these environment variables are set
@@ -101,7 +102,8 @@ if [[ -z "$SUBSCRIPTION_ID" || -z "$RESOURCE_GROUP_NAME" ]]; then
   exit 1
 fi
 # Check if GitHub Actions App Registration already exists
-APP_OBJECT_ID=$(az ad app list --display-name "$APP_NAME" --query "[0].id" -o tsv)
+APP_OBJECT_ID=$(az ad app list --display-name "$APP_NAME" --query "[0].id" -o tsv) 
+
 APP_ID=$(az ad app list --display-name "$APP_NAME" --query "[0].appId" -o tsv)
 
 if [[ -n "$APP_OBJECT_ID" ]]; then
@@ -111,6 +113,7 @@ if [[ -n "$APP_OBJECT_ID" ]]; then
   terraform import azuread_application.github_actions "/applications/$APP_OBJECT_ID"
 
   # Import the service principal
+
   SP_ID=$(az ad sp list --display-name "$APP_NAME" --query "[0].id" -o tsv)
   if [[ -n "$SP_ID" ]]; then
     echo "Importing existing Service Principal..."
@@ -121,22 +124,14 @@ if [[ -n "$APP_OBJECT_ID" ]]; then
 
   echo ">>> 222 VERIFYING IMPORT OF GITHUB ACTIONS APP REGISTRATION"
 
-  # List all federated credentials for debugging
-  echo "All federated credentials:"
-  az ad app federated-credential list --id "$APP_OBJECT_ID" --query "[].{displayName:displayName,id:id}" -o table
+  # Get the first (and likely only) federated credential ID
+  FED_CRED_ID=$(az ad app federated-credential list --id "$APP_OBJECT_ID" --query "[0].id" -o tsv)
 
-
-  # Check and import the federated identity credential
-  # Check if federated credential exists using the original command
-  FED_CRED_EXISTS=$(az ad app federated-credential list --id "$APP_OBJECT_ID" --query "[?displayName=='$FED_CRED_NAME'] | length(@)" -o tsv)
-
-  if [[ "$FED_CRED_EXISTS" -gt 0 ]]; then
-    echo "Importing existing Federated Identity Credential..."
-    # terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_ID/federatedIdentityCredentials/$FED_CRED_ID"
-    # terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_ID/federatedIdentityCredentials/<federated-cred-name>"
-    terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_ID/federatedIdentityCredentials/$FED_CRED_NAME"
+  if [[ -n "$FED_CRED_ID" && "$FED_CRED_ID" != "null" ]]; then
+    echo "Importing existing Federated Identity Credential with ID: $FED_CRED_ID"
+    terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_OBJECT_ID/federatedIdentityCredentials/$FED_CRED_ID"
   else
-    echo "Federated Identity Credential does not exist. Skipping import."
+    echo "No federated Identity Credential found. Will create new one."
   fi
 
   # Get the Service Principal object ID for role assignments
