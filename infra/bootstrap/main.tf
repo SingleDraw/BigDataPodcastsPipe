@@ -135,29 +135,56 @@ output "client_id" {
 
 
 
-
-# Contributor role for the specific resource group
+# FIX: Use service principal, not managed identity
 resource "azurerm_role_assignment" "github_actions_rg_contributor" {
   scope                = azurerm_resource_group.rg.id
   role_definition_name = "Contributor"
-  principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
-
-  depends_on = [
-    azurerm_federated_identity_credential.github_oidc
-  ]
+  principal_id         = azuread_service_principal.github_actions.object_id  # CHANGED
 }
 
-
-# 7. Store github actions identity client ID in GitHub secrets
+# FIX: Use app registration client ID
 resource "github_actions_secret" "github_actions_client_id" {
   repository      = var.github_repository
   secret_name     = "AZURE_CLIENT_ID"
-  plaintext_value = azurerm_user_assigned_identity.github_actions.client_id
-
-  depends_on = [
-    azurerm_user_assigned_identity.github_actions
-  ]
+  plaintext_value = azuread_application.github_actions.client_id  # CHANGED
 }
+
+
+# # Contributor role for the specific resource group
+# resource "azurerm_role_assignment" "github_actions_rg_contributor" {
+#   scope                = azurerm_resource_group.rg.id
+#   role_definition_name = "Contributor"
+#   principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
+
+#   depends_on = [
+#     azurerm_federated_identity_credential.github_oidc
+#   ]
+# }
+
+
+# # 7. Store github actions identity client ID in GitHub secrets
+# resource "github_actions_secret" "github_actions_client_id" {
+#   repository      = var.github_repository
+#   secret_name     = "AZURE_CLIENT_ID"
+#   plaintext_value = azurerm_user_assigned_identity.github_actions.client_id
+
+#   depends_on = [
+#     azurerm_user_assigned_identity.github_actions
+#   ]
+# }
+
+
+
+# # Add Key Vault permissions too
+# resource "azurerm_key_vault_access_policy" "github_actions" {
+#   key_vault_id = azurerm_key_vault.kv.id
+#   tenant_id    = data.azurerm_client_config.current.tenant_id
+#   object_id    = azuread_service_principal.github_actions.object_id
+
+#   secret_permissions = [
+#     "Get", "List", "Set", "Delete"
+#   ]
+# }
 
 
 # 8. Register the Microsoft.App provider for Container Apps
