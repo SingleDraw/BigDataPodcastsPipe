@@ -4,24 +4,46 @@ on:
   workflow_dispatch:
 
 env:
-  ADF_NAME: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}-adf
-  RESOURCE_GROUP: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} 
-  LOCATION: westeurope
+  # Subscription and resource group details for URL build in template hydration
   SUBSCRIPTION_ID: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
+  RESOURCE_GROUP: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
+
+  # pipeline WebActivity url build hydration, body properties container name for ACI
   ACI_NAME: ephemeral-job-test
-  ACR_NAME: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
+  # pipeline WebActivity body block variables hydration for ACI
+  LOCATION: westeurope
+  # pipline WebActivity body block UAMI hydration for ACI
+  UAMI_NAME: aci-uami 
+  # pipeline WebActivity body block container image name hydration for ACI
   IMAGE_NAME: test-app-image
-  STORAGE_ACCOUNT_NAME: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
-  STORAGE_ACCOUNT_KEY: ${{ secrets.STORAGE_ACCOUNT_KEY }}
-  IDENTITY_RESOURCE_ID: ${{ secrets.IDENTITY_RESOURCE_ID }} # For container identity
-  IDENTITY_CLIENT_ID: ${{ secrets.IDENTITY_CLIENT_ID }}     # For ADF authentication
-  TRIGGER_NAME: DailyTriggerTest
-  ADF_PIPELINE_NAME: RunTestACI
-  ADF_LINKED_SERVICE_NAME: AzureManagementLSTest
+  IMAGE_TAG: latest
+
+  # ACR credentials for pipeline template hydration
+  ACR_NAME: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
   ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
   ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
-  KEY_VAULT_NAME: ${{ secrets.KEY_VAULT_NAME }} # For secrets management
+
+  # KEY VAULT for building vault URL passed as ENV var to ACI
+  KEY_VAULT_NAME: ${{ secrets.KEY_VAULT_NAME }}
+  # For Storage access passed as ENV var to ACI
+  STORAGE_ACCOUNT_NAME: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
+  # SPECIFIC ENV TO APP INTERNAL USE
   SECRET_NAME_TO_DISPLAY: "blob-storage-connection-string"
+
+  # For Trigger hydration
+  ADF_PIPELINE_NAME: RunTestACI
+
+  # For this workflow script only
+  TRIGGER_NAME: DailyTriggerTest
+  ADF_NAME: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}-adf
+
+
+  # STORAGE_ACCOUNT_KEY: ${{ secrets.STORAGE_ACCOUNT_KEY }}
+  # IDENTITY_RESOURCE_ID: ${{ secrets.IDENTITY_RESOURCE_ID }} # For container identity
+  # IDENTITY_CLIENT_ID: ${{ secrets.IDENTITY_CLIENT_ID }}     # For ADF authentication
+  # ADF_LINKED_SERVICE_NAME: AzureManagementLSTest
+
+  
 
 jobs:
   deploy:
@@ -38,57 +60,32 @@ jobs:
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-
     - name: Install jq
       run: sudo apt-get update && sudo apt-get install -y jq
-
     - name: Set environment variables for container
       run: |
         echo "AZURE_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" >> $GITHUB_ENV
         echo "AZURE_TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" >> $GITHUB_ENV
         echo "AZURE_CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" >> $GITHUB_ENV
-        # echo "STORAGE_ACCOUNT_KEY=${{ secrets.STORAGE_ACCOUNT_KEY }}" >> $GITHUB_ENV
-        # echo "KEY_VAULT_NAME=${{ secrets.KEY_VAULT_NAME }}" >> $GITHUB_ENV
-
     - name: Generate pipeline JSON with env vars and create trigger JSON
       run: |
           echo "Generating pipeline.json and trigger.json with environment variables..."
           export NOW=$(date -u -d "+30 seconds" +"%Y-%m-%dT%H:%M:%SZ")
-          export AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
-          export AZURE_TENANT_ID=${AZURE_TENANT_ID}
-          export AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
-          export STORAGE_ACCOUNT_KEY=${STORAGE_ACCOUNT_KEY}
-          export KEY_VAULT_NAME=${KEY_VAULT_NAME}
-
-          # DEBUG: Print environment variables
-          # echo "AZURE_CLIENT_ID=${AZURE_CLIENT_ID}"
-          # echo "SECRET_NAME_TO_DISPLAY=${SECRET_NAME_TO_DISPLAY}"
-          # echo "KEY_VAULT_NAME=${KEY_VAULT_NAME}"
-          # echo "STORAGE_ACCOUNT_KEY=${STORAGE_ACCOUNT_KEY}"
-          # echo "ADF_NAME=${ADF_NAME}"
-          # echo "RESOURCE_GROUP=${RESOURCE_GROUP}"
-          # echo "LOCATION=${LOCATION}"
-          # echo "SUBSCRIPTION_ID=${SUBSCRIPTION_ID}"
-          # echo "ACI_NAME=${ACI_NAME}"
-          # echo "IMAGE_NAME=${IMAGE_NAME}"
-          # echo "ADF_PIPELINE_NAME=${ADF_PIPELINE_NAME}"
-          # echo "TRIGGER_NAME=${TRIGGER_NAME}"
-          # echo "ADF_LINKED_SERVICE_NAME=${ADF_LINKED_SERVICE_NAME}"
-          # echo "ACR_NAME=${ACR_NAME}"
-          # echo "ACR_USERNAME=${ACR_USERNAME}"
-          # echo "ACR_PASSWORD=${ACR_PASSWORD}"
-          # echo "IDENTITY_RESOURCE_ID=${IDENTITY_RESOURCE_ID}"
-          # echo "IDENTITY_CLIENT_ID=${IDENTITY_CLIENT_ID}"
-          # exit 1
-
-
+          # export AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+          # export AZURE_TENANT_ID=${AZURE_TENANT_ID}
+          # export AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+          # export STORAGE_ACCOUNT_KEY=${STORAGE_ACCOUNT_KEY}
+          # export KEY_VAULT_NAME=${KEY_VAULT_NAME}
+          # export UAMI_NAME=${UAMI_NAME}
+          # export IMAGE_NAME=${IMAGE_NAME}
+          # export IMAGE_TAG=${IMAGE_TAG}
 
           echo "Generated NOW: $NOW"
+
           cat infra/adf-pipelines/RunTestACI.template.json | envsubst > pipeline.json
           cat infra/adf-triggers/DailyTriggerTest.template.json | envsubst > trigger.json
           echo "Generated trigger.json:"
           cat trigger.json
-
     - name: Disable and delete ADF trigger if it exists
       run: |
         if az datafactory trigger show --factory-name "$ADF_NAME" --resource-group "$RESOURCE_GROUP" --name "$TRIGGER_NAME" > /dev/null 2>&1; then

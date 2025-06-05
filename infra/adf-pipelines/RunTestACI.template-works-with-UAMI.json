@@ -21,7 +21,7 @@
             "identity": {
               "type": "UserAssigned",
               "userAssignedIdentities": {
-                "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$UAMI_NAME": {}
+                "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aci-uami": {}
               }
             },
             "properties": {
@@ -29,11 +29,11 @@
                 {
                   "name": "$ACI_NAME",
                   "properties": {
-                    "image": "$ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG",
+                    "image": "$ACR_NAME.azurecr.io/$IMAGE_NAME:latest",
                     "resources": {
                       "requests": {
-                        "cpu": 0.2,
-                        "memoryInGb": 0.5
+                        "cpu": 1,
+                        "memoryInGb": 1.5
                       }
                     },
                     "command": [
@@ -46,6 +46,10 @@
                       {
                         "name": "AZURE_STORAGE_ACCOUNT",
                         "value": "$STORAGE_ACCOUNT_NAME"
+                      },
+                      {
+                        "name": "AZURE_STORAGE_KEY",
+                        "value": "$STORAGE_ACCOUNT_KEY"
                       },
                       {
                         "name": "AZURE_KEY_VAULT_URL",

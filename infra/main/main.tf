@@ -155,7 +155,8 @@ resource "azurerm_user_assigned_identity" "aci_identity" {                      
   location            = azurerm_resource_group.rg.location
 }
 
-resource "azurerm_key_vault_access_policy" "aci_identity_policy" {
+resource "azurerm_key_vault_access_policy" "aci_identity_policy" {              # <---------- UAMI FOR ACI
+  # This policy allows the ACI identity to access Key Vault secrets
   key_vault_id = azurerm_key_vault.kv.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = azurerm_user_assigned_identity.aci_identity.principal_id
@@ -163,26 +164,24 @@ resource "azurerm_key_vault_access_policy" "aci_identity_policy" {
   secret_permissions = ["Get"]
 }
 
-# This role assignment allows the identity to pull images from ACR
 resource "azurerm_role_assignment" "aci_identity_role" {
+  # This role assignment allows the ACI identity to pull images from ACR
   scope                = azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_user_assigned_identity.aci_identity.principal_id
 }
 
-# This role assignment allows the identity to read/write to the storage account
 resource "azurerm_role_assignment" "aci_storage_role" {
+  # This role assignment allows the ACI identity to read/write to the storage account
   scope                = azurerm_storage_account.storage.id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.aci_identity.principal_id
 }
 
-# Add role assignment for ACI identity to create container instances
 resource "azurerm_role_assignment" "aci_identity_contributor" {
+  # This role assignment allows the ACI identity to create/manage container instances
   scope                = azurerm_resource_group.rg.id
-  # role_definition_name = "Container Instance Contributor"
   role_definition_name = "Contributor"
-  # role_definition_id = data.azurerm_role_definition.aci_contributor.id
   principal_id         = azurerm_user_assigned_identity.aci_identity.principal_id
 }
 
@@ -199,7 +198,7 @@ resource "github_actions_secret" "aci_identity_client_id" {
   plaintext_value = azurerm_user_assigned_identity.aci_identity.client_id
 }
 
-# Aci Identity Resource ID for the container identity               # <---------- UAMI FOR ACI
+# Aci Identity Resource ID for the container identity                     # <---------- UAMI FOR ACI
 resource "github_actions_secret" "aci_identity_id" {
   repository      = var.github_repository
   secret_name     = "IDENTITY_RESOURCE_ID"

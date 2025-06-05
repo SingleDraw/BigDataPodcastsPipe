@@ -15,9 +15,9 @@ env:
   REGISTRY_USERNAME: ${{ secrets.ACR_USERNAME }}
   REGISTRY_PASSWORD: ${{ secrets.ACR_PASSWORD }}
   AZURE_RESOURCE_GROUP: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
-  IMAGE_NAME_SCRAPER: test-app-image
   APP_REPO_PATH: ./docker/ingest/test
-  APP_NAME_SCRAPER: test-app
+  IMAGE_NAME: test-app-image
+  IMAGE_TAG: latest
 
 jobs:
   check-infra:
@@ -64,5 +64,5 @@ jobs:
         file: ${{ env.APP_REPO_PATH }}/Dockerfile
         push: true
         tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_SCRAPER }}:latest
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_SCRAPER }}:${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}

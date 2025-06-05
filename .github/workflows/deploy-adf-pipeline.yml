@@ -74,6 +74,15 @@ jobs:
           echo "Trigger does not exist, skipping disable step."
         fi
 
+    - name: Remove existing pipeline if it exists
+      run: |
+        if az datafactory pipeline show --factory-name "$ADF_NAME" --resource-group "$RESOURCE_GROUP" --name "$ADF_PIPELINE_NAME" > /dev/null 2>&1; then
+          echo "Removing existing pipeline..."
+          az datafactory pipeline delete --factory-name "$ADF_NAME" --resource-group "$RESOURCE_GROUP" --name "$ADF_PIPELINE_NAME" --yes
+        else
+          echo "Pipeline does not exist, skipping removal step."
+        fi
+
     - name: Deploy pipeline to ADF
       run: |
         az datafactory pipeline create \
