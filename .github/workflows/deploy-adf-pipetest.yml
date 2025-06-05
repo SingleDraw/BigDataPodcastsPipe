@@ -72,7 +72,7 @@ jobs:
     - name: Generate pipeline JSON with env vars and create trigger JSON
       run: |
           echo "Generating pipeline.json and trigger.json with environment variables..."
-          export NOW=$(date -u -d "+30 seconds" +"%Y-%m-%dT%H:%M:%SZ")
+          export NOW=$(date -u -d "+1 minute" +"%Y-%m-%dT%H:%M:%SZ")
           # export AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
           # export AZURE_TENANT_ID=${AZURE_TENANT_ID}
           # export AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
