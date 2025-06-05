@@ -52,8 +52,7 @@ resource "azurerm_key_vault" "kv" {
   enable_rbac_authorization = true  # Enable RBAC instead of access policies
 
   depends_on = [
-    azurerm_resource_group.rg,
-    azurerm_client_config.current
+    azurerm_resource_group.rg
   ]
 
   # Admin access policy for the current user
