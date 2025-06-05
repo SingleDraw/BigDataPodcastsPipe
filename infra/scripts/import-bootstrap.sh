@@ -90,3 +90,20 @@ else
   echo "Federated Identity Credential for GitHub Actions does not exist. Skipping import."
 fi
 
+
+# Contributor role for the specific resource group
+# resource "azurerm_role_assignment" "github_actions_rg_contributor" {
+#   scope                = azurerm_resource_group.rg.id
+#   role_definition_name = "Contributor"
+#   principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
+# }
+
+# Check if the role assignment already exists
+ROLE_ASSIGNMENT_NAME="github-actions-rg-contributor"
+ROLE_ASSIGNMENT_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Authorization/roleAssignments/$ROLE_ASSIGNMENT_NAME"
+if az role assignment show --assignee "github-actions-identity" --role "Contributor" --scope "$RG_ID" &>/dev/null; then
+  echo "Importing existing role assignment for GitHub Actions identity..."
+  terraform import azurerm_role_assignment.github_actions_rg_contributor "$ROLE_ASSIGNMENT_ID"
+else
+  echo "Role assignment for GitHub Actions identity does not exist. Skipping import."
+fi
