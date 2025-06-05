@@ -156,6 +156,36 @@ if APP_ID=$(az ad app list --display-name "$APP_NAME" --query "[0].appId" -o tsv
       echo "Role assignment for Service Principal does not exist. Skipping import."
     fi
   fi
+
+  # 
+  # resource "azurerm_role_assignment" "github_actions_subscription_contributor" {
+  #   scope                = data.azurerm_subscription.current.id
+  #   role_definition_name = "Contributor"
+  #   principal_id         = azuread_service_principal.github_actions.object_id
+  # }
+
+  # Import the role assignment for subscription level
+  if SP_OBJECT_ID=$(az ad sp show --id "$APP_ID" --query "id" -o tsv); then
+    ROLE_NAME="Contributor"
+    SCOPE="/subscriptions/$SUBSCRIPTION_ID"
+    # Check if role assignment exists
+    ASSIGNMENT_ID=$(az role assignment list \
+      --assignee "$SP_OBJECT_ID" \
+      --role "$ROLE_NAME" \
+      --scope "$SCOPE" \
+      --query "[0].id" -o tsv)
+
+    if [[ -n "$ASSIGNMENT_ID" ]]; then
+      echo "Importing existing role assignment for Service Principal at subscription level..."
+      terraform import azurerm_role_assignment.github_actions_subscription_contributor "$ASSIGNMENT_ID"
+    else
+      echo "Role assignment for Service Principal at subscription level does not exist. Skipping import."
+    fi
+  fi
+
 else
   echo "GitHub Actions App Registration does not exist. Skipping import."
 fi
+
+
+
