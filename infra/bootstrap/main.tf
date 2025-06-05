@@ -47,7 +47,7 @@ resource "azurerm_storage_container" "whisperer" {
 
 # 3.C. Create a storage container for ACI logs
 # This container will store logs from ephemeral Azure Container Instances (ACI)
-resource "azurerm_storage_container" "aci-logs" {
+resource "azurerm_storage_container" "aci_logs" {
   name                  = "aci-logs"
   storage_account_id    = azurerm_storage_account.storage.id
   container_access_type = "private"
