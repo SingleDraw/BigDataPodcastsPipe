@@ -254,8 +254,6 @@ resource "github_actions_secret" "stortage_account_key" {
   plaintext_value = azurerm_storage_account.storage.primary_access_key
 }
 
-data "azurerm_client_config" "current" {}
-
 #-------------------------------------------------------------
 # 10. Azure Data Factory - Big Data Pipeline Runner
 # -----------------------------------------------------------------
