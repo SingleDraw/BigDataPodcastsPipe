@@ -20,7 +20,7 @@ env:
   ADF_LINKED_SERVICE_NAME: AzureManagementLSTest
   ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
   ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
-  KEY_VAULT_NAME: ${{ secrets.TF_VAR_KEY_VAULT_NAME }} # For secrets management
+  KEY_VAULT_NAME: ${{ secrets.KEY_VAULT_NAME }} # For secrets management
   SECRET_NAME_TO_DISPLAY: blob-storage-connection-string
 
 jobs:
@@ -47,6 +47,8 @@ jobs:
         echo "AZURE_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" >> $GITHUB_ENV
         echo "AZURE_TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" >> $GITHUB_ENV
         echo "AZURE_CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" >> $GITHUB_ENV
+        echo "STORAGE_ACCOUNT_KEY=${{ secrets.STORAGE_ACCOUNT_KEY }}" >> $GITHUB_ENV
+        echo "KEY_VAULT_NAME=${{ secrets.KEY_VAULT_NAME }}" >> $GITHUB_ENV
 
     - name: Generate pipeline JSON with env vars and create trigger JSON
       run: |
@@ -55,6 +57,8 @@ jobs:
           export AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
           export AZURE_TENANT_ID=${AZURE_TENANT_ID}
           export AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+          export STORAGE_ACCOUNT_KEY=${STORAGE_ACCOUNT_KEY}
+          export KEY_VAULT_NAME=${KEY_VAULT_NAME}
 
           echo "Generated NOW: $NOW"
           cat infra/adf-pipelines/RunTestACI.template.json | envsubst > pipeline.json
