@@ -33,6 +33,13 @@ resource "azurerm_container_registry" "acr" {
   admin_enabled       = true      # Enables username/password access
 }
 
+
+# Get the current client configuration (OIDC identity)
+# This ensures we can set access policies for the Key Vault for the current user
+# If previously KV was created with service principal, 
+# this will overwrite it with the current user's identity
+data "azurerm_client_config" "current" {}
+
 # 4. KV - Azure Key Vault
 # -----------------------------------------------------------------
 resource "azurerm_key_vault" "kv" {
@@ -42,38 +49,24 @@ resource "azurerm_key_vault" "kv" {
   tenant_id           = data.azurerm_client_config.current.tenant_id
   sku_name            = "standard"
 
-  # Admin access policy for the current user
-  access_policy {
-    tenant_id = data.azurerm_client_config.current.tenant_id
-    object_id = data.azurerm_client_config.current.object_id
-    secret_permissions = [
-      "Get", "List", "Set", "Delete"
-    ]
-  }
+  enable_rbac_authorization = true  # Enable RBAC instead of access policies
 
-  # Add access for GitHub OIDC federated identity
+  # Admin access policy for the current user
   # access_policy {
   #   tenant_id = data.azurerm_client_config.current.tenant_id
-  #   object_id = var.github_oidc_identity_object_id  # <- you must supply this
+  #   object_id = data.azurerm_client_config.current.object_id
   #   secret_permissions = [
-  #     "Get", "List"
+  #     "Get", "List", "Set", "Delete"
   #   ]
   # }
-
 }
 
-# 5. Store secrets in Key Vault
-# Store GitHub secrets in Key Vault
-#--------------------------------------------------------------
-# To store GitHub secrets, we will create Key Vault secrets
-# that can be referenced in GitHub Actions workflows.
-# like this:
-#   - name: Set GitHub Secrets
-#     run: |
-#       gh secret set SECRET_NAME --body "${{ secrets.SECRET_NAME }}"
-#   - name: Set Key Vault Secrets
-#     run: |  
-#       az keyvault secret set --vault-name ${{ secrets.KEY_VAULT_NAME }} --name SECRET_NAME --value "${{ secrets.SECRET_NAME }}"
+# Assign Key Vault Secrets Officer role to the current identity
+resource "azurerm_role_assignment" "kv_secrets_officer" {
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
 
 # Podcasting Index Api Secrets
 resource "azurerm_key_vault_secret" "podcast_api_key" {
