@@ -116,7 +116,7 @@ data "azurerm_subscription" "current" {}
 
 # Add this instead
 resource "azuread_application" "github_actions" {
-  # display_name = "github-actions-app"
+  # display_name = "github-actions-app" # commented to avoid recreation
 }
 
 resource "azuread_service_principal" "github_actions" {

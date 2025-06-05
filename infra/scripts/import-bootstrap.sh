@@ -119,9 +119,16 @@ if [[ -n "$APP_OBJECT_ID" ]]; then
     echo "Service Principal does not exist. Skipping import."
   fi
 
+  echio ">>> VERIFYING IMPORT OF GITHUB ACTIONS APP REGISTRATION"
+  terraform state show azuread_application.github_actions
+  ##########################################################################################
+  echo ">>> 2222 GitHub Actions App Registration ID: $APP_OBJECT_ID"
+  echo ">>> 2222 GitHub Actions App Registration App ID: $APP_ID"
+
   # Check and import the federated identity credential
   FED_CRED_ID=$(az ad app federated-credential list --id "$APP_ID" \
     --query "[?displayName=='$FED_CRED_NAME'].id" -o tsv)
+
   if [[ -n "$FED_CRED_ID" ]]; then
     echo "Importing existing Federated Identity Credential..."
     # terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_ID/federatedIdentityCredentials/$FED_CRED_ID"
@@ -132,7 +139,7 @@ if [[ -n "$APP_OBJECT_ID" ]]; then
     echo ">>> VERIFYING IMPORT OF FEDERATED IDENTITY CREDENTIAL"
     terraform state show azuread_application_federated_identity_credential.github_actions
     ##########################################################################################
-    echo ">>> Federated Identity Credential ID: $FED_CRED_ID"
+    echo ">>> 3333 Federated Identity Credential ID: $FED_CRED_ID"
 
   else
     echo "Federated Identity Credential does not exist. Skipping import."

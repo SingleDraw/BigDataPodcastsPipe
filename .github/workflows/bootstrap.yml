@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-    TF_LOG: ERROR # DEBUG for detailed logs, ERROR for less verbose
+    TF_LOG: DEBUG # ERROR # DEBUG for detailed logs, ERROR for less verbose
     TF_VAR_github_token: ${{ secrets.GH_PAT_TOKEN }}
     TF_VAR_github_owner: ${{ github.repository_owner }}
     TF_VAR_github_repository: ${{ github.event.repository.name }}
