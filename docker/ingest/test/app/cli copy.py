@@ -87,6 +87,15 @@ def test_fn(
     key_vault: str = typer.Option(..., "--key-vault", "-k", help="Name of the secret in Azure Key Vault to retrieve", show_default=False, metavar="SECRET_NAME")
 ):
     try:
+        print("Starting test app process...")
+        typer.echo("Echoing ENV variables:")
+        typer.echo(f"AZURE_STORAGE_ACCOUNT: {os.getenv('AZURE_STORAGE_ACCOUNT', '')}")
+        typer.echo(f"AZURE_STORAGE_KEY: {os.getenv('AZURE_STORAGE_KEY', '')}")
+        typer.echo(f"AZURE_KEY_VAULT_URL: {os.getenv('AZURE_KEY_VAULT_URL', '')}")
+        typer.echo(f"Key Vault Secret Name: {key_vault}")
+
+        typer.echo("Running the test app...")
+
         run_app()                   # Works !
         if write_blob:
             test_blob_write()       # Works !
@@ -97,7 +106,7 @@ def test_fn(
                 secret_name=key_vault
             )
     except Exception as e:
-        typer.echo(f"Error during the test app: {e}", err=True)
+        typer.echo(f"Error in test app process: {e}", err=True)
         raise typer.Exit(code=1)
 
 if __name__ == "__main__":

@@ -61,25 +61,25 @@ jobs:
           export KEY_VAULT_NAME=${KEY_VAULT_NAME}
 
           # DEBUG: Print environment variables
-          echo "AZURE_CLIENT_ID=${AZURE_CLIENT_ID}"
-          echo "SECRET_NAME_TO_DISPLAY=${SECRET_NAME_TO_DISPLAY}"
-          echo "KEY_VAULT_NAME=${KEY_VAULT_NAME}"
-          echo "STORAGE_ACCOUNT_KEY=${STORAGE_ACCOUNT_KEY}"
-          echo "ADF_NAME=${ADF_NAME}"
-          echo "RESOURCE_GROUP=${RESOURCE_GROUP}"
-          echo "LOCATION=${LOCATION}"
-          echo "SUBSCRIPTION_ID=${SUBSCRIPTION_ID}"
-          echo "ACI_NAME=${ACI_NAME}"
-          echo "IMAGE_NAME=${IMAGE_NAME}"
-          echo "ADF_PIPELINE_NAME=${ADF_PIPELINE_NAME}"
-          echo "TRIGGER_NAME=${TRIGGER_NAME}"
-          echo "ADF_LINKED_SERVICE_NAME=${ADF_LINKED_SERVICE_NAME}"
-          echo "ACR_NAME=${ACR_NAME}"
-          echo "ACR_USERNAME=${ACR_USERNAME}"
-          echo "ACR_PASSWORD=${ACR_PASSWORD}"
-          echo "IDENTITY_RESOURCE_ID=${IDENTITY_RESOURCE_ID}"
-          echo "IDENTITY_CLIENT_ID=${IDENTITY_CLIENT_ID}"
-          exit 1
+          # echo "AZURE_CLIENT_ID=${AZURE_CLIENT_ID}"
+          # echo "SECRET_NAME_TO_DISPLAY=${SECRET_NAME_TO_DISPLAY}"
+          # echo "KEY_VAULT_NAME=${KEY_VAULT_NAME}"
+          # echo "STORAGE_ACCOUNT_KEY=${STORAGE_ACCOUNT_KEY}"
+          # echo "ADF_NAME=${ADF_NAME}"
+          # echo "RESOURCE_GROUP=${RESOURCE_GROUP}"
+          # echo "LOCATION=${LOCATION}"
+          # echo "SUBSCRIPTION_ID=${SUBSCRIPTION_ID}"
+          # echo "ACI_NAME=${ACI_NAME}"
+          # echo "IMAGE_NAME=${IMAGE_NAME}"
+          # echo "ADF_PIPELINE_NAME=${ADF_PIPELINE_NAME}"
+          # echo "TRIGGER_NAME=${TRIGGER_NAME}"
+          # echo "ADF_LINKED_SERVICE_NAME=${ADF_LINKED_SERVICE_NAME}"
+          # echo "ACR_NAME=${ACR_NAME}"
+          # echo "ACR_USERNAME=${ACR_USERNAME}"
+          # echo "ACR_PASSWORD=${ACR_PASSWORD}"
+          # echo "IDENTITY_RESOURCE_ID=${IDENTITY_RESOURCE_ID}"
+          # echo "IDENTITY_CLIENT_ID=${IDENTITY_CLIENT_ID}"
+          # exit 1
 
 
 
