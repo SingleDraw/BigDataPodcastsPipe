@@ -34,3 +34,10 @@ echo "Importing existing Service Principal..."
 
 echo "Service Principal ID: $SP_ID"
 # terraform import azuread_service_principal.github_actions "$SP_ID"
+
+
+# ---
+
+# github cheatsheet
+gh run list
+gh run cancel 15473921372 # cancel a run ID
