@@ -99,11 +99,24 @@ fi
 # }
 
 # Check if the role assignment already exists
-ROLE_ASSIGNMENT_NAME="github-actions-rg-contributor"
-ROLE_ASSIGNMENT_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Authorization/roleAssignments/$ROLE_ASSIGNMENT_NAME"
-if az role assignment show --assignee "github-actions-identity" --role "Contributor" --scope "$RG_ID" &>/dev/null; then
-  echo "Importing existing role assignment for GitHub Actions identity..."
-  terraform import azurerm_role_assignment.github_actions_rg_contributor "$ROLE_ASSIGNMENT_ID"
+IDENTITY_NAME="github-actions-identity"
+if ! ASSIGNEE_OBJECT_ID=$(az identity show --name "$IDENTITY_NAME" --resource-group "$RESOURCE_GROUP_NAME" --query "principalId" -o tsv); then
+  echo "GitHub Actions identity does not exist. Skipping role assignment import."
 else
-  echo "Role assignment for GitHub Actions identity does not exist. Skipping import."
+  ROLE_NAME="Contributor"
+  SCOPE="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME"
+
+  # Check if role assignment exists
+  ASSIGNMENT_ID=$(az role assignment list \
+    --assignee "$ASSIGNEE_OBJECT_ID" \
+    --role "$ROLE_NAME" \
+    --scope "$SCOPE" \
+    --query "[0].id" -o tsv)
+
+  if [[ -n "$ASSIGNMENT_ID" ]]; then
+    echo "Importing existing role assignment for GitHub Actions identity..."
+    terraform import azurerm_role_assignment.github_actions_rg_contributor "$ASSIGNMENT_ID"
+  else
+    echo "Role assignment for GitHub Actions identity does not exist. Skipping import."
+  fi
 fi
