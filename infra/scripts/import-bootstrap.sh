@@ -73,6 +73,7 @@ fi
 # Github Actions OIDC identity
 
 # Check if GitHub Actions identity already exists
+IDENTITY_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.ManagedIdentity/userAssignedIdentities/github-actions-identity"
 if az identity show --name "github-actions-identity" --resource-group "$RESOURCE_GROUP_NAME" &>/dev/null; then
   echo "Importing existing GitHub Actions identity..."
   terraform import azurerm_user_assigned_identity.github_actions "$IDENTITY_ID"
@@ -80,11 +81,11 @@ else
   echo "GitHub Actions identity does not exist. Skipping import."
 fi
 
-
 # Check if Federated Identity Credential already exists
+FED_CRED_ID="$IDENTITY_ID/federatedIdentityCredentials/github-actions-oidc"
 if az identity federated-credential show --name "github-actions-oidc" --identity-name "github-actions-identity" --resource-group "$RESOURCE_GROUP_NAME" &>/dev/null; then
   echo "Importing existing Federated Identity Credential for GitHub Actions..."
-  terraform import azurerm_federated_identity_credential.github_oidc "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.ManagedIdentity/userAssignedIdentities/github-actions-identity/federatedIdentityCredentials/github-actions-oidc"
+  terraform import azurerm_federated_identity_credential.github_oidc "$FED_CRED_ID"
 else
   echo "Federated Identity Credential for GitHub Actions does not exist. Skipping import."
 fi
