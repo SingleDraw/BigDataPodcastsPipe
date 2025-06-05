@@ -88,15 +88,14 @@ if [[ -z "$SUBSCRIPTION_ID" || -z "$RESOURCE_GROUP_NAME" ]]; then
   echo "Error: SUBSCRIPTION_ID and RESOURCE_GROUP_NAME must be set."
   exit 1
 fi
-
 # Check if GitHub Actions App Registration already exists
+APP_OBJECT_ID=$(az ad app list --display-name "$APP_NAME" --query "[0].id" -o tsv)
 APP_ID=$(az ad app list --display-name "$APP_NAME" --query "[0].appId" -o tsv)
 
-if [[ -n "$APP_ID" ]]; then
+if [[ -n "$APP_OBJECT_ID" ]]; then
   echo "Importing existing GitHub Actions App Registration..."
-  terraform import azuread_application.github_actions "/applications/$APP_ID"
-  # terraform import azuread_application.github_actions "$APP_ID"
-
+  terraform import azuread_application.github_actions "$APP_OBJECT_ID"
+  
   # Import the service principal
   SP_ID=$(az ad sp list --display-name "$APP_NAME" --query "[0].id" -o tsv)
   if [[ -n "$SP_ID" ]]; then
