@@ -80,6 +80,18 @@ fi
 
 
 APP_NAME="github-actions-app"
+
+app_id=$(az ad app list --display-name "$APP_NAME" --query "[0].appId" -o tsv)
+
+if [ -z "$app_id" ]; then
+  echo "App not found. Creating..."
+  app_id=$(az ad app create --display-name "$APP_NAME" --query appId -o tsv)
+  echo "Created app with ID: $app_id"
+else
+  echo "App already exists: $app_id"
+fi
+
+
 FED_CRED_NAME="github-actions-federated-credential"
 ROLE_NAME="Contributor"
 
@@ -94,8 +106,8 @@ APP_ID=$(az ad app list --display-name "$APP_NAME" --query "[0].appId" -o tsv)
 
 if [[ -n "$APP_OBJECT_ID" ]]; then
   echo "Importing existing GitHub Actions App Registration..."
-  echo "App Object ID: $APP_OBJECT_ID"
-  echo "App ID: $APP_ID"
+  # echo "App Object ID: $APP_OBJECT_ID"
+  # echo "App ID: $APP_ID"
   terraform import azuread_application.github_actions "/applications/$APP_OBJECT_ID"
 
   # Import the service principal
