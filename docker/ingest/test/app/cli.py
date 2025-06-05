@@ -2,7 +2,8 @@ import typer, os, requests
 from azure.storage.blob import BlobServiceClient
 from azure.keyvault.secrets import SecretClient
 
-
+# Request to a public API to test connectivity
+# This function is used to ensure that the application can make HTTP requests successfully.
 def run_app():
     # Test request to a public API
     try:
@@ -16,6 +17,8 @@ def run_app():
         raise
 
 # Test Azure Key Vault access
+# This function retrieves a secret from Azure Key Vault using the DefaultAzureCredential.
+# It requires the AZURE_KEY_VAULT_URL environment variable to be set.
 def test_key_vault(
     secret_name: str = "PodcastingIndexApiKey"
 ):
@@ -33,7 +36,9 @@ def test_key_vault(
         print(f"An error occurred while accessing the Key Vault: {e}")
         raise
 
-
+# Test Azure Blob Storage write operation
+# This function writes a test blob to Azure Blob Storage using the BlobServiceClient.
+# It requires the AZURE_STORAGE_ACCOUNT and AZURE_STORAGE_KEY environment variables to be set.
 def test_blob_write():
     try:
         # Initialize BlobServiceClient with DefaultAzureCredential
@@ -53,21 +58,35 @@ def test_blob_write():
         print(f"An error occurred while writing the blob: {e}")
         raise
 
+# Test Azure Blob Storage write operation using DefaultAzureCredential
+# This function writes a test blob to Azure Blob Storage using the DefaultAzureCredential.
+# It requires the AZURE_STORAGE_ACCOUNT environment variable to be set.
 def test_blob_write_two():
     from azure.identity import DefaultAzureCredential
     try:
         # Initialize BlobServiceClient with DefaultAzureCredential
         storage_account = os.getenv("AZURE_STORAGE_ACCOUNT")
 
+        if not storage_account:
+            raise ValueError("AZURE_STORAGE_ACCOUNT environment variable is not set.")
+
         credential = DefaultAzureCredential()
+
+        if not credential:
+            raise ValueError("DefaultAzureCredential could not be initialized.")
 
         blob_service_client = BlobServiceClient(
             account_url=f"https://{storage_account}.blob.core.windows.net",
             credential=credential
         )
+
+        if not blob_service_client:
+            raise ValueError("BlobServiceClient could not be initialized.")
+        
         # Access a specific container and blob
         container_name = "whisperer"
         blob_name = "test_blob_two.txt"
+
         container_client = blob_service_client.get_container_client(container_name)
         blob_client = container_client.get_blob_client(blob_name)
         # Write a test blob
@@ -92,7 +111,7 @@ def test_fn(
             test_blob_write()       # Works !
         if write_blob_two:
             test_blob_write_two()
-        if key_vault:
+        if key_vault:               # Works ! 
             test_key_vault(
                 secret_name=key_vault
             )
