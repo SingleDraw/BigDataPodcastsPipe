@@ -21,7 +21,7 @@ env:
   ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
   ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
   KEY_VAULT_NAME: ${{ secrets.KEY_VAULT_NAME }} # For secrets management
-  SECRET_NAME_TO_DISPLAY: blob-storage-connection-string
+  SECRET_NAME_TO_DISPLAY: "blob-storage-connection-string"
 
 jobs:
   deploy:
@@ -60,9 +60,32 @@ jobs:
           export STORAGE_ACCOUNT_KEY=${STORAGE_ACCOUNT_KEY}
           export KEY_VAULT_NAME=${KEY_VAULT_NAME}
 
+          # DEBUG: Print environment variables
+          echo "AZURE_CLIENT_ID=${AZURE_CLIENT_ID}"
+          echo "SECRET_NAME_TO_DISPLAY=${SECRET_NAME_TO_DISPLAY}"
+          echo "KEY_VAULT_NAME=${KEY_VAULT_NAME}"
+          echo "STORAGE_ACCOUNT_KEY=${STORAGE_ACCOUNT_KEY}"
+          echo "ADF_NAME=${ADF_NAME}"
+          echo "RESOURCE_GROUP=${RESOURCE_GROUP}"
+          echo "LOCATION=${LOCATION}"
+          echo "SUBSCRIPTION_ID=${SUBSCRIPTION_ID}"
+          echo "ACI_NAME=${ACI_NAME}"
+          echo "IMAGE_NAME=${IMAGE_NAME}"
+          echo "ADF_PIPELINE_NAME=${ADF_PIPELINE_NAME}"
+          echo "TRIGGER_NAME=${TRIGGER_NAME}"
+          echo "ADF_LINKED_SERVICE_NAME=${ADF_LINKED_SERVICE_NAME}"
+          echo "ACR_NAME=${ACR_NAME}"
+          echo "ACR_USERNAME=${ACR_USERNAME}"
+          echo "ACR_PASSWORD=${ACR_PASSWORD}"
+          echo "IDENTITY_RESOURCE_ID=${IDENTITY_RESOURCE_ID}"
+          echo "IDENTITY_CLIENT_ID=${IDENTITY_CLIENT_ID}"
+          exit 1
+
+
+
           echo "Generated NOW: $NOW"
           cat infra/adf-pipelines/RunTestACI.template.json | envsubst > pipeline.json
-          cat infra/adf-triggers/TestTrigger.template.json | envsubst > trigger.json
+          cat infra/adf-triggers/DailyTriggerTest.template.json | envsubst > trigger.json
           echo "Generated trigger.json:"
           cat trigger.json
 
@@ -77,27 +100,27 @@ jobs:
           echo "Trigger does not exist, skipping disable step."
         fi
 
-    - name: Deploy pipeline to ADF
-      run: |
-        az datafactory pipeline create \
-          --factory-name $ADF_NAME \
-          --resource-group $RESOURCE_GROUP \
-          --name $ADF_PIPELINE_NAME \
-          --pipeline @pipeline.json
+    # - name: Deploy pipeline to ADF
+    #   run: |
+    #     az datafactory pipeline create \
+    #       --factory-name $ADF_NAME \
+    #       --resource-group $RESOURCE_GROUP \
+    #       --name $ADF_PIPELINE_NAME \
+    #       --pipeline @pipeline.json
 
-    - name: Deploy ADF trigger
-      run: |
-        az datafactory trigger create \
-          --factory-name "$ADF_NAME" \
-          --resource-group "$RESOURCE_GROUP" \
-          --name "$TRIGGER_NAME" \
-          --properties @"trigger.json"
+    # - name: Deploy ADF trigger
+    #   run: |
+    #     az datafactory trigger create \
+    #       --factory-name "$ADF_NAME" \
+    #       --resource-group "$RESOURCE_GROUP" \
+    #       --name "$TRIGGER_NAME" \
+    #       --properties @"trigger.json"
         
-    - name: Start trigger
-      run: |
-        az datafactory trigger start \
-          --factory-name "$ADF_NAME" \
-          --resource-group "$RESOURCE_GROUP" \
-          --name "$TRIGGER_NAME"
+    # - name: Start trigger
+    #   run: |
+    #     az datafactory trigger start \
+    #       --factory-name "$ADF_NAME" \
+    #       --resource-group "$RESOURCE_GROUP" \
+    #       --name "$TRIGGER_NAME"
 
 
