@@ -121,21 +121,19 @@ if [[ -n "$APP_OBJECT_ID" ]]; then
 
   echo ">>> 222 VERIFYING IMPORT OF GITHUB ACTIONS APP REGISTRATION"
   # Check and import the federated identity credential
-  FED_CRED_ID=$(az ad app federated-credential list --id "$APP_ID" \
-    --query "[?displayName=='$FED_CRED_NAME'].id" -o tsv)
+  #FED_CRED_ID=$(az ad app federated-credential list --id "$APP_ID" --query "[?displayName=='$FED_CRED_NAME'].id" -o tsv)
+
     
+  FED_CRED_ID=$(az rest \
+    --method get \
+    --uri "https://graph.microsoft.com/v1.0/applications/${APP_OBJECT_ID}/federatedIdentityCredentials" \
+    --query "value[?displayName=='$FED_CRED_NAME'].id" -o tsv)
+
   if [[ -n "$FED_CRED_ID" ]]; then
     echo "Importing existing Federated Identity Credential..."
     # terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_ID/federatedIdentityCredentials/$FED_CRED_ID"
     # terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_ID/federatedIdentityCredentials/<federated-cred-name>"
     terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_ID/federatedIdentityCredentials/$FED_CRED_NAME"
-    
-
-    echo ">>> 333 VERIFYING IMPORT OF FEDERATED IDENTITY CREDENTIAL"
-    terraform state show azuread_application_federated_identity_credential.github_actions
-    ##########################################################################################
-    echo ">>> Federated Identity Credential ID: $FED_CRED_ID"
-
   else
     echo "Federated Identity Credential does not exist. Skipping import."
   fi
