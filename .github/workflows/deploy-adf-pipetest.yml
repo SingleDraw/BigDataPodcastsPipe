@@ -100,27 +100,27 @@ jobs:
           echo "Trigger does not exist, skipping disable step."
         fi
 
-    # - name: Deploy pipeline to ADF
-    #   run: |
-    #     az datafactory pipeline create \
-    #       --factory-name $ADF_NAME \
-    #       --resource-group $RESOURCE_GROUP \
-    #       --name $ADF_PIPELINE_NAME \
-    #       --pipeline @pipeline.json
+    - name: Deploy pipeline to ADF
+      run: |
+        az datafactory pipeline create \
+          --factory-name $ADF_NAME \
+          --resource-group $RESOURCE_GROUP \
+          --name $ADF_PIPELINE_NAME \
+          --pipeline @pipeline.json
 
-    # - name: Deploy ADF trigger
-    #   run: |
-    #     az datafactory trigger create \
-    #       --factory-name "$ADF_NAME" \
-    #       --resource-group "$RESOURCE_GROUP" \
-    #       --name "$TRIGGER_NAME" \
-    #       --properties @"trigger.json"
+    - name: Deploy ADF trigger
+      run: |
+        az datafactory trigger create \
+          --factory-name "$ADF_NAME" \
+          --resource-group "$RESOURCE_GROUP" \
+          --name "$TRIGGER_NAME" \
+          --properties @"trigger.json"
         
-    # - name: Start trigger
-    #   run: |
-    #     az datafactory trigger start \
-    #       --factory-name "$ADF_NAME" \
-    #       --resource-group "$RESOURCE_GROUP" \
-    #       --name "$TRIGGER_NAME"
+    - name: Start trigger
+      run: |
+        az datafactory trigger start \
+          --factory-name "$ADF_NAME" \
+          --resource-group "$RESOURCE_GROUP" \
+          --name "$TRIGGER_NAME"
 
 
