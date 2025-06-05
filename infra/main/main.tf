@@ -42,11 +42,6 @@ data "azurerm_client_config" "current" {}
 
 data "azuread_service_principal" "github_oidc" {
   object_id = data.azurerm_client_config.current.object_id
-  # object_id = "19b5688e-4667-4f79-b6b3-a5124f1d6a39"
-  # This data source retrieves the service principal for the current user
-  # It is used to set access policies for the Key Vault
-  # If you are using a different identity, replace this with the appropriate object_id
-  # For example, if you are using a service principal, use its object_id
 }
 
 # Option 2: Alternative - Get by application name if you know it
@@ -77,7 +72,8 @@ resource "azurerm_key_vault" "kv" {
   # Admin access policy for the current user
   access_policy {
     tenant_id = data.azurerm_client_config.current.tenant_id
-    object_id = data.azurerm_client_config.current.object_id
+    # object_id = data.azurerm_client_config.current.object_id
+    object_id = data.azuread_service_principal.github_oidc.object_id
     secret_permissions = [
       "Get", "List", "Set", "Delete"
     ]
