@@ -40,6 +40,25 @@ resource "azurerm_container_registry" "acr" {
 # this will overwrite it with the current user's identity
 data "azurerm_client_config" "current" {}
 
+data "azuread_service_principal" "github_oidc" {
+  object_id = data.azurerm_client_config.current.object_id
+  # object_id = "19b5688e-4667-4f79-b6b3-a5124f1d6a39"
+  # This data source retrieves the service principal for the current user
+  # It is used to set access policies for the Key Vault
+  # If you are using a different identity, replace this with the appropriate object_id
+  # For example, if you are using a service principal, use its object_id
+}
+
+# Option 2: Alternative - Get by application name if you know it
+# data "azuread_service_principal" "github_oidc" {
+#   display_name = "YourGitHubOIDCAppName"
+# }
+
+# Option 3: Alternative - Get by application ID if you have it
+# data "azuread_service_principal" "github_oidc" {
+#   application_id = "your-application-id-here"
+# }
+
 # 4. KV - Azure Key Vault
 # -----------------------------------------------------------------
 resource "azurerm_key_vault" "kv" {
@@ -70,6 +89,13 @@ resource "azurerm_role_assignment" "kv_secrets_officer" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = data.azurerm_client_config.current.object_id
+}
+
+# Optional: If GitHub identity have to to read secrets during deployment
+resource "azurerm_role_assignment" "kv_secrets_user_github" {
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = data.azuread_service_principal.github_oidc.object_id
 }
 
 # Podcasting Index Api Secrets
