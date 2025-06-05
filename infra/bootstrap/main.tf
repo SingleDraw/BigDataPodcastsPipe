@@ -105,8 +105,8 @@ resource "azurerm_federated_identity_credential" "github_oidc" {
     parent_id           = azurerm_user_assigned_identity.github_actions.id
     audience            = ["api://AzureADTokenExchange"]
     issuer              = "https://token.actions.githubusercontent.com"
-    # subject             = "repo:${var.github_owner}/${var.github_repository}:ref:refs/heads/main" # adjust branch if needed
-    subject             = "repo:SingleDraw/BigDataPodcastsPipe:*"  # More permissive
+    subject             = "repo:${var.github_owner}/${var.github_repository}:ref:refs/heads/main" # adjust branch if needed
+    # subject             = "repo:SingleDraw/BigDataPodcastsPipe:*"  # More permissive
 
     depends_on = [
         azurerm_user_assigned_identity.github_actions
