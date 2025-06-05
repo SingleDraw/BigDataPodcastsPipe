@@ -112,7 +112,10 @@ if [[ -n "$APP_OBJECT_ID" ]]; then
     --query "[?displayName=='$FED_CRED_NAME'].id" -o tsv)
   if [[ -n "$FED_CRED_ID" ]]; then
     echo "Importing existing Federated Identity Credential..."
-    terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_ID/federatedIdentityCredentials/$FED_CRED_ID"
+    # terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_ID/federatedIdentityCredentials/$FED_CRED_ID"
+    # terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_ID/federatedIdentityCredentials/<federated-cred-name>"
+    terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_ID/federatedIdentityCredentials/$FED_CRED_NAME"
+    
   else
     echo "Federated Identity Credential does not exist. Skipping import."
   fi
