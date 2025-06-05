@@ -20,6 +20,8 @@ provider "azurerm" {
   # tenant_id and client_id will be picked up from Azure CLI login
 }
 
+# GitHub provider configuration
+# - used for managing GitHub repositories like: storing secrets from terraform ouptuts.
 provider "github" {
   token = var.github_token
   owner = var.github_owner  # Your GitHub username or organization

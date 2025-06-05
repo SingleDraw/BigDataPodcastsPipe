@@ -92,7 +92,8 @@ resource "azurerm_key_vault_secret" "acr_password" {
 
 # Store storage connection string
 resource "azurerm_key_vault_secret" "blob_connection_string" {
-  name         = "blob-storage-connection-string"
+  # name         = "blob-storage-connection-string"
+  name         = var.blob_connection_string_name
   value        = azurerm_storage_account.storage.primary_connection_string
   key_vault_id = azurerm_key_vault.kv.id
 }

@@ -8,6 +8,9 @@ on:
       - 'docker/ingest/test/**'
   workflow_dispatch:  # Manual trigger
 
+permissions:
+  id-token: write
+  contents: read
 
 env:
   TF_LOG: DEBUG

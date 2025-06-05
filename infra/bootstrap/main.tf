@@ -15,36 +15,107 @@ resource "azurerm_storage_account" "storage" {
   public_network_access_enabled   = true                                        # for access from remote machines outside azure
   allow_nested_items_to_be_public = false
   is_hns_enabled           = true                                               # Enables Data Lake Gen2 (ABFS)
+
+  depends_on = [
+    azurerm_resource_group.rg
+  ]
 }
 
-# 3. STORAGE CONTAINER FOR TERRAFORM STATE
+# 3.A. STORAGE CONTAINER FOR TERRAFORM STATE
+# This container will store the Terraform state files
 resource "azurerm_storage_container" "tfstate" {
   name                  = "tfstate"
   storage_account_id    = azurerm_storage_account.storage.id
   container_access_type = "private"
+
+  depends_on = [
+    azurerm_storage_account.storage
+  ]
 }
 
-# 4. Create a storage container for Whisperer files
+# 3.B. Create a storage container for Whisperer files
+# This serves as a sink for the project's results and outputs
 resource "azurerm_storage_container" "whisperer" {
   name                  = "whisperer"
   storage_account_id    = azurerm_storage_account.storage.id
   container_access_type = "private"
+
+  depends_on = [
+    azurerm_storage_account.storage
+  ]
 }
 
-## 5. Automatically set GitHub secrets
+# 3.C. Create a storage container for ACI logs
+# This container will store logs from ephemeral Azure Container Instances (ACI)
+resource "azurerm_storage_container" "aci-logs" {
+  name                  = "aci-logs"
+  storage_account_id    = azurerm_storage_account.storage.id
+  container_access_type = "private"
+
+  depends_on = [
+    azurerm_storage_account.storage
+  ]
+}
+
+# 4. Automatically set GitHub secrets
 resource "github_actions_secret" "resource_group_name" {
   repository      = var.github_repository
   secret_name     = "AZURE_RESOURCE_GROUP"
   plaintext_value = azurerm_resource_group.rg.name
+
+  depends_on = [
+    azurerm_resource_group.rg
+  ]
 }
 
 resource "github_actions_secret" "storage_account_name" {
   repository      = var.github_repository
   secret_name     = "STORAGE_ACCOUNT_NAME"
   plaintext_value = azurerm_storage_account.storage.name
+
+  depends_on = [
+    azurerm_storage_account.storage
+  ]
 }
 
-# Register the Microsoft.App provider for Container Apps
+
+
+# 5. GitHub Actions OIDC Integration - Federated Identity
+# This allows GitHub Actions to authenticate with Azure using OIDC
+resource "azurerm_user_assigned_identity" "github_actions" {
+    name                = "github-actions-identity"
+    resource_group_name = azurerm_resource_group.rg.name
+    location            = azurerm_resource_group.rg.location
+
+    tags = {
+        environment = "GitHub Actions"
+    }
+
+    depends_on = [
+        azurerm_resource_group.rg
+    ]
+}
+
+
+
+# 6. Federated Identity Credential for GitHub Actions
+resource "azurerm_federated_identity_credential" "github_oidc" {
+    name                = "github-actions-oidc"
+    resource_group_name = azurerm_resource_group.rg.name
+    parent_id           = azurerm_user_assigned_identity.github_actions.id
+    audience            = ["api://AzureADTokenExchange"]
+    issuer              = "https://token.actions.githubusercontent.com"
+    subject             = "repo:${var.github_owner}/${var.github_repository}:ref:refs/heads/main" # adjust branch if needed
+
+    depends_on = [
+        azurerm_user_assigned_identity.github_actions
+    ]
+}
+
+
+
+# 7. Register the Microsoft.App provider for Container Apps
+# This is necessary for using Azure Container Apps, which is a newer service.
 resource "null_resource" "register_containerapps" {
   provisioner "local-exec" {
     command = "az provider register -n Microsoft.App --wait"
@@ -54,6 +125,10 @@ resource "null_resource" "register_containerapps" {
     # always_run = timestamp()  # Ensures this runs every time you apply
     rg_name = azurerm_resource_group.rg.name # This ensures it runs after the resource group is created
   }
+
+  depends_on = [
+    azurerm_resource_group.rg
+  ]
 }
 
 data "azurerm_client_config" "current" {}

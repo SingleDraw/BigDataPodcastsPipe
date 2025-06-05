@@ -34,6 +34,18 @@ variable "container_registry_name" {
     type        = string
 }
 
+# Custom naming for resources
+variable "blob_connection_string_name" {
+  description = "Name of the Azure Blob Storage connection string secret"
+  type        = string
+  default     = "blob-storage-connection-string"
+}
+variable "blob_container_name_aci_logs" {
+  description = "Name of the Azure Blob Storage container for ACI logs"
+  type        = string
+  default     = "aci-logs"
+}
+
 # Podcasting Index API configuration
 variable "podcasting_index_api_key" {
   description = "API key for Podcasting Index"

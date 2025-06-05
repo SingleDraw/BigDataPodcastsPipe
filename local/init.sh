@@ -101,25 +101,75 @@ echo "Creating service principal and setting GitHub secret..."
 
 CREDENTIALS_JSON=$(create_service_principal)
 
+# Extract the JSON output and set it as a GitHub secret
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to create service principal. Please check your Azure permissions and try again."
+    exit 1
+fi
+# Extract JSON clientId, clientSecret, tenantId, and subscriptionId without using jq
+if [[ -z "$CREDENTIALS_JSON" ]]; then
+    echo "Error: Failed to create service principal. The output is empty."
+    exit 1
+fi
+# validate JSON format
+if ! echo "$CREDENTIALS_JSON" | grep -q '"clientId"\s*:\s*"[^"]\+"'; then
+    echo "Error: The output is not in the expected JSON format. Please check the service principal creation command."
+    exit 1
+fi
+
+# Extract the values from the JSON output and set them as GitHub secrets
+# Using grep with Perl-compatible regex to extract values
+
+# Subscription ID
+gh secret set AZURE_SUBSCRIPTION_ID \
+    --body "$TF_VAR_SUBSCRIPTION_ID" \
+    --repo "$TF_VAR_GITHUB_REPOSITORY"
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to set GitHub secret AZURE_SUBSCRIPTION_ID."
+    exit 1
+fi
+
+# Client ID
+CLIENT_ID=$(echo "$CREDENTIALS_JSON" | grep -oP '"clientId"\s*:\s*"\K[^"]+')
+gh secret set AZURE_CLIENT_ID \
+    --body "$CLIENT_ID" \
+    --repo "$TF_VAR_GITHUB_REPOSITORY"
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to set GitHub secret AZURE_CLIENT_ID."
+    exit 1
+fi
+
+# Tenant ID
+gh secret set AZURE_TENANT_ID \
+    --body "$(echo "$CREDENTIALS_JSON" | grep -oP '"tenantId"\s*:\s*"\K[^"]+')" \
+    --repo "$TF_VAR_GITHUB_REPOSITORY"
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to set GitHub secret AZURE_TENANT_ID."
+    exit 1
+fi
+
+# Client Secret
+gh secret set AZURE_CLIENT_SECRET \
+    --body "$(echo "$CREDENTIALS_JSON" | grep -oP '"clientSecret"\s*:\s*"\K[^"]+')" \
+    --repo "$TF_VAR_GITHUB_REPOSITORY"
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to set GitHub secret AZURE_CLIENT_SECRET."
+    exit 1
+fi
+
+
+
+
+
+
+
+# exit 0
+
+# Set credentials JSON as a GitHub secret for bootstrapping - it will be removed after the first run
+# This is useful for the bootstrap workflow to run without needing to manually set the secret
 gh secret set AZURE_CREDENTIALS \
     --body "$CREDENTIALS_JSON" \
     --repo "$TF_VAR_GITHUB_REPOSITORY"
-
-
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to set GitHub secret AZURE_CREDENTIALS."
-    manually_set_guide_prompt
-    exit 1
-fi
-
-APP_ID=$(echo "$CREDENTIALS_JSON" | grep -oP '"clientId"\s*:\s*"\K[^"]+')
-
-if [[ -z "$APP_ID" ]]; then
-    echo "Failed to extract appId from service principal output."
-    exit 1
-fi
-
-
 
 # check if the role already exists
 ROLE_EXISTS=$(az role definition list --name "User Access Administrator" --query "[].name" -o tsv)
@@ -127,7 +177,7 @@ ROLE_EXISTS=$(az role definition list --name "User Access Administrator" --query
 if [[ -z "$ROLE_EXISTS" ]]; then
     echo "Assigning 'User Access Administrator' role to the service principal..."
     az role assignment create \
-        --assignee "$APP_ID" \
+        --assignee "$CLIENT_ID" \
         --role "User Access Administrator" \
         --scope "$SCOPES"
 

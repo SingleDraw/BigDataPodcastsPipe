@@ -3,6 +3,10 @@ name: Deploy ADF Pipeline and Trigger Test
 on:
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   # Subscription and resource group details for URL build in template hydration
   SUBSCRIPTION_ID: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
@@ -58,36 +62,41 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Azure Login
+    # - name: Azure Login
+    #   uses: azure/login@v1
+    #   with:
+    #     creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Azure Login via OIDC
       uses: azure/login@v1
       with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+
     - name: Install jq
       run: sudo apt-get update && sudo apt-get install -y jq
-    - name: Set environment variables for container
-      run: |
-        echo "AZURE_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" >> $GITHUB_ENV
-        echo "AZURE_TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" >> $GITHUB_ENV
-        echo "AZURE_CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" >> $GITHUB_ENV
+
+    # - name: Set environment variables for container - not secure, for testing only
+    #   run: |
+    #     echo "AZURE_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" >> $GITHUB_ENV
+    #     echo "AZURE_TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" >> $GITHUB_ENV
+    #     echo "AZURE_CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" >> $GITHUB_ENV
+
     - name: Generate pipeline JSON with env vars and create trigger JSON
       run: |
           echo "Generating pipeline.json and trigger.json with environment variables..."
           export NOW=$(date -u -d "+1 minute" +"%Y-%m-%dT%H:%M:%SZ")
-          # export AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
-          # export AZURE_TENANT_ID=${AZURE_TENANT_ID}
-          # export AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
-          # export STORAGE_ACCOUNT_KEY=${STORAGE_ACCOUNT_KEY}
-          # export KEY_VAULT_NAME=${KEY_VAULT_NAME}
-          # export UAMI_NAME=${UAMI_NAME}
-          # export IMAGE_NAME=${IMAGE_NAME}
-          # export IMAGE_TAG=${IMAGE_TAG}
-
-          echo "Generated NOW: $NOW"
+          echo "Trigger time set to: $NOW"
 
           cat infra/adf-pipelines/RunTestACI.template.json | envsubst > pipeline.json
           cat infra/adf-triggers/DailyTriggerTest.template.json | envsubst > trigger.json
-          echo "Generated trigger.json:"
-          cat trigger.json
+
+          # Uncomment below to debug generated JSON files
+          # echo "Generated trigger.json:"
+          # cat trigger.json
+
     - name: Disable and delete ADF trigger if it exists
       run: |
         if az datafactory trigger show --factory-name "$ADF_NAME" --resource-group "$RESOURCE_GROUP" --name "$TRIGGER_NAME" > /dev/null 2>&1; then
