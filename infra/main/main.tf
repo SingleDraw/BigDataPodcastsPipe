@@ -218,13 +218,13 @@ resource "github_actions_secret" "acr_login_server" {
 resource "github_actions_secret" "acr_username" {
   repository      = var.github_repository
   secret_name     = "ACR_USERNAME"
-  plaintext_value = azurerm_key_vault_secret.acr_username.value
+  plaintext_value = azurerm_container_registry.acr.admin_username
 }
 
 resource "github_actions_secret" "acr_password" {
   repository      = var.github_repository
   secret_name     = "ACR_PASSWORD"
-  plaintext_value = azurerm_key_vault_secret.acr_password.value
+  plaintext_value = azurerm_container_registry.acr.admin_password
 }
 
 # Resources names
