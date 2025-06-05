@@ -42,6 +42,7 @@ resource "azurerm_key_vault" "kv" {
   tenant_id           = data.azurerm_client_config.current.tenant_id
   sku_name            = "standard"
 
+  # Admin access policy for the current user
   access_policy {
     tenant_id = data.azurerm_client_config.current.tenant_id
     object_id = data.azurerm_client_config.current.object_id
@@ -49,6 +50,16 @@ resource "azurerm_key_vault" "kv" {
       "Get", "List", "Set", "Delete"
     ]
   }
+
+  # Add access for GitHub OIDC federated identity
+  # access_policy {
+  #   tenant_id = data.azurerm_client_config.current.tenant_id
+  #   object_id = var.github_oidc_identity_object_id  # <- you must supply this
+  #   secret_permissions = [
+  #     "Get", "List"
+  #   ]
+  # }
+
 }
 
 # 5. Store secrets in Key Vault
@@ -69,12 +80,16 @@ resource "azurerm_key_vault_secret" "podcast_api_key" {
   name         = "PodcastingIndexApiKey"
   value        = var.podcasting_index_api_key
   key_vault_id = azurerm_key_vault.kv.id
+
+  depends_on = [azurerm_key_vault.kv]
 }
 
 resource "azurerm_key_vault_secret" "podcast_api_secret" {
   name         = "PodcastingIndexApiSecret"
   value        = var.podcasting_index_api_secret
   key_vault_id = azurerm_key_vault.kv.id
+
+  depends_on = [azurerm_key_vault.kv]
 }
 
 # Store ACR credentials in Key Vault
@@ -82,20 +97,25 @@ resource "azurerm_key_vault_secret" "acr_username" {
   name         = "acr-admin-username"
   value        = azurerm_container_registry.acr.admin_username
   key_vault_id = azurerm_key_vault.kv.id
+
+  depends_on = [azurerm_key_vault.kv]
 }
 
 resource "azurerm_key_vault_secret" "acr_password" {
   name         = "acr-admin-password"
   value        = azurerm_container_registry.acr.admin_password
   key_vault_id = azurerm_key_vault.kv.id
+
+  depends_on = [azurerm_key_vault.kv]
 }
 
 # Store storage connection string
 resource "azurerm_key_vault_secret" "blob_connection_string" {
-  # name         = "blob-storage-connection-string"
   name         = var.blob_connection_string_name
   value        = azurerm_storage_account.storage.primary_connection_string
   key_vault_id = azurerm_key_vault.kv.id
+
+  depends_on = [azurerm_key_vault.kv]
 }
 
 
