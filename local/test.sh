@@ -41,3 +41,10 @@ echo "Service Principal ID: $SP_ID"
 # github cheatsheet
 gh run list
 gh run cancel 15473921372 # cancel a run ID
+gh run cancel 15474012031 
+
+gh api /rate_limit
+https://github.com/settings/billing
+
+# check for stuck runs
+gh run list --limit 10

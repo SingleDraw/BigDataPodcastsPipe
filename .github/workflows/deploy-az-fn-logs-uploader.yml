@@ -1,9 +1,11 @@
 name: Deploy Azure Function App
 
 on:
-  push:
-    branches:
-      - main  # or your deploy branch
+    workflow_dispatch:  # Manual trigger for the workflow
+# Uncomment the following lines if you want to trigger on push to main branch
+#   push:
+#     branches:
+#       - main  # or your deploy branch
 
 jobs:
   build-and-deploy:
@@ -30,7 +32,7 @@ jobs:
         app-name: ${{ secrets.FUNCTION_APP_NAME }}
         package: ./aci_logs_uploader
 
-        
+
     # Approach 2: Usinf Azure Functions App Publish Profile
     # Uncomment the following steps if you want to use the publish profile method.
 
