@@ -114,6 +114,18 @@ resource "azurerm_federated_identity_credential" "github_oidc" {
 }
 
 
+# Contributor role for the specific resource group
+resource "azurerm_role_assignment" "github_actions_rg_contributor" {
+  scope                = azurerm_resource_group.rg.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
+
+  depends_on = [
+    azurerm_federated_identity_credential.github_oidc
+  ]
+}
+
+
 # 7. Store github actions identity client ID in GitHub secrets
 resource "github_actions_secret" "github_actions_client_id" {
   repository      = var.github_repository
