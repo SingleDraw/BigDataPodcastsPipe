@@ -149,8 +149,8 @@ resource "azurerm_role_assignment" "key_vault_identity_role" {
 #   name = "f1a07417-d97a-45cb-824c-7a7467783830"
 # }
 
-resource "azurerm_user_assigned_identity" "aci_identity" {
-  name                = "${var.resource_group_name}-aci-identity"
+resource "azurerm_user_assigned_identity" "aci_identity" {                      # <---------- UAMI FOR ACI
+  name                = "aci-uami"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
 }
@@ -187,20 +187,19 @@ resource "azurerm_role_assignment" "aci_identity_contributor" {
 }
 
 
-# # # Update the GitHub secret to use client ID of the ACI identity
+# 6. Automatically set GitHub secrets
+# This section sets GitHub secrets automatically using the GitHub Actions Secrets API
+# Ensure you have the GitHub Actions provider configured in your Terraform setup
+#-------------------------------------------------------------
+
+# # # Update the GitHub secret to use client ID of the ACI identity       # <---------- UAMI FOR ACI
 resource "github_actions_secret" "aci_identity_client_id" {
   repository      = var.github_repository
   secret_name     = "IDENTITY_CLIENT_ID"
   plaintext_value = azurerm_user_assigned_identity.aci_identity.client_id
 }
 
-
-# 6. Automatically set GitHub secrets
-# This section sets GitHub secrets automatically using the GitHub Actions Secrets API
-# Ensure you have the GitHub Actions provider configured in your Terraform setup
-#-------------------------------------------------------------
-
-# Aci Identity Resource ID for the container identity
+# Aci Identity Resource ID for the container identity               # <---------- UAMI FOR ACI
 resource "github_actions_secret" "aci_identity_id" {
   repository      = var.github_repository
   secret_name     = "IDENTITY_RESOURCE_ID"

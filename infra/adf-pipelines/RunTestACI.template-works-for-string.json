@@ -18,12 +18,6 @@
           },
           "body": {
             "location": "$LOCATION",
-            "identity": {
-              "type": "UserAssigned",
-              "userAssignedIdentities": {
-                "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ManagedIdentity/userAssignedIdentities/aci-uami": {}
-              }
-            },
             "properties": {
               "containers": [
                 {
@@ -54,6 +48,18 @@
                       {
                         "name": "AZURE_KEY_VAULT_URL",
                         "value": "https://$KEY_VAULT_NAME.vault.azure.net/"
+                      },
+                      {
+                        "name": "AZURE_CLIENT_ID",
+                        "value": "$AZURE_CLIENT_ID"
+                      },
+                      {
+                        "name": "AZURE_TENANT_ID",
+                        "value": "$AZURE_TENANT_ID"
+                      },
+                      {
+                        "name": "AZURE_CLIENT_SECRET",
+                        "value": "$AZURE_CLIENT_SECRET"
                       }
                     ]
                   }
