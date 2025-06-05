@@ -129,34 +129,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Client ID - dont store it as a secret, won't be used in the workflow
+# Client ID - dont store it as a secret, it is not sensitive
 CLIENT_ID=$(echo "$CREDENTIALS_JSON" | grep -oP '"clientId"\s*:\s*"\K[^"]+')
-
-az ad app permission admin-consent --id "$CLIENT_ID"
-
-az ad app permission add \
-    --id "$CLIENT_ID" \
-    --api 00000003-0000-0000-c000-000000000000 \
-    --api-permissions 1bfefb4e-e0b5-418b-a88f-73c46d2cc8e9=Role
-
-# Invoking `
-az ad app permission grant --id c0c5ac54-6ff7-4d49-8e4b-6a4ee1d81c44 --api 00000003-0000-0000-c000-000000000000 --scope "Application.ReadWrite.OwnedBy Directory.Read.All" \
-    --consent-type AllPrincipals
-#` is needed to make the change effective
-
-
-
-# # Grant Application.ReadWrite.OwnedBy permission (alternative, less privileged)
-# az ad app permission add \
-#     --id "$CLIENT_ID" \
-#     --api 00000003-0000-0000-c000-000000000000 \
-#     --api-permissions 18a4783c-866b-4cc7-a460-3d5e5662c884=Role
-
-# # Grant Directory.Read.All permission (for reading directory objects)
-# az ad app permission add \
-#     --id "$CLIENT_ID" \
-#     --api 00000003-0000-0000-c000-000000000000 \
-#     --api-permissions 7ab1d382-f21e-4acd-a863-ba3e13f7da61=Role
 
 # Tenant ID
 gh secret set AZURE_TENANT_ID \

@@ -1,0 +1,103 @@
+name: Debug Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug_level:
+        description: 'Debug level (basic, verbose, full)'
+        required: false
+        default: 'basic'
+        type: choice
+        options:
+        - basic
+        - verbose
+        - full
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      timeout-minutes: 2
+      
+    - name: Basic system info
+      run: |
+        echo "=== BASIC SYSTEM INFO ==="
+        echo "Runner OS: $RUNNER_OS"
+        echo "Runner Arch: $RUNNER_ARCH"
+        echo "GitHub Workspace: $GITHUB_WORKSPACE"
+        echo "Current date: $(date)"
+        echo "Current user: $(whoami)"
+        echo "Current directory: $(pwd)"
+        
+    - name: Environment variables
+      run: |
+        echo "=== ENVIRONMENT VARIABLES ==="
+        echo "GitHub Actor: $GITHUB_ACTOR"
+        echo "GitHub Repository: $GITHUB_REPOSITORY"
+        echo "GitHub Ref: $GITHUB_REF"
+        echo "GitHub Event Name: $GITHUB_EVENT_NAME"
+        echo "Debug Level Input: ${{ inputs.debug_level }}"
+        
+    - name: Verbose system info
+      if: ${{ inputs.debug_level == 'verbose' || inputs.debug_level == 'full' }}
+      run: |
+        echo "=== VERBOSE SYSTEM INFO ==="
+        echo "Disk usage:"
+        df -h
+        echo ""
+        echo "Memory usage:"
+        free -h
+        echo ""
+        echo "CPU info:"
+        lscpu | head -10
+        
+    - name: Full system info
+      if: ${{ inputs.debug_level == 'full' }}
+      run: |
+        echo "=== FULL SYSTEM INFO ==="
+        echo "All environment variables:"
+        env | sort
+        echo ""
+        echo "Network info:"
+        ip addr show
+        echo ""
+        echo "Processes:"
+        ps aux | head -20
+        
+    - name: Test basic commands
+      run: |
+        echo "=== TESTING BASIC COMMANDS ==="
+        echo "Testing echo: OK"
+        echo "Testing ls:"
+        ls -la
+        echo "Testing curl (to github.com):"
+        curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" https://github.com
+        
+    - name: Test with timeout
+      timeout-minutes: 1
+      run: |
+        echo "=== TESTING TIMEOUT ==="
+        echo "This step has a 1-minute timeout"
+        echo "Sleeping for 10 seconds..."
+        sleep 10
+        echo "Sleep completed successfully"
+        
+    - name: Simulate potential issues
+      run: |
+        echo "=== TESTING POTENTIAL ISSUES ==="
+        echo "Testing large output (this should work):"
+        for i in {1..100}; do echo "Line $i"; done
+        echo ""
+        echo "Testing command that might hang (with timeout):"
+        timeout 5s bash -c 'echo "Starting potentially hanging command"; sleep 3; echo "Command completed"'
+        echo "All tests completed"
+        
+    - name: Final status
+      run: |
+        echo "=== WORKFLOW COMPLETED SUCCESSFULLY ==="
+        echo "If you see this message, your GitHub Actions setup is working correctly"
+        echo "Workflow finished at: $(date)"

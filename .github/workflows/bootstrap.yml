@@ -1,16 +1,18 @@
-# This Terraform script:
-# - creates Azure Resource Group
-# - creates Azure Storage Account with Contantainers
-# - stores secrets in github secrets
-# - sets up a remote backend in storage for Terraform state management
-# - sets up Federated Identity for Azure Container Registry for GitHub Actions
-
 name: Bootstrap
 on:
   workflow_dispatch:
 
+
+  # This Terraform script:
+  # - creates Azure Resource Group
+  # - creates Azure Storage Account with Contantainers
+  # - stores secrets in github secrets
+  # - sets up a remote backend in storage for Terraform state management
+  # - sets up Federated Identity for Azure Container Registry for GitHub Actions
+
+
 env:
-    TF_LOG: DEBUG
+    TF_LOG: ERROR # DEBUG for detailed logs, ERROR for less verbose
     TF_VAR_github_token: ${{ secrets.GH_PAT_TOKEN }}
     TF_VAR_github_owner: ${{ github.repository_owner }}
     TF_VAR_github_repository: ${{ github.event.repository.name }}
