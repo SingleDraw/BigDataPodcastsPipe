@@ -129,7 +129,8 @@ if [[ -n "$APP_OBJECT_ID" ]]; then
 
   if [[ -n "$FED_CRED_ID" && "$FED_CRED_ID" != "null" ]]; then
     echo "Importing existing Federated Identity Credential with ID: $FED_CRED_ID"
-    terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_OBJECT_ID/federatedIdentityCredentials/$FED_CRED_ID"
+    # terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_OBJECT_ID/federatedIdentityCredentials/$FED_CRED_ID"
+    terraform import azuread_application_federated_identity_credential.github_actions "$APP_OBJECT_ID/federatedIdentityCredentials/$FED_CRED_ID"
   else
     echo "No federated Identity Credential found. Will create new one."
   fi
