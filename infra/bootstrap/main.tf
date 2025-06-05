@@ -111,6 +111,9 @@ resource "github_actions_secret" "storage_account_name" {
 #     ]
 # }
 
+
+data "azurerm_subscription" "current" {}
+
 # Add this instead
 resource "azuread_application" "github_actions" {
   display_name = "github-actions-app"
@@ -133,6 +136,12 @@ output "client_id" {
   value = azuread_application.github_actions.client_id
 }
 
+
+resource "azurerm_role_assignment" "github_actions_subscription_contributor" {
+  scope                = data.azurerm_subscription.current.id
+  role_definition_name = "Contributor"
+  principal_id         = azuread_service_principal.github_actions.object_id
+}
 
 
 # FIX: Use service principal, not managed identity
