@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# ---------------------------------------------------------
+# RESOURCE GROUP IMPORT SCRIPT
+# ---------------------------------------------------------
+
 RESOURCE_GROUP_NAME="$TF_VAR_resource_group_name"
 SUBSCRIPTION_ID="$TF_VAR_subscription_id"
 RG_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME"
@@ -13,63 +17,10 @@ else
   echo "Resource group does not exist. Skipping import."
 fi
 
-STORAGE_ACCOUNT_NAME="$TF_VAR_storage_account_name"
-STORAGE_ACCOUNT_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME"
-# Check if the storage account exists
-if az storage account show --name "$STORAGE_ACCOUNT_NAME" --resource-group "$RESOURCE_GROUP_NAME" --subscription "$SUBSCRIPTION_ID" &>/dev/null; then
-  echo "Importing existing storage account..."
-  terraform import azurerm_storage_account.storage "$STORAGE_ACCOUNT_ID"
-else
-  echo "Storage account does not exist. Skipping import."
-fi
 
 
-
-
-# Import storage container (tfstate)
-CONTAINER_NAME="tfstate"
-CONTAINER_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/$CONTAINER_NAME"
-
-# Check if the container exists using Azure CLI
-if az storage container show --name "$CONTAINER_NAME" \
-    --account-name "$STORAGE_ACCOUNT_NAME" \
-    --auth-mode login &>/dev/null; then
-  echo "Importing existing storage container..."
-  terraform import azurerm_storage_container.tfstate "$CONTAINER_ID"
-else
-  echo "Storage container does not exist. Skipping import."
-fi
-
-# Import storage container (tfstate)
-CONTAINER_NAME="whisperer"
-CONTAINER_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/$CONTAINER_NAME"
-
-# Check if the container exists using Azure CLI
-if az storage container show --name "$CONTAINER_NAME" \
-    --account-name "$STORAGE_ACCOUNT_NAME" \
-    --auth-mode login &>/dev/null; then
-  echo "Importing existing storage container..."
-  terraform import azurerm_storage_container.whisperer "$CONTAINER_ID"
-else
-  echo "Storage container does not exist. Skipping import."
-fi
-
-
-# Import storage container (aci-logs)
-CONTAINER_NAME="aci-logs"
-CONTAINER_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/$CONTAINER_NAME"
-
-# Check if the container exists using Azure CLI
-if az storage container show --name "$CONTAINER_NAME" \
-    --account-name "$STORAGE_ACCOUNT_NAME" \
-    --auth-mode login &>/dev/null; then
-  echo "Importing existing storage container..."
-  terraform import azurerm_storage_container.aci_logs "$CONTAINER_ID"
-else
-  echo "Storage container does not exist. Skipping import."
-fi
-
-
+# ---------------------------------------------------------# STORAGE IDENTITY IMPORT SCRIPT
+# ---------------------------------------------------------
 # Github Actions OIDC identity
 
 # # Check if GitHub Actions identity already exists
@@ -143,8 +94,8 @@ APP_ID=$(az ad app list --display-name "$APP_NAME" --query "[0].appId" -o tsv)
 
 if [[ -n "$APP_ID" ]]; then
   echo "Importing existing GitHub Actions App Registration..."
-  # terraform import azuread_application.github_actions "/applications/$APP_ID"
-  terraform import azuread_application.github_actions "$APP_ID"
+  terraform import azuread_application.github_actions "/applications/$APP_ID"
+  # terraform import azuread_application.github_actions "$APP_ID"
 
   # Import the service principal
   SP_ID=$(az ad sp list --display-name "$APP_NAME" --query "[0].id" -o tsv)
@@ -204,3 +155,63 @@ fi
 
 
 
+#----------------------------------------------------------
+# STORAGE ACCOUNT AND CONTAINERS IMPORT
+#----------------------------------------------------------
+
+
+STORAGE_ACCOUNT_NAME="$TF_VAR_storage_account_name"
+STORAGE_ACCOUNT_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME"
+# Check if the storage account exists
+if az storage account show --name "$STORAGE_ACCOUNT_NAME" --resource-group "$RESOURCE_GROUP_NAME" --subscription "$SUBSCRIPTION_ID" &>/dev/null; then
+  echo "Importing existing storage account..."
+  terraform import azurerm_storage_account.storage "$STORAGE_ACCOUNT_ID"
+else
+  echo "Storage account does not exist. Skipping import."
+fi
+
+
+
+
+# Import storage container (tfstate)
+CONTAINER_NAME="tfstate"
+CONTAINER_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/$CONTAINER_NAME"
+
+# Check if the container exists using Azure CLI
+if az storage container show --name "$CONTAINER_NAME" \
+    --account-name "$STORAGE_ACCOUNT_NAME" \
+    --auth-mode login &>/dev/null; then
+  echo "Importing existing storage container..."
+  terraform import azurerm_storage_container.tfstate "$CONTAINER_ID"
+else
+  echo "Storage container does not exist. Skipping import."
+fi
+
+# Import storage container (tfstate)
+CONTAINER_NAME="whisperer"
+CONTAINER_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/$CONTAINER_NAME"
+
+# Check if the container exists using Azure CLI
+if az storage container show --name "$CONTAINER_NAME" \
+    --account-name "$STORAGE_ACCOUNT_NAME" \
+    --auth-mode login &>/dev/null; then
+  echo "Importing existing storage container..."
+  terraform import azurerm_storage_container.whisperer "$CONTAINER_ID"
+else
+  echo "Storage container does not exist. Skipping import."
+fi
+
+
+# Import storage container (aci-logs)
+CONTAINER_NAME="aci-logs"
+CONTAINER_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/$CONTAINER_NAME"
+
+# Check if the container exists using Azure CLI
+if az storage container show --name "$CONTAINER_NAME" \
+    --account-name "$STORAGE_ACCOUNT_NAME" \
+    --auth-mode login &>/dev/null; then
+  echo "Importing existing storage container..."
+  terraform import azurerm_storage_container.aci_logs "$CONTAINER_ID"
+else
+  echo "Storage container does not exist. Skipping import."
+fi
