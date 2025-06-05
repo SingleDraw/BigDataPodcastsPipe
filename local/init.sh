@@ -119,17 +119,26 @@ if [[ -z "$APP_ID" ]]; then
     exit 1
 fi
 
-echo "Assigning 'User Access Administrator' role to the service principal..."
 
-az role assignment create \
-    --assignee "$APP_ID" \
-    --role "User Access Administrator" \
-    --scope "$SCOPES"
 
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to assign 'User Access Administrator' role."
-    manually_set_guide_prompt
-    exit 1
+# check if the role already exists
+ROLE_EXISTS=$(az role definition list --name "User Access Administrator" --query "[].name" -o tsv)
+
+if [[ -z "$ROLE_EXISTS" ]]; then
+    echo "Assigning 'User Access Administrator' role to the service principal..."
+    az role assignment create \
+        --assignee "$APP_ID" \
+        --role "User Access Administrator" \
+        --scope "$SCOPES"
+
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to assign 'User Access Administrator' role."
+        manually_set_guide_prompt
+        exit 1
+    fi
+    echo "Role 'User Access Administrator' has been assigned to the service principal successfully."
+else
+    echo "Role 'User Access Administrator' already exists for the service principal. Skipping role assignment."
 fi
 
 echo "GitHub secret AZURE_CREDENTIALS has been set successfully."
