@@ -46,9 +46,10 @@ jobs:
     - name: Azure Login via OIDC
       uses: azure/login@v1
       with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        client-id: ${{ secrets.AZURE_CLIENT_ID }} # Client ID - not App ID, it't federated identity of the GitHub App
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        auth-type: federated
 
     - name: Init main Terraform with remote backend
       run: |

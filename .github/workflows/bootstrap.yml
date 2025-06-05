@@ -4,8 +4,6 @@
 # - stores secrets in github secrets
 # - sets up a remote backend in storage for Terraform state management
 # - sets up Federated Identity for Azure Container Registry for GitHub Actions
-# - removes Azure credentials from GitHub secrets after the workflow run
-
 
 name: Bootstrap
 on:
@@ -35,7 +33,7 @@ jobs:
     - name: Azure Login
       uses: azure/login@v1
       with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}     # One time use credentials for Azure login, deleted after workflow run
+        creds: ${{ secrets.AZURE_CREDENTIALS }}     # 
 
     - name: Terraform Init
       run: terraform init
@@ -68,12 +66,12 @@ jobs:
       working-directory: infra/main
 
     
-    - name: Delete Azure Login Credentials from GitHub Secrets
-      run: |
-        gh secret delete AZURE_CREDENTIALS
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      working-directory: infra/bootstrap
+    # - name: Delete Azure Login Credentials from GitHub Secrets
+    #   run: |
+    #     gh secret delete AZURE_CREDENTIALS
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   working-directory: infra/bootstrap
     
 
         

@@ -129,15 +129,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Client ID
+# Client ID - dont store it as a secret, won't be used in the workflow
 CLIENT_ID=$(echo "$CREDENTIALS_JSON" | grep -oP '"clientId"\s*:\s*"\K[^"]+')
-gh secret set AZURE_CLIENT_ID \
-    --body "$CLIENT_ID" \
-    --repo "$TF_VAR_GITHUB_REPOSITORY"
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to set GitHub secret AZURE_CLIENT_ID."
-    exit 1
-fi
 
 # Tenant ID
 gh secret set AZURE_TENANT_ID \

@@ -113,8 +113,19 @@ resource "azurerm_federated_identity_credential" "github_oidc" {
 }
 
 
+# 7. Store github actions identity client ID in GitHub secrets
+resource "github_actions_secret" "github_actions_client_id" {
+  repository      = var.github_repository
+  secret_name     = "AZURE_CLIENT_ID"
+  plaintext_value = azurerm_user_assigned_identity.github_actions.client_id
 
-# 7. Register the Microsoft.App provider for Container Apps
+  depends_on = [
+    azurerm_user_assigned_identity.github_actions
+  ]
+}
+
+
+# 8. Register the Microsoft.App provider for Container Apps
 # This is necessary for using Azure Container Apps, which is a newer service.
 resource "null_resource" "register_containerapps" {
   provisioner "local-exec" {
