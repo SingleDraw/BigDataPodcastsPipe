@@ -112,7 +112,7 @@ fi
 #     echo "Role assignment for GitHub Actions identity does not exist. Skipping import."
 #   fi
 # fi
-#!/bin/bash
+# # !/bin/bash
 
 APP_NAME="github-actions-app"
 FED_CRED_NAME="github-actions-federated-credential"
@@ -129,7 +129,8 @@ APP_ID=$(az ad app list --display-name "$APP_NAME" --query "[0].appId" -o tsv)
 
 if [[ -n "$APP_ID" ]]; then
   echo "Importing existing GitHub Actions App Registration..."
-  terraform import azuread_application.github_actions "/applications/$APP_ID"
+  # terraform import azuread_application.github_actions "/applications/$APP_ID"
+  terraform import azuread_application.github_actions "$APP_ID"
 
   # Import the service principal
   SP_ID=$(az ad sp list --display-name "$APP_NAME" --query "[0].id" -o tsv)
