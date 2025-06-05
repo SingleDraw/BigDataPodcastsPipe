@@ -94,8 +94,8 @@ APP_ID=$(az ad app list --display-name "$APP_NAME" --query "[0].appId" -o tsv)
 
 if [[ -n "$APP_OBJECT_ID" ]]; then
   echo "Importing existing GitHub Actions App Registration..."
-  terraform import azuread_application.github_actions "$APP_OBJECT_ID"
-  
+  terraform import azuread_application.github_actions "/applications/$APP_OBJECT_ID"
+
   # Import the service principal
   SP_ID=$(az ad sp list --display-name "$APP_NAME" --query "[0].id" -o tsv)
   if [[ -n "$SP_ID" ]]; then
