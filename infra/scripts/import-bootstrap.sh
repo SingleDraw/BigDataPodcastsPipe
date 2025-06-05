@@ -23,6 +23,9 @@ else
   echo "Storage account does not exist. Skipping import."
 fi
 
+
+
+
 # Import storage container (tfstate)
 CONTAINER_NAME="tfstate"
 CONTAINER_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/$CONTAINER_NAME"
@@ -49,5 +52,39 @@ if az storage container show --name "$CONTAINER_NAME" \
   terraform import azurerm_storage_container.whisperer "$CONTAINER_ID"
 else
   echo "Storage container does not exist. Skipping import."
+fi
+
+
+# Import storage container (aci-logs)
+CONTAINER_NAME="aci-logs"
+CONTAINER_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/$CONTAINER_NAME"
+
+# Check if the container exists using Azure CLI
+if az storage container show --name "$CONTAINER_NAME" \
+    --account-name "$STORAGE_ACCOUNT_NAME" \
+    --auth-mode login &>/dev/null; then
+  echo "Importing existing storage container..."
+  terraform import azurerm_storage_container.aci_logs "$CONTAINER_ID"
+else
+  echo "Storage container does not exist. Skipping import."
+fi
+
+
+# Github Actions OIDC identity
+
+# Check if GitHub Actions identity already exists
+if az identity show --name "github-actions-identity" --resource-group "$RESOURCE_GROUP_NAME" &>/dev/null; then
+  echo "GitHub Actions identity already exists. Skipping import."
+else
+  echo "Importing GitHub Actions identity..."
+  terraform import azurerm_user_assigned_identity.github_actions "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.ManagedIdentity/userAssignedIdentities/github-actions-identity"
+fi
+
+# Check if Federated Identity Credential already exists
+if az identity federated-credential show --name "github-actions-oidc" --identity-name "github-actions-identity" --resource-group "$RESOURCE_GROUP_NAME" &>/dev/null; then
+  echo "Federated Identity Credential already exists. Skipping import."
+else
+  echo "Importing Federated Identity Credential for GitHub Actions..."
+  terraform import azurerm_federated_identity_credential.github_oidc "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.ManagedIdentity/userAssignedIdentities/github-actions-identity/federatedIdentityCredentials/github-actions-oidc"
 fi
 
