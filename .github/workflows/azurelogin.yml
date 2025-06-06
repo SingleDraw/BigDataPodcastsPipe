@@ -1,5 +1,5 @@
 name: Test Azure Login
-# descriptiion: This workflow tests Azure login functionality using GitHub Actions.
+# description: This workflow tests Azure login functionality using GitHub Actions.
 
 on:
   workflow_dispatch:

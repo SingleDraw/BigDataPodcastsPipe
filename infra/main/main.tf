@@ -41,7 +41,8 @@ resource "azurerm_container_registry" "acr" {
 data "azurerm_client_config" "current" {}
 
 data "azuread_service_principal" "github_oidc" {
-  object_id = data.azurerm_client_config.current.object_id
+  #object_id = data.azurerm_client_config.current.object_id  
+  client_id = var.azure_client_id  # This should be passed from GitHub secret
 }
 
 # Option 2: Alternative - Get by application name if you know it
@@ -53,6 +54,17 @@ data "azuread_service_principal" "github_oidc" {
 # data "azuread_service_principal" "github_oidc" {
 #   application_id = "your-application-id-here"
 # }
+
+
+
+
+
+
+
+
+
+
+
 
 # 4. KV - Azure Key Vault
 # -----------------------------------------------------------------
@@ -69,15 +81,40 @@ resource "azurerm_key_vault" "kv" {
     azurerm_resource_group.rg
   ]
 
-  # Admin access policy for the current user
-  access_policy {
-    tenant_id = data.azurerm_client_config.current.tenant_id
-    # object_id = data.azurerm_client_config.current.object_id
-    object_id = data.azuread_service_principal.github_oidc.object_id
-    secret_permissions = [
-      "Get", "List", "Set", "Delete"
-    ]
-  }
+  # # Admin access policy for the current user
+  # access_policy {
+  #   tenant_id = data.azurerm_client_config.current.tenant_id
+  #   # object_id = data.azurerm_client_config.current.object_id
+  #   object_id = data.azuread_service_principal.github_oidc.object_id
+  #   secret_permissions = [
+  #     "Get",
+  #     "List",
+  #     "Set",
+  #     "Delete",
+  #     "Backup",
+  #     "Restore",
+  #     "Recover",
+  #     "Purge"
+  #   ]
+  # }
+}
+
+
+resource "azurerm_key_vault_access_policy" "github_actions" {
+  key_vault_id = azurerm_key_vault.main.id  # Match your KV resource name
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azuread_service_principal.github_oidc.object_id
+
+  secret_permissions = [
+    "Get",
+    "List",
+    "Set",
+    "Delete",
+    "Backup",
+    "Restore",
+    "Recover",
+    "Purge"
+  ]
 }
 
 # # Assign Key Vault Secrets Officer role to the current identity
@@ -136,6 +173,9 @@ resource "azurerm_key_vault_secret" "blob_connection_string" {
 
   depends_on = [azurerm_key_vault.kv]
 }
+
+
+
 
 
 

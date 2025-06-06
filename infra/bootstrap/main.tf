@@ -131,10 +131,6 @@ resource "azuread_application_federated_identity_credential" "github_actions" {
   audiences      = ["api://AzureADTokenExchange"]
 }
 
-# Store this as AZURE_CLIENT_ID
-output "client_id" {
-  value = azuread_application.github_actions.client_id
-}
 
 
 resource "azurerm_role_assignment" "github_actions_subscription_contributor" {
@@ -151,11 +147,34 @@ resource "azurerm_role_assignment" "github_actions_rg_contributor" {
   principal_id         = azuread_service_principal.github_actions.object_id  # CHANGED
 }
 
+
+# Output both client_id and object_id for the second flow
+output "client_id" {
+  value = azuread_application.github_actions.client_id
+}
+
+output "service_principal_object_id" {
+  value = azuread_service_principal.github_actions.object_id
+}
+
 # FIX: Use app registration client ID
 resource "github_actions_secret" "github_actions_client_id" {
   repository      = var.github_repository
   secret_name     = "AZURE_CLIENT_ID"
   plaintext_value = azuread_application.github_actions.client_id  # CHANGED
+}
+
+resource "github_actions_secret" "github_actions_client_id" {
+  repository      = var.github_repository
+  secret_name     = "AZURE_CLIENT_ID"
+  plaintext_value = azuread_application.github_actions.client_id
+}
+
+# Add the object_id as a secret too for the second flow
+resource "github_actions_secret" "github_actions_object_id" {
+  repository      = var.github_repository
+  secret_name     = "AZURE_OBJECT_ID"
+  plaintext_value = azuread_service_principal.github_actions.object_id
 }
 
 

@@ -26,6 +26,10 @@ env:
     TF_VAR_podcasting_index_api_key: ${{ secrets.PODCASTING_INDEX_API_KEY }}
     TF_VAR_podcasting_index_api_secret: ${{ secrets.PODCASTING_INDEX_API_SECRET }}
     TF_VAR_brick_pcaster_image_name: ${{ secrets.BRICK_PCASTER_IMAGE_NAME }}
+    #
+    TF_VAR_azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+    TF_VAR_azure_object_id: ${{ secrets.AZURE_OBJECT_ID }}  # If using this approach
+    TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
 
 jobs:
   terraform:

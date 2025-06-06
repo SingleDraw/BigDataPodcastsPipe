@@ -77,3 +77,26 @@ variable "brick_pcaster_image_name" {
 #     description = "Name of the Azure Container App Environment"
 #     type        = string
 # }
+
+
+
+variable "azure_client_id" {
+  description = "Azure Client ID from GitHub secret"
+  type        = string
+}
+
+# Optional if you use object_id approach
+variable "azure_object_id" {
+  description = "Azure Service Principal Object ID from GitHub secret"
+  type        = string
+}
+
+variable "tenant_id" {
+  description = "Azure Tenant ID"
+  type        = string
+}
+
+variable "subscription_id" {
+  description = "Azure Subscription ID"
+  type        = string
+}
