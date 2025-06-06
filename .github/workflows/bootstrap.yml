@@ -1,6 +1,6 @@
 name: Bootstrap
 on:
-  workflow_dispatch:
+    workflow_dispatch:
 
 env:
     TF_LOG: DEBUG
