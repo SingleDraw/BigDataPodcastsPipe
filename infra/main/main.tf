@@ -41,7 +41,6 @@ resource "azurerm_container_registry" "acr" {
 data "azurerm_client_config" "current" {}
 
 data "azuread_service_principal" "github_oidc" {
-  #object_id = data.azurerm_client_config.current.object_id  
   client_id = var.azure_client_id  # This should be passed from GitHub secret
 }
 
