@@ -30,7 +30,7 @@ APP_RESOURCE_NAME="github_actions"
 
 # Get the App ID for the GitHub Actions App Registration
 # If App does not exist, it will be created
-APP_ID=$(source "$UTILS_DIR/ensure_app.sh" "$APP_NAME")
+APP_ID=$(source "$UTILS_DIR/ensure-app.sh" "$APP_NAME")
 
 if [[ -z "$APP_ID" ]]; then
   echo "Failed to retrieve or create App ID for $APP_NAME. Exiting."
