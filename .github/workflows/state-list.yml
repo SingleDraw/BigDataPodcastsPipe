@@ -60,12 +60,12 @@ jobs:
         terraform state list
       working-directory: infra/main
 
-    - name: Terraform State Pull Main
-      run: |
-        echo "📥 Pulling the current Terraform state..."
-        terraform state pull > terraform.tfstate
-        cat terraform.tfstate
-      working-directory: infra/main
+    # - name: Terraform State Pull Main
+    #   run: |
+    #     echo "📥 Pulling the current Terraform state..."
+    #     terraform state pull > terraform.tfstate
+    #     cat terraform.tfstate
+    #   working-directory: infra/main
 
     - name: Init bootstrap Terraform with remote backend
       run: |
@@ -73,7 +73,7 @@ jobs:
           -backend-config="resource_group_name=${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}" \
           -backend-config="storage_account_name=${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}" \
           -backend-config="container_name=tfstate" \
-          -backend-config="key=bootstrap.tfstate"
+          -backend-config="key=terraform.tfstate"
       working-directory: infra/bootstrap
 
     - name: Terraform State List Bootstrap
@@ -82,11 +82,11 @@ jobs:
         terraform state list
       working-directory: infra/bootstrap
 
-    - name: Terraform State Pull Bootstrap
-      run: |
-        echo "📥 Pulling the current Terraform state for bootstrap..."
-        terraform state pull > terraform.tfstate
-        cat terraform.tfstate
+    # - name: Terraform State Pull Bootstrap
+    #   run: |
+    #     echo "📥 Pulling the current Terraform state for bootstrap..."
+    #     terraform state pull > terraform.tfstate
+    #     cat terraform.tfstate
 
 
         
