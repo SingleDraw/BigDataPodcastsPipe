@@ -1,12 +1,6 @@
 name: Bootstrap
 on:
   workflow_dispatch:
-  #   push:
-  #     branches: [ main ]  # Also trigger on push to main
-  workflow_run:               # Trigger after Bootstrap workflow completes
-    workflows: ["Bootstrap"]
-    types:
-      - completed
 
 env:
     TF_LOG: DEBUG
