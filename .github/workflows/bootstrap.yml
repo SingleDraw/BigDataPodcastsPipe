@@ -1,6 +1,8 @@
-name: Bootstrap
+name: Provision Azure Infra
 on:
-    workflow_dispatch:
+  workflow_dispatch:
+#   push:
+#     branches: [ main ]  # Also trigger on push to main
 
 env:
     TF_LOG: DEBUG
@@ -8,6 +10,7 @@ env:
     TF_VAR_github_owner: ${{ github.repository_owner }}
     TF_VAR_github_repository: ${{ github.event.repository.name }}
     TF_VAR_resource_group_name: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} 
+    TF_VAR_container_registry_name: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
     TF_VAR_location: ${{ secrets.TF_VAR_LOCATION }}                       
     TF_VAR_storage_account_name: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
     TF_VAR_subscription_id: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
@@ -30,20 +33,20 @@ jobs:
 
     - name: Terraform Init
       run: terraform init
-      working-directory: infra/bootstrap
+      working-directory: infra/main
 
     - name: Make script executable
-      run: chmod +x ../scripts/import-bootstrap.sh
-      working-directory: infra/bootstrap
+      run: chmod +x ../scripts/import.sh
+      working-directory: infra/main
 
     - name: Run conditional import script
-      run: ../scripts/import-bootstrap.sh
-      working-directory: infra/bootstrap
+      run: ../scripts/import.sh
+      working-directory: infra/main
       shell: bash
 
     - name: Terraform Plan
       run: terraform plan
-      working-directory: infra/bootstrap
+      working-directory: infra/main
 
     - name: Terraform Apply
       run: terraform apply -auto-approve
@@ -56,10 +59,6 @@ jobs:
           -backend-config="storage_account_name=${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}" \
           -backend-config="container_name=tfstate" \
           -backend-config="key=terraform.tfstate"
-      working-directory: infra/main
-y=terraform.tfstate"
-      working-directory: infra/main
-y=terraform.tfstate"
       working-directory: infra/main
     
 
