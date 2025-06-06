@@ -132,13 +132,23 @@ resource "azuread_application_federated_identity_credential" "github_actions" {
 }
 
 
+resource "azurerm_role_assignment" "github_actions_user_access_administrator" {
+  scope                = data.azurerm_subscription.current.id
+  role_definition_name = "User Access Administrator"
+  principal_id         = azuread_service_principal.github_actions.object_id
+}
+
+resource "azurerm_role_assignment" "github_actions_role_assignment_admin" {
+  scope                = data.azurerm_resource_group.main.id
+  role_definition_name = "Role Based Access Control Administrator"
+  principal_id         = azuread_service_principal.github_actions.object_id
+}
 
 resource "azurerm_role_assignment" "github_actions_subscription_contributor" {
   scope                = data.azurerm_subscription.current.id
   role_definition_name = "Contributor"
   principal_id         = azuread_service_principal.github_actions.object_id
 }
-
 
 # FIX: Use service principal, not managed identity
 resource "azurerm_role_assignment" "github_actions_rg_contributor" {
