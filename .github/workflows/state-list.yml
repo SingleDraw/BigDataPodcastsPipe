@@ -67,6 +67,15 @@ jobs:
         cat terraform.tfstate
       working-directory: infra/main
 
+    - name: Init bootstrap Terraform with remote backend
+      run: |
+        terraform init \
+          -backend-config="resource_group_name=${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}" \
+          -backend-config="storage_account_name=${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}" \
+          -backend-config="container_name=tfstate" \
+          -backend-config="key=bootstrap.tfstate"
+      working-directory: infra/bootstrap
+
     - name: Terraform State List Bootstrap
       run: |
         echo "🔍 Listing all resources currently tracked in Terraform state for bootstrap..."
