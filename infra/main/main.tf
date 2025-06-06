@@ -115,6 +115,10 @@ resource "azurerm_key_vault_access_policy" "github_actions" {
     "Recover",
     "Purge"
   ]
+
+  depends_on = [
+    azurerm_key_vault.kv
+  ]
 }
 
 # # Assign Key Vault Secrets Officer role to the current identity
@@ -137,7 +141,9 @@ resource "azurerm_key_vault_secret" "podcast_api_key" {
   value        = var.podcasting_index_api_key
   key_vault_id = azurerm_key_vault.kv.id
 
-  depends_on = [azurerm_key_vault.kv]
+  # depends_on = [azurerm_key_vault.kv]
+  # This ensures permissions are set before trying to manage the secret
+  depends_on = [azurerm_key_vault_access_policy.github_actions]
 }
 
 resource "azurerm_key_vault_secret" "podcast_api_secret" {
@@ -145,7 +151,8 @@ resource "azurerm_key_vault_secret" "podcast_api_secret" {
   value        = var.podcasting_index_api_secret
   key_vault_id = azurerm_key_vault.kv.id
 
-  depends_on = [azurerm_key_vault.kv]
+  # depends_on = [azurerm_key_vault.kv]
+  depends_on = [azurerm_key_vault_access_policy.github_actions]
 }
 
 # Store ACR credentials in Key Vault
@@ -154,7 +161,8 @@ resource "azurerm_key_vault_secret" "acr_username" {
   value        = azurerm_container_registry.acr.admin_username
   key_vault_id = azurerm_key_vault.kv.id
 
-  depends_on = [azurerm_key_vault.kv]
+  # depends_on = [azurerm_key_vault.kv]
+  depends_on = [azurerm_key_vault_access_policy.github_actions]
 }
 
 resource "azurerm_key_vault_secret" "acr_password" {
@@ -162,7 +170,8 @@ resource "azurerm_key_vault_secret" "acr_password" {
   value        = azurerm_container_registry.acr.admin_password
   key_vault_id = azurerm_key_vault.kv.id
 
-  depends_on = [azurerm_key_vault.kv]
+  # depends_on = [azurerm_key_vault.kv]
+  depends_on = [azurerm_key_vault_access_policy.github_actions]
 }
 
 # Store storage connection string
@@ -171,7 +180,8 @@ resource "azurerm_key_vault_secret" "blob_connection_string" {
   value        = azurerm_storage_account.storage.primary_connection_string
   key_vault_id = azurerm_key_vault.kv.id
 
-  depends_on = [azurerm_key_vault.kv]
+  # depends_on = [azurerm_key_vault.kv]
+  depends_on = [azurerm_key_vault_access_policy.github_actions]
 }
 
 
