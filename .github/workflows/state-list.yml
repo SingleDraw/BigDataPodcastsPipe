@@ -54,11 +54,30 @@ jobs:
           -backend-config="key=terraform.tfstate"
       working-directory: infra/main
 
-    - name: Terraform State List
+    - name: Terraform State List Main
       run: |
         echo "🔍 Listing all resources currently tracked in Terraform state..."
         terraform state list
       working-directory: infra/main
+
+    - name: Terraform State Pull Main
+      run: |
+        echo "📥 Pulling the current Terraform state..."
+        terraform state pull > terraform.tfstate
+        cat terraform.tfstate
+      working-directory: infra/main
+
+    - name: Terraform State List Bootstrap
+      run: |
+        echo "🔍 Listing all resources currently tracked in Terraform state for bootstrap..."
+        terraform state list
+      working-directory: infra/bootstrap
+
+    - name: Terraform State Pull Bootstrap
+      run: |
+        echo "📥 Pulling the current Terraform state for bootstrap..."
+        terraform state pull > terraform.tfstate
+        cat terraform.tfstate
 
 
         
