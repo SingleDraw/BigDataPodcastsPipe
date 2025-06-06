@@ -4,4 +4,4 @@
 PROMPT="This is a test prompt for the test utility script."
 
 
-source "./utils/test-util.sh" "$PROMPT" "$PROMPT"
+source "../scripts/utils/test-util.sh" "$PROMPT" "$PROMPT"
