@@ -79,39 +79,7 @@ resource "github_actions_secret" "storage_account_name" {
 }
 
 
-
-# 5. GitHub Actions OIDC Integration - Federated Identity
-# This allows GitHub Actions to authenticate with Azure using OIDC
-# resource "azurerm_user_assigned_identity" "github_actions" {
-#     name                = "github-actions-identity"
-#     resource_group_name = azurerm_resource_group.rg.name
-#     location            = azurerm_resource_group.rg.location
-
-#     tags = {
-#         environment = "GitHub Actions"
-#     }
-
-#     depends_on = [
-#         azurerm_resource_group.rg
-#     ]
-# }
-
-# # 6. Federated Identity Credential for GitHub Actions
-# resource "azurerm_federated_identity_credential" "github_oidc" {
-#     name                = "github-actions-oidc"
-#     resource_group_name = azurerm_resource_group.rg.name
-#     parent_id           = azurerm_user_assigned_identity.github_actions.id
-#     audience            = ["api://AzureADTokenExchange"]
-#     issuer              = "https://token.actions.githubusercontent.com"
-#     subject             = "repo:${var.github_owner}/${var.github_repository}:ref:refs/heads/main" # adjust branch if needed
-#     # subject             = "repo:SingleDraw/BigDataPodcastsPipe:*"  # More permissive
-
-#     depends_on = [
-#         azurerm_user_assigned_identity.github_actions
-#     ]
-# }
-
-
+# OIDC authentication for GitHub Actions
 data "azurerm_subscription" "current" {}
 
 # Add this instead
