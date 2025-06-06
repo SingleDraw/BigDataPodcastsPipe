@@ -139,7 +139,7 @@ resource "azurerm_role_assignment" "github_actions_user_access_administrator" {
 }
 
 resource "azurerm_role_assignment" "github_actions_role_assignment_admin" {
-  scope                = data.azurerm_resource_group.main.id
+  scope                = azurerm_resource_group.rg.id
   role_definition_name = "Role Based Access Control Administrator"
   principal_id         = azuread_service_principal.github_actions.object_id
 }
