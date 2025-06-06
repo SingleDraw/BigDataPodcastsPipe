@@ -72,6 +72,10 @@ jobs:
     #   env:
     #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     #   working-directory: infra/bootstrap
+y=terraform.tfstate"
+      working-directory: infra/main
+y=terraform.tfstate"
+      working-directory: infra/main
     
 
         

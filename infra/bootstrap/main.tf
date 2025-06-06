@@ -164,12 +164,6 @@ resource "github_actions_secret" "github_actions_client_id" {
   plaintext_value = azuread_application.github_actions.client_id  # CHANGED
 }
 
-resource "github_actions_secret" "github_actions_client_id" {
-  repository      = var.github_repository
-  secret_name     = "AZURE_CLIENT_ID"
-  plaintext_value = azuread_application.github_actions.client_id
-}
-
 # Add the object_id as a secret too for the second flow
 resource "github_actions_secret" "github_actions_object_id" {
   repository      = var.github_repository

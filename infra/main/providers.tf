@@ -25,8 +25,7 @@ provider "azurerm" {
 }
 
 provider "azuread" {
-  # Will use the same authentication as azurerm (OIDC in your case)
-  tenant_id = var.tenant_id  # Add this variable
+  # All authentication details will be picked up from Azure CLI login
 }
 
 # GitHub provider configuration
