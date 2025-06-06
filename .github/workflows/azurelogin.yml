@@ -20,6 +20,16 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+
+    - name: Make script executable
+      run: chmod +x ../scripts/test.sh
+      working-directory: infra/bootstrap
+  
+    - name: Run test bash script (checking path resolution)
+      run: ../scripts/test.sh
+      working-directory: infra/bootstrap
+      shell: bash
+
     - name: Test Azure CLI
       run: |
         echo "Testing Azure authentication..."
