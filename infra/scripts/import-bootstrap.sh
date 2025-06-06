@@ -1,186 +1,93 @@
 #!/bin/bash
+
 set -e
 
 # ---------------------------------------------------------
-# RESOURCE GROUP IMPORT SCRIPT
+# Get the absolute path of the directory containing this script
+# and set the path to the utils directory
+# ---------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+UTILS_DIR="$SCRIPT_DIR/utils"
 # ---------------------------------------------------------
 
-# RESOURCE_GROUP_NAME="$TF_VAR_resource_group_name"
-# SUBSCRIPTION_ID="$TF_VAR_subscription_id"
-# RG_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME"
 
-# # Check if the resource group exists
-# if az group show --name "$RESOURCE_GROUP_NAME" --subscription "$SUBSCRIPTION_ID" &>/dev/null; then
-#   echo "Importing existing resource group..."
-#   terraform import azurerm_resource_group.rg "$RG_ID"
-# else
-#   echo "Resource group does not exist. Skipping import."
-# fi
-
-# Resource group import script
-source ./utils/import-rg.sh "$TF_VAR_resource_group_name" "$TF_VAR_subscription_id"
+SUBID="$TF_VAR_subscription_id"
+RGN="$TF_VAR_resource_group_name"
 
 
-# TO CHECK:
+#----------------------------------------------------------
+# Resource group
+#----------------------------------------------------------
+source "$UTILS_DIR/import-rg.sh" "$SUBID" "$RGN"
 
-# ---------------------------------------------------------# Script to import existing GitHub Actions App Registration and Service Principal into Terraform state
+
 # ---------------------------------------------------------
-# Debugging terraform import script for GitHub Actions App Registration and Service Principal
-
+# App Registration, Service Principal and Federated Identity Credential import
+# ---------------------------------------------------------
 
 APP_NAME="github-actions-app"
+APP_RESOURCE_NAME="github_actions"
 
-app_id=$(az ad app list --display-name "$APP_NAME" --query "[0].appId" -o tsv) # bc44d180-5b11-4c63-bd56-2012b7567d8f
+# Get the App ID for the GitHub Actions App Registration
+# If App does not exist, it will be created
+APP_ID=$(source "$UTILS_DIR/ensure_app.sh" "$APP_NAME")
 
-
-if [ -z "$app_id" ]; then
-  echo "App not found. Creating..."
-  app_id=$(az ad app create --display-name "$APP_NAME" --query appId -o tsv)
-  echo "Created app with ID: $app_id"
-else
-  echo "App already exists: $app_id"
-fi
-
-
-# FED_CRED_NAME="github-actions-federated-credential"
-ROLE_NAME="Contributor"
-
-# Ensure these environment variables are set
-if [[ -z "$SUBSCRIPTION_ID" || -z "$RESOURCE_GROUP_NAME" ]]; then
-  echo "Error: SUBSCRIPTION_ID and RESOURCE_GROUP_NAME must be set."
+if [[ -z "$APP_ID" ]]; then
+  echo "Failed to retrieve or create App ID for $APP_NAME. Exiting."
   exit 1
+else
+  echo "App ID for $APP_NAME: $APP_ID"
 fi
-# Check if GitHub Actions App Registration already exists
+
+# Get the Service Principal object ID
+SP_OBJECT_ID=$(az ad sp show --id "$APP_ID" --query "id" -o tsv)
+
+if [[ -z "$SP_OBJECT_ID" ]]; then
+  echo "Failed to retrieve Service Principal object ID for $APP_NAME. Exiting."
+  exit 1
+else
+  echo "Service Principal object ID for $APP_NAME: $SP_OBJECT_ID"
+fi
+
+# Get the App Registration object ID
 APP_OBJECT_ID=$(az ad app list --display-name "$APP_NAME" --query "[0].id" -o tsv) 
 
-APP_ID=$(az ad app list --display-name "$APP_NAME" --query "[0].appId" -o tsv)
-
-if [[ -n "$APP_OBJECT_ID" ]]; then
-  echo "Importing existing GitHub Actions App Registration..."
-  # echo "App Object ID: $APP_OBJECT_ID"
-  # echo "App ID: $APP_ID"
-  terraform import azuread_application.github_actions "/applications/$APP_OBJECT_ID"
-
-  # Import the service principal
-
-  SP_ID=$(az ad sp list --display-name "$APP_NAME" --query "[0].id" -o tsv)
-  if [[ -n "$SP_ID" ]]; then
-    echo "Importing existing Service Principal..."
-    #terraform import azuread_service_principal.github_actions "/servicePrincipals/$SP_ID"
-    terraform import azuread_service_principal.github_actions "$SP_ID"
-  else
-    echo "Service Principal does not exist. Skipping import."
-  fi
-
-  echo ">>> 222 VERIFYING IMPORT OF GITHUB ACTIONS APP REGISTRATION"
-
-  # Get the first (and likely only) federated credential ID
-  FED_CRED_ID=$(az ad app federated-credential list --id "$APP_OBJECT_ID" --query "[0].id" -o tsv)
-
-  if [[ -n "$FED_CRED_ID" && "$FED_CRED_ID" != "null" ]]; then
-    echo "Importing existing Federated Identity Credential with ID: $FED_CRED_ID"
-    # terraform import azuread_application_federated_identity_credential.github_actions "/applications/$APP_OBJECT_ID/federatedIdentityCredentials/$FED_CRED_ID"
-    terraform import azuread_application_federated_identity_credential.github_actions "$APP_OBJECT_ID/federatedIdentityCredential/$FED_CRED_ID"
-  else
-    echo "No federated Identity Credential found. Will create new one."
-  fi
-
-  # Get the Service Principal object ID for role assignments
-  SP_OBJECT_ID=$(az ad sp show --id "$APP_ID" --query "id" -o tsv)
-
-  # Import RG-level role assignment if it exists
-  RG_SCOPE="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME"
-  ASSIGNMENT_ID_RG=$(az role assignment list \
-    --assignee "$SP_OBJECT_ID" \
-    --role "$ROLE_NAME" \
-    --scope "$RG_SCOPE" \
-    --query "[0].id" -o tsv)
-
-  if [[ -n "$ASSIGNMENT_ID_RG" ]]; then
-    echo "Importing existing role assignment for Service Principal at resource group level..."
-    terraform import azurerm_role_assignment.github_actions_rg_contributor "$ASSIGNMENT_ID_RG"
-  else
-    echo "Role assignment at resource group level does not exist. Skipping import."
-  fi
-
-  # Import subscription-level role assignment if it exists
-  SUB_SCOPE="/subscriptions/$SUBSCRIPTION_ID"
-  ASSIGNMENT_ID_SUB=$(az role assignment list \
-    --assignee "$SP_OBJECT_ID" \
-    --role "$ROLE_NAME" \
-    --scope "$SUB_SCOPE" \
-    --query "[0].id" -o tsv)
-
-  if [[ -n "$ASSIGNMENT_ID_SUB" ]]; then
-    echo "Importing existing role assignment for Service Principal at subscription level..."
-    terraform import azurerm_role_assignment.github_actions_subscription_contributor "$ASSIGNMENT_ID_SUB"
-  else
-    echo "Role assignment at subscription level does not exist. Skipping import."
-  fi
-
+if [[ -z "$APP_OBJECT_ID" ]]; then
+  echo "Failed to retrieve App Registration object ID for $APP_NAME. Exiting."
+  exit 1
 else
-  echo "GitHub Actions App Registration does not exist. Skipping import."
+  echo "App Registration object ID for $APP_NAME: $APP_OBJECT_ID"
 fi
 
+source "$UTILS_DIR/import-app-reg.sh" "$APP_RESOURCE_NAME" "$APP_OBJECT_ID"   # App Registration 
+source "$UTILS_DIR/import-app-sp.sh" "$APP_RESOURCE_NAME" "$APP_NAME"         # App Service Principal 
+source "$UTILS_DIR/import-app-fedi.sh" "$APP_RESOURCE_NAME" "$APP_OBJECT_ID"  # App Fed Id Cred 
 
+
+#----------------------------------------------------------
+# Role Assignments for GitHub Actions App
+#----------------------------------------------------------
+
+source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
+  "github_actions_rg_contributor" \
+  "/subscriptions/$SUBID/resourceGroups/$RGN" \
+  "Contributor" 
+
+source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
+  "github_actions_subscription_contributor" \
+  "/subscriptions/$SUBID" \
+  "Contributor" 
 
 #----------------------------------------------------------
 # STORAGE ACCOUNT AND CONTAINERS IMPORT
 #----------------------------------------------------------
 
+STA="$TF_VAR_storage_account_name"
 
-STORAGE_ACCOUNT_NAME="$TF_VAR_storage_account_name"
-STORAGE_ACCOUNT_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME"
-# Check if the storage account exists
-if az storage account show --name "$STORAGE_ACCOUNT_NAME" --resource-group "$RESOURCE_GROUP_NAME" --subscription "$SUBSCRIPTION_ID" &>/dev/null; then
-  echo "Importing existing storage account..."
-  terraform import azurerm_storage_account.storage "$STORAGE_ACCOUNT_ID"
-else
-  echo "Storage account does not exist. Skipping import."
-fi
+# Import storage account
+source "$UTILS_DIR/import-st.sh" "$SUBID" "$RGN" "$STA"
 
-
-
-
-# Import storage container (tfstate)
-CONTAINER_NAME="tfstate"
-CONTAINER_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/$CONTAINER_NAME"
-
-# Check if the container exists using Azure CLI
-if az storage container show --name "$CONTAINER_NAME" \
-    --account-name "$STORAGE_ACCOUNT_NAME" \
-    --auth-mode login &>/dev/null; then
-  echo "Importing existing storage container..."
-  terraform import azurerm_storage_container.tfstate "$CONTAINER_ID"
-else
-  echo "Storage container does not exist. Skipping import."
-fi
-
-# Import storage container (tfstate)
-CONTAINER_NAME="whisperer"
-CONTAINER_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/$CONTAINER_NAME"
-
-# Check if the container exists using Azure CLI
-if az storage container show --name "$CONTAINER_NAME" \
-    --account-name "$STORAGE_ACCOUNT_NAME" \
-    --auth-mode login &>/dev/null; then
-  echo "Importing existing storage container..."
-  terraform import azurerm_storage_container.whisperer "$CONTAINER_ID"
-else
-  echo "Storage container does not exist. Skipping import."
-fi
-
-
-# Import storage container (aci-logs)
-CONTAINER_NAME="aci-logs"
-CONTAINER_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT_NAME/blobServices/default/containers/$CONTAINER_NAME"
-
-# Check if the container exists using Azure CLI
-if az storage container show --name "$CONTAINER_NAME" \
-    --account-name "$STORAGE_ACCOUNT_NAME" \
-    --auth-mode login &>/dev/null; then
-  echo "Importing existing storage container..."
-  terraform import azurerm_storage_container.aci_logs "$CONTAINER_ID"
-else
-  echo "Storage container does not exist. Skipping import."
-fi
+# Import storage containers (tfstate, whisperer, aci-logs)
+source "$UTILS_DIR/import-st-container.sh" "$SUBID" "$RGN" "$STA" "tfstate"
+source "$UTILS_DIR/import-st-container.sh" "$SUBID" "$RGN" "$STA" "whisperer"
+source "$UTILS_DIR/import-st-container.sh" "$SUBID" "$RGN" "$STA" "aci-logs"

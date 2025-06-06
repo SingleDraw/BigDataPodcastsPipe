@@ -1,12 +1,14 @@
 #!/bin/bash
 
+set -e
+
 # ---------------------------------------------------------
 # Script to import existing Azure Resource Group into Terraform state
 # ---------------------------------------------------------
 
 
-RESOURCE_GROUP_NAME="$1"
-SUBSCRIPTION_ID="$2"
+SUBSCRIPTION_ID="$1"
+RESOURCE_GROUP_NAME="$2"
 
 
 RG_ID="/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP_NAME"
