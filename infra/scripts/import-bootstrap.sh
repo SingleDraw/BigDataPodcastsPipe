@@ -78,6 +78,16 @@ source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
   "/subscriptions/$SUBID" \
   "Contributor" 
 
+source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
+  "github_actions_user_access_administrator" \
+  "/subscriptions/$SUBID" \
+  "User Access Administrator"
+
+source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
+  "github_actions_role_assignment_admin" \
+  "/subscriptions/$SUBID/resourceGroups/$RGN" \
+  "Role Based Access Control Administrator"
+
 #----------------------------------------------------------
 # STORAGE ACCOUNT AND CONTAINERS IMPORT
 #----------------------------------------------------------
