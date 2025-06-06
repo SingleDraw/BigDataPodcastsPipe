@@ -80,11 +80,28 @@ jobs:
       working-directory: infra/main
       shell: bash
 
-    - name: Terraform Plan
+    # - name: Terraform Plan
+    #   run: terraform plan
+    #   working-directory: infra/main
+
+    # - name: Terraform Apply
+    #   run: terraform apply -auto-approve
+    #   working-directory: infra/main
+
+
+    - name: 'Terraform Plan - Access Policies First'
+      run: terraform plan -target=azurerm_key_vault_access_policy.github_actions
+      working-directory: infra/main
+    
+    - name: 'Terraform Apply - Access Policies First'
+      run: terraform apply -target=azurerm_key_vault_access_policy.github_actions -auto-approve
+      working-directory: infra/main
+    
+    - name: 'Terraform Plan - Everything Else'
       run: terraform plan
       working-directory: infra/main
-
-    - name: Terraform Apply
+    
+    - name: 'Terraform Apply - Everything Else'
       run: terraform apply -auto-approve
       working-directory: infra/main
 
