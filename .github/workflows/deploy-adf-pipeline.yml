@@ -3,10 +3,6 @@ name: Deploy ADF Pipeline and Trigger
 on:
   workflow_dispatch:
 
-permissions:
-  id-token: write
-  contents: read
-
 env:
   ADF_NAME: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}-adf       # ${{ secrets.ADF_NAME }} # make use of it or remove it
   RESOURCE_GROUP: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} 
@@ -35,17 +31,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    # - name: Azure Login
-    #   uses: azure/login@v1
-    #   with:
-    #     creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    - name: Azure Login via OIDC
+    - name: Azure Login
       uses: azure/login@v1
       with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Install jq
       run: sudo apt-get update && sudo apt-get install -y jq

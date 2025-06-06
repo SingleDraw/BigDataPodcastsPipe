@@ -129,7 +129,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Client ID - dont store it as a secret, it is not sensitive
+# Client ID - dont store it as a secret, won't be used in the workflow
 CLIENT_ID=$(echo "$CREDENTIALS_JSON" | grep -oP '"clientId"\s*:\s*"\K[^"]+')
 
 # Tenant ID

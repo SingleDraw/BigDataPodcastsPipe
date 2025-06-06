@@ -33,27 +33,6 @@ resource "azurerm_container_registry" "acr" {
   admin_enabled       = true      # Enables username/password access
 }
 
-
-# Get the current client configuration (OIDC identity)
-# This ensures we can set access policies for the Key Vault for the current user
-# If previously KV was created with service principal, 
-# this will overwrite it with the current user's identity
-data "azurerm_client_config" "current" {}
-
-data "azuread_service_principal" "github_oidc" {
-  object_id = data.azurerm_client_config.current.object_id
-}
-
-# Option 2: Alternative - Get by application name if you know it
-# data "azuread_service_principal" "github_oidc" {
-#   display_name = "YourGitHubOIDCAppName"
-# }
-
-# Option 3: Alternative - Get by application ID if you have it
-# data "azuread_service_principal" "github_oidc" {
-#   application_id = "your-application-id-here"
-# }
-
 # 4. KV - Azure Key Vault
 # -----------------------------------------------------------------
 resource "azurerm_key_vault" "kv" {
@@ -63,36 +42,38 @@ resource "azurerm_key_vault" "kv" {
   tenant_id           = data.azurerm_client_config.current.tenant_id
   sku_name            = "standard"
 
-  # enable_rbac_authorization = true  # Enable RBAC instead of access policies
-
-  depends_on = [
-    azurerm_resource_group.rg
-  ]
-
   # Admin access policy for the current user
   access_policy {
     tenant_id = data.azurerm_client_config.current.tenant_id
-    # object_id = data.azurerm_client_config.current.object_id
-    object_id = data.azuread_service_principal.github_oidc.object_id
+    object_id = data.azurerm_client_config.current.object_id
     secret_permissions = [
       "Get", "List", "Set", "Delete"
     ]
   }
+
+  # Add access for GitHub OIDC federated identity
+  # access_policy {
+  #   tenant_id = data.azurerm_client_config.current.tenant_id
+  #   object_id = var.github_oidc_identity_object_id  # <- you must supply this
+  #   secret_permissions = [
+  #     "Get", "List"
+  #   ]
+  # }
+
 }
 
-# # Assign Key Vault Secrets Officer role to the current identity
-# resource "azurerm_role_assignment" "kv_secrets_officer" {
-#   scope                = azurerm_key_vault.kv.id
-#   role_definition_name = "Key Vault Secrets Officer"
-#   principal_id         = data.azurerm_client_config.current.object_id
-# }
-
-# # Optional: If GitHub identity have to to read secrets during deployment
-# resource "azurerm_role_assignment" "kv_secrets_user_github" {
-#   scope                = azurerm_key_vault.kv.id
-#   role_definition_name = "Key Vault Secrets User"
-#   principal_id         = data.azuread_service_principal.github_oidc.object_id
-# }
+# 5. Store secrets in Key Vault
+# Store GitHub secrets in Key Vault
+#--------------------------------------------------------------
+# To store GitHub secrets, we will create Key Vault secrets
+# that can be referenced in GitHub Actions workflows.
+# like this:
+#   - name: Set GitHub Secrets
+#     run: |
+#       gh secret set SECRET_NAME --body "${{ secrets.SECRET_NAME }}"
+#   - name: Set Key Vault Secrets
+#     run: |  
+#       az keyvault secret set --vault-name ${{ secrets.KEY_VAULT_NAME }} --name SECRET_NAME --value "${{ secrets.SECRET_NAME }}"
 
 # Podcasting Index Api Secrets
 resource "azurerm_key_vault_secret" "podcast_api_key" {
@@ -279,6 +260,8 @@ resource "github_actions_secret" "stortage_account_key" {
   secret_name     = "STORAGE_ACCOUNT_KEY"
   plaintext_value = azurerm_storage_account.storage.primary_access_key
 }
+
+data "azurerm_client_config" "current" {}
 
 #-------------------------------------------------------------
 # 10. Azure Data Factory - Big Data Pipeline Runner

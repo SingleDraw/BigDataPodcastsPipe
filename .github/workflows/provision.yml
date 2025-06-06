@@ -7,10 +7,6 @@ on:
     types:
       - completed
 
-permissions:
-  id-token: write
-  contents: read
-
 env:
     TF_LOG: DEBUG
     TF_VAR_github_token: ${{ secrets.GH_PAT_TOKEN }}
@@ -29,7 +25,6 @@ env:
 
 jobs:
   terraform:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -39,24 +34,10 @@ jobs:
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v3
 
-    # - name: Azure Login
-    #   uses: azure/login@v1
-    #   with:
-    #     creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    - name: Debug OIDC Token
-      run: |
-        echo "GITHUB_TOKEN exists: ${{ secrets.GITHUB_TOKEN != '' }}"
-        echo "Repository: ${{ github.repository }}"
-        echo "Ref: ${{ github.ref }}"
-        echo "Actor: ${{ github.actor }}"
-
-    - name: Azure Login via OIDC
-      uses: azure/login@v2 # Use v2 for OIDC support
+    - name: Azure Login
+      uses: azure/login@v1
       with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Init main Terraform with remote backend
       run: |
