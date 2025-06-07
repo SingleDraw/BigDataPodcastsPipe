@@ -30,13 +30,13 @@ jobs:
           client-id: ${{ env.AZURE_CLIENT_ID }}
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.SUBSCRIPTION_ID }}
-          
-      - name: List repo files
-        run: ls -R
+
+      # - name: List repo files
+      #   run: ls -R
 
       - name: Zip Function App
         run: |
-          cd ./azure_functions/save-logs
+          cd ./azure-functions/save-logs
           zip -r ../../save_logs_function.zip .
           cd -
         
