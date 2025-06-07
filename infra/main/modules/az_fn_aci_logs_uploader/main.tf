@@ -20,11 +20,12 @@ resource "azurerm_service_plan" "function_plan" {
 
 # Azure Linux Function App for ACI Logs Uploader
 resource "azurerm_linux_function_app" "aci_logs_uploader" {
-    name                       = var.function_app_name
-    location                   = var.location
-    resource_group_name        = var.resource_group_name
-    service_plan_id            = azurerm_service_plan.function_plan.id
-    storage_account_name       = var.storage_account_name
+    name                            = var.function_app_name
+    location                        = var.location
+    resource_group_name             = var.resource_group_name
+    service_plan_id                 = azurerm_service_plan.function_plan.id
+    storage_account_name            = var.storage_account_name
+    storage_uses_managed_identity   = true  # This enables managed identity for storage access, comment out if using connection string
     # storage_account_access_key = azurerm_storage_account.storage.primary_access_key     # Uncomment if string authorization is needed
 
     identity {
@@ -38,18 +39,48 @@ resource "azurerm_linux_function_app" "aci_logs_uploader" {
     }
 
     app_settings = {
-        "FUNCTIONS_WORKER_RUNTIME"        = "python"
-        "FUNCTION_KEY"                    = var.function_key                              # Key for the function app - create one!
-        "AZURE_STORAGE_ACCOUNT"           = var.storage_account_name
-        "AZURE_KEY_VAULT_URL"             = var.key_vault_uri
-        "AZURE_KEY_VAULT_SECRET_NAME"     = var.blob_connection_string_name
-        "BLOB_CONTAINER_NAME"             = var.blob_container_name_aci_logs
+        "FUNCTIONS_WORKER_RUNTIME"          = "python"
+        "FUNCTION_KEY"                      = var.function_key                              # Key for the function app - create one!
+        "AZURE_STORAGE_ACCOUNT"             = var.storage_account_name
+        "AZURE_KEY_VAULT_URL"               = var.key_vault_uri
+        "AZURE_KEY_VAULT_SECRET_NAME"       = var.blob_connection_string_name
+        "BLOB_CONTAINER_NAME"               = var.blob_container_name_aci_logs
+        "WEBSITE_RUN_FROM_PACKAGE"          = "1"  # Required for GitHub zip deployments
+        # Required for managed identity storage access
+        "AzureWebJobsStorage__accountName"  = var.storage_account_name # Comment this out if using connection string
     }
 
     depends_on = [
         azurerm_service_plan.function_plan,
         # azurerm_key_vault.kv
         null_resource.dependency_guard
+    ]
+}
+
+
+# Role Assignment for Function App to Storage Account (for runtime)
+# This gives the Function App the necessary permissions to create file shares
+resource "azurerm_role_assignment" "fn_storage_data_owner" {
+    scope                = var.storage_account_id
+    role_definition_name = "Storage Account Contributor"  # Needed for file share creation
+    principal_id         = azurerm_linux_function_app.aci_logs_uploader.identity[0].principal_id
+
+    depends_on = [
+        azurerm_linux_function_app.aci_logs_uploader
+    ]
+}
+
+
+
+# Role Assignment for Function App to Storage Account 
+# - allows reading/writing blobs without needing a connection string
+resource "azurerm_role_assignment" "fn_storage_role" {
+    scope                = var.storage_account_id
+    role_definition_name = "Storage Blob Data Contributor"                                      # Allows read/write access to blobs
+    principal_id         = azurerm_linux_function_app.aci_logs_uploader.identity[0].principal_id   # Fn App Managed Identity
+
+    depends_on = [
+        azurerm_linux_function_app.aci_logs_uploader
     ]
 }
 
@@ -69,18 +100,6 @@ resource "azurerm_key_vault_access_policy" "fn_access" {
     secret_permissions = ["Get"]
 }
 
-
-# Role Assignment for Function App to Storage Account 
-# - allows reading/writing blobs without needing a connection string
-resource "azurerm_role_assignment" "fn_storage_role" {
-    scope                = var.storage_account_id
-    role_definition_name = "Storage Blob Data Contributor"                                      # Allows read/write access to blobs
-    principal_id         = azurerm_linux_function_app.aci_logs_uploader.identity[0].principal_id   # Fn App Managed Identity
-
-    depends_on = [
-        azurerm_linux_function_app.aci_logs_uploader
-    ]
-}
 
 
 # Role Assignment for GitHub Actions to Function App
