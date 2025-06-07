@@ -40,10 +40,18 @@ variable "blob_connection_string_name" {
   type        = string
   default     = "blob-storage-connection-string"
 }
+
+# Azure Function configuration [aci-logs uploader]
 variable "blob_container_name_aci_logs" {
   description = "Name of the Azure Blob Storage container for ACI logs"
   type        = string
   default     = "aci-logs"
+}
+
+variable "function_key" {
+  description = "Azure Function key for ACI logs uploader"
+  type        = string
+  sensitive   = true
 }
 
 # Podcasting Index API configuration

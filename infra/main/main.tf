@@ -374,3 +374,25 @@ resource "github_actions_secret" "adf_name" {
   secret_name     = "ADF_NAME"
   plaintext_value = azurerm_data_factory.adf.name
 }
+
+
+# Azure Function App for ACI Logs Uploader
+# This function app will upload logs from ephemeral Azure Container Instances (ACI) to a blob storage container
+module "aci_logs_uploader" {
+  source                      = "./modules/aci_logs_uploader"
+  location                    = azurerm_resource_group.rg.location
+  resource_group_name         = azurerm_resource_group.rg.name
+  storage_account_name        = var.storage_account_name
+  function_key                = var.function_key
+  blob_connection_string_name = var.blob_connection_string_name
+  blob_container_name_aci_logs = var.blob_container_name_aci_logs
+  storage_account_id          = azurerm_storage_account.storage.id
+  key_vault_id                = azurerm_key_vault.kv.id
+  key_vault_uri               = azurerm_key_vault.kv.vault_uri
+  github_oidc_sp_id           = data.azuread_service_principal.github_oidc.object_id
+  # Key Vault dependency
+  # This ensures the Key Vault is created before the function app tries to access it
+  dependency_resources        = [
+    azurerm_key_vault.kv
+  ]
+}

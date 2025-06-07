@@ -6,3 +6,4 @@ docker/scaffold
 *.md
 !README.md
 _backup
+azure-credentials.md

@@ -58,18 +58,14 @@ jobs:
 
     - name: Init main Terraform with remote backend
       run: |
+        # terraform state pull > bootstrap.tfstate # pull the current state to a local file
+        echo "🔄 Initializing Terraform with remote backend..."
         terraform init -reconfigure \
           -backend-config="resource_group_name=${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}" \
           -backend-config="storage_account_name=${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}" \
           -backend-config="container_name=tfstate" \
           -backend-config="key=terraform.tfstate"
+        # terraform state push bootstrap.tfstate # push the local state file to the remote backend
       working-directory: infra/main
 
-    
-    # - name: Delete Azure Login Credentials from GitHub Secrets
-    #   run: |
-    #     gh secret delete AZURE_CREDENTIALS
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #   working-directory: infra/bootstrap
     
