@@ -1,5 +1,7 @@
 ###  Azure Funtion App for ACI Logs Uploader Resources
 
+data "azurerm_client_config" "current" {}
+
 # Null resource to ensure dependencies are created before the function app
 # This is a workaround to ensure the Key Vault is created before the Function App
 resource "null_resource" "dependency_guard" {
@@ -8,21 +10,12 @@ resource "null_resource" "dependency_guard" {
 
 
 # Service Plan for Azure Function App
-resource "azurerm_app_service_plan" "function_plan" {
+resource "azurerm_service_plan" "function_plan" {
   name                = var.service_plan_name
   location            = var.location
   resource_group_name = var.resource_group_name
-  kind                = "FunctionApp"
-  reserved            = true    # Required for Linux
-
-  sku {
-    tier = "Dynamic"            # Consumption plan for serverless functions
-    size = "Y1"                 # Consumption plan size
-  }
-
-    #   depends_on = [
-    #     azurerm_resource_group.rg
-    #   ]
+  os_type             = "Linux"
+  sku_name            = "Y1"    # Consumption plan for serverless functions
 }
 
 # Azure Linux Function App for ACI Logs Uploader
@@ -65,7 +58,7 @@ resource "azurerm_linux_function_app" "aci_logs_uploader" {
 resource "azurerm_key_vault_access_policy" "fn_access" {
     key_vault_id = var.key_vault_id
     tenant_id    = data.azurerm_client_config.current.tenant_id
-    object_id    = azurerm_linux_function_app.aci_logs_uploader.identity.principal_id
+    object_id    = azurerm_linux_function_app.aci_logs_uploader.identity[0].principal_id
 
     depends_on = [
         azurerm_linux_function_app.aci_logs_uploader,
@@ -82,7 +75,7 @@ resource "azurerm_key_vault_access_policy" "fn_access" {
 resource "azurerm_role_assignment" "fn_storage_role" {
     scope                = var.storage_account_id
     role_definition_name = "Storage Blob Data Contributor"                                      # Allows read/write access to blobs
-    principal_id         = azurerm_linux_function_app.aci_logs_uploader.identity.principal_id   # Fn App Managed Identity
+    principal_id         = azurerm_linux_function_app.aci_logs_uploader.identity[0].principal_id   # Fn App Managed Identity
 
     depends_on = [
         azurerm_linux_function_app.aci_logs_uploader
