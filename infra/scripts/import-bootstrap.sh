@@ -88,6 +88,7 @@ source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
   "/subscriptions/$SUBID/resourceGroups/$RGN" \
   "Role Based Access Control Administrator"
 
+# Role assignment for Storage Blob Data Contributor - needed for GH Actions to deploy AZ Functions
 source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
   "github_actions_storage_blob_data_contributor" \
   "/subscriptions/$SUBID/resourceGroups/$RGN/providers/Microsoft.Storage/storageAccounts/$TF_VAR_storage_account_name" \
