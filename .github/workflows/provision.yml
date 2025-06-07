@@ -114,4 +114,16 @@ jobs:
         GH_TOKEN: ${{ env.TF_VAR_github_token }}
 
 
+    - name: Zip Function App code
+      run: |
+        cd ./aci_logs_uploader
+        zip -r ../function.zip .
+        cd ..
+
+    - name: Deploy to Azure Function App
+      run: |
+        az functionapp deployment source config-zip \
+          --name ${{ secrets.FUNCTION_APP_NAME }} \
+          --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} \
+          --src function.zip
         

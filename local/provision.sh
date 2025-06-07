@@ -9,13 +9,14 @@
 # ---------------------------------------------------------
 
 declare -A workflow_map=(
-    [test]="azurelogin.yml"
-    [bootstrap]="bootstrap.yml"
+    [test]="azurelogin.yml"                 # -- Login to Azure - test workflow  
+    [bootstrap]="bootstrap.yml"             # Bootstrap workflow - creates the initial setup    
     [infra]="provision.yml"                 # Provisioning resources - triggered by bootstrap workflow too
-    [images]="build-and-push-scraper.yml"
-    [adf]="deploy-adf-pipeline.yml"
-    [buildtest]="build-and-push-test.yml"
-    [pipetest]="deploy-adf-pipetest.yml"
+    [images]="build-and-push-scraper.yml"   # Build and push scraper image
+    [adf]="deploy-adf-pipeline.yml"         # Deploy Azure Data Factory pipeline    
+    [buildtest]="build-and-push-test.yml"       # -- Build and push test image
+    [pipetest]="deploy-adf-pipetest.yml"        # -- Deploy ADF pipeline for test
+    [azfnlogs]="deploy-az-fn-logs-uploader.yml" # Deploy Azure Function for logs uploader
 )
 
 if [ "$1" != "--env" ] || [ -z "$2" ]; then

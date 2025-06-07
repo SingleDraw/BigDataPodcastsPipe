@@ -1,60 +1,50 @@
 name: Deploy Azure Function App
+permissions:
+    id-token: write
+    contents: read
 
 on:
-    workflow_dispatch:  # Manual trigger for the workflow
-# Uncomment the following lines if you want to trigger on push to main branch
-#   push:
-#     branches:
-#       - main  # or your deploy branch
+  workflow_dispatch:
+
+env:
+    AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+    AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    SUBSCRIPTION_ID: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
+    FUNCTION_APP_NAME: "aci-logs-uploader" # ${{ secrets.TF_VAR_FUNCTION_APP_NAME }} # To be implemented in the Terraform module
+    RESOURCE_GROUP_NAME: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} 
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read    # Allow read access to the repository contents
-      id-token: write   # Allow writing ID tokens for Azure login
+    build-and-deploy:
+      runs-on: ubuntu-latest
+  
+      steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+  
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+  
+      - name: Azure Login via OIDC
+        uses: azure/login@v2 # Use v2 for OIDC support
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.SUBSCRIPTION_ID }}
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Zip Function App
+        run: |
+          cd azure_functions/save-logs
+          zip -r ../../save_logs_function.zip .
+          cd -
+        
+      - name: Deploy Function App via CLI
+        run: |
+          az functionapp deployment source config-zip \
+            --name ${{ env.FUNCTION_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
+            --src save_logs_function.zip
 
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-
-    # Approach 1: Using Azure Functions Action
-    # This method uses the Azure Functions Action to deploy the Function App directly from the repository.
-    - name: Build and deploy Function App
-      uses: azure/functions-action@v1
-      with:
-        app-name: ${{ secrets.FUNCTION_APP_NAME }}
-        package: ./aci_logs_uploader
-
-
-    # Approach 2: Usinf Azure Functions App Publish Profile
-    # Uncomment the following steps if you want to use the publish profile method.
-
-    # - name: Set up Python
-    #   uses: actions/setup-python@v4
-    #   with:
-    #     python-version: '3.11'
-
-    # - name: Install dependencies
-    #   run: |
-    #     cd aci_logs_uploader
-    #     pip install -r requirements.txt
-
-    # - name: Zip function app
-    #   run: |
-    #     cd aci_logs_uploader
-    #     zip -r ../functionapp.zip .
-
-    # - name: Deploy to Azure Functions
-    #   uses: azure/functions-action@v1
-    #   with:
-    #     app-name: aci-logs-uploader
-    #     package: functionapp.zip
-    #     publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
-
+      - name: Clean up
+        run: |
+          rm save_logs_function.zip
+          echo "Function App deployed successfully!"
