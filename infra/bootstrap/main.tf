@@ -79,39 +79,6 @@ resource "github_actions_secret" "storage_account_name" {
 }
 
 
-
-# 5. GitHub Actions OIDC Integration - Federated Identity
-# This allows GitHub Actions to authenticate with Azure using OIDC
-# resource "azurerm_user_assigned_identity" "github_actions" {
-#     name                = "github-actions-identity"
-#     resource_group_name = azurerm_resource_group.rg.name
-#     location            = azurerm_resource_group.rg.location
-
-#     tags = {
-#         environment = "GitHub Actions"
-#     }
-
-#     depends_on = [
-#         azurerm_resource_group.rg
-#     ]
-# }
-
-# # 6. Federated Identity Credential for GitHub Actions
-# resource "azurerm_federated_identity_credential" "github_oidc" {
-#     name                = "github-actions-oidc"
-#     resource_group_name = azurerm_resource_group.rg.name
-#     parent_id           = azurerm_user_assigned_identity.github_actions.id
-#     audience            = ["api://AzureADTokenExchange"]
-#     issuer              = "https://token.actions.githubusercontent.com"
-#     subject             = "repo:${var.github_owner}/${var.github_repository}:ref:refs/heads/main" # adjust branch if needed
-#     # subject             = "repo:SingleDraw/BigDataPodcastsPipe:*"  # More permissive
-
-#     depends_on = [
-#         azurerm_user_assigned_identity.github_actions
-#     ]
-# }
-
-
 data "azurerm_subscription" "current" {}
 
 # Add this instead
@@ -157,6 +124,13 @@ resource "azurerm_role_assignment" "github_actions_rg_contributor" {
   principal_id         = azuread_service_principal.github_actions.object_id  # CHANGED
 }
 
+# For deploying Azure Function Apps, we need the "Contributor" in the storage account
+resource "azurerm_role_assignment" "github_actions_storage_blob_data_contributor" {
+  scope                = azurerm_storage_account.storage.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azuread_service_principal.github_actions.object_id
+}
+
 
 # Output both client_id and object_id for the second flow
 output "client_id" {
@@ -180,43 +154,6 @@ resource "github_actions_secret" "github_actions_object_id" {
   secret_name     = "AZURE_OBJECT_ID"
   plaintext_value = azuread_service_principal.github_actions.object_id
 }
-
-
-# # Contributor role for the specific resource group
-# resource "azurerm_role_assignment" "github_actions_rg_contributor" {
-#   scope                = azurerm_resource_group.rg.id
-#   role_definition_name = "Contributor"
-#   principal_id         = azurerm_user_assigned_identity.github_actions.principal_id
-
-#   depends_on = [
-#     azurerm_federated_identity_credential.github_oidc
-#   ]
-# }
-
-
-# # 7. Store github actions identity client ID in GitHub secrets
-# resource "github_actions_secret" "github_actions_client_id" {
-#   repository      = var.github_repository
-#   secret_name     = "AZURE_CLIENT_ID"
-#   plaintext_value = azurerm_user_assigned_identity.github_actions.client_id
-
-#   depends_on = [
-#     azurerm_user_assigned_identity.github_actions
-#   ]
-# }
-
-
-
-# # Add Key Vault permissions too
-# resource "azurerm_key_vault_access_policy" "github_actions" {
-#   key_vault_id = azurerm_key_vault.kv.id
-#   tenant_id    = data.azurerm_client_config.current.tenant_id
-#   object_id    = azuread_service_principal.github_actions.object_id
-
-#   secret_permissions = [
-#     "Get", "List", "Set", "Delete"
-#   ]
-# }
 
 
 # 8. Register the Microsoft.App provider for Container Apps

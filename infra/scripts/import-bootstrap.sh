@@ -88,6 +88,11 @@ source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
   "/subscriptions/$SUBID/resourceGroups/$RGN" \
   "Role Based Access Control Administrator"
 
+source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
+  "github_actions_storage_blob_data_contributor" \
+  "/subscriptions/$SUBID/resourceGroups/$RGN/providers/Microsoft.Storage/storageAccounts/$TF_VAR_storage_account_name" \
+  "Storage Blob Data Contributor"
+
 #----------------------------------------------------------
 # STORAGE ACCOUNT AND CONTAINERS IMPORT
 #----------------------------------------------------------
