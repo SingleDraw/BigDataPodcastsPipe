@@ -17,11 +17,11 @@ output "function_app_identity" {
 
 # App Service Plan
 output "app_service_plan_id" {
-  value = azurerm_app_service_plan.function_plan.id
+  value = azurerm_service_plan.function_plan.id
 }
 
 output "app_service_plan_name" {
-  value = azurerm_app_service_plan.function_plan.name
+  value = azurerm_service_plan.function_plan.name
 }
 
 # Role Assignments

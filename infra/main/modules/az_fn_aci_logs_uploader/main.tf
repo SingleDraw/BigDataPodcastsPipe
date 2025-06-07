@@ -23,7 +23,7 @@ resource "azurerm_linux_function_app" "aci_logs_uploader" {
     name                       = var.function_app_name
     location                   = var.location
     resource_group_name        = var.resource_group_name
-    service_plan_id            = azurerm_app_service_plan.function_plan.id
+    service_plan_id            = azurerm_service_plan.function_plan.id
     storage_account_name       = var.storage_account_name
     # storage_account_access_key = azurerm_storage_account.storage.primary_access_key     # Uncomment if string authorization is needed
 
@@ -47,7 +47,7 @@ resource "azurerm_linux_function_app" "aci_logs_uploader" {
     }
 
     depends_on = [
-        azurerm_app_service_plan.function_plan,
+        azurerm_service_plan.function_plan,
         # azurerm_key_vault.kv
         null_resource.dependency_guard
     ]
