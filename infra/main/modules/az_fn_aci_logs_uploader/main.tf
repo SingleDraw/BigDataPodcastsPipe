@@ -66,7 +66,7 @@ resource "azurerm_key_vault_access_policy" "fn_access" {
         null_resource.dependency_guard
     ]
 
-    secret_permissions = ["get"]
+    secret_permissions = ["Get"]
 }
 
 
