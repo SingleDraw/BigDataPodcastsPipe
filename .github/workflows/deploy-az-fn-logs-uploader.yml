@@ -33,7 +33,7 @@ jobs:
 
       - name: Zip Function App
         run: |
-          cd azure_functions/save-logs
+          cd ./azure_functions/save-logs
           zip -r ../../save_logs_function.zip .
           cd -
         
