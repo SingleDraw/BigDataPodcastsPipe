@@ -40,13 +40,13 @@ jobs:
       # - name: List repo files
       #   run: ls -R
 
-      # - name: Zip Function App - first method
-      #   run: |
-      #     cd ./azure-functions/save-logs
-      #     zip -r ../../save_logs_function.zip .
-      #     cd -
+      - name: Zip Function App
+        run: |
+          cd ./azure-functions/save-logs
+          zip -r ../../save_logs_function.zip .
+          cd -
         
-      # - name: Deploy Function App via CLI
+      # - name: Deploy Function App via CLI - first method
       #   run: |
       #     az functionapp deployment source config-zip \
       #       --name ${{ env.FUNCTION_APP_NAME }} \
