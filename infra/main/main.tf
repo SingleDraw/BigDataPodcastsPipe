@@ -379,7 +379,7 @@ resource "github_actions_secret" "adf_name" {
 # Azure Function App for ACI Logs Uploader
 # This function app will upload logs from ephemeral Azure Container Instances (ACI) to a blob storage container
 module "aci_logs_uploader" {
-  source                      = "./modules/aci_logs_uploader"
+  source                      = "./modules/az_fn_aci_logs_uploader"
   location                    = azurerm_resource_group.rg.location
   resource_group_name         = azurerm_resource_group.rg.name
   storage_account_name        = var.storage_account_name
