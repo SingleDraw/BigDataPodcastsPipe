@@ -48,7 +48,7 @@ resource "azurerm_linux_function_app" "aci_logs_uploader" {
         "FUNCTIONS_WORKER_RUNTIME"        = "python"
         "FUNCTION_KEY"                    = var.function_key                              # Key for the function app - create one!
         "AZURE_STORAGE_ACCOUNT"           = var.storage_account_name
-        "AZURE_KEY_VAULT_URL"             = var.key_vault_url
+        "AZURE_KEY_VAULT_URL"             = var.key_vault_uri
         "AZURE_KEY_VAULT_SECRET_NAME"     = var.blob_connection_string_name
         "BLOB_CONTAINER_NAME"             = var.blob_container_name_aci_logs
     }
