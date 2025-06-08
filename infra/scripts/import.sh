@@ -130,7 +130,18 @@ RESOURCES+=(
   "$MODULE.azurerm_role_assignment.github_actions_function_app|az role assignment show --name \"$GH_AF_ROLE_N\" --scope \"/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.Web/sites/$AF_N\"|\"$GH_AF_ROLE_ID\""
 )
 
-
+#  module.aci_logs_uploader.azurerm_service_plan.function_plan already managed. Skipping.
+# Checking module.aci_logs_uploader.azurerm_linux_function_app.aci_logs_uploader...
+# module.aci_logs_uploader.azurerm_linux_function_app.aci_logs_uploader already managed. Skipping.
+# Checking module.aci_logs_uploader.azurerm_key_vault_access_policy.adf_kv_access_policy...
+# module.aci_logs_uploader.azurerm_key_vault_access_policy.adf_kv_access_policy does not exist. Skipping.
+# Checking module.aci_logs_uploader.azurerm_role_assignment.github_actions_function_app...
+# module.aci_logs_uploader.azurerm_role_assignment.github_actions_function_app does not exist. Skipping.
+# Checking azurerm_data_factory_linked_service_azure_function.adf_fn_linked_service...
+# azurerm_data_factory_linked_service_azure_function.adf_fn_linked_service does not exist. Skipping.
+# WARNING: Failed to query 1164d2bf-54d1-4720-830f-185a2ff66ea2 by invoking Graph API. If you don't have permission to query Graph API, please specify --assignee-object-id and --assignee-principal-type.
+# WARNING: Assuming 1164d2bf-54d1-4720-830f-185a2ff66ea2 as an object ID.
+# Checking if module.aci_logs_uploader.azurerm_role_assignment.fn_storage_data_owner is already managed...
 
 # # Linked Service to Azure Data Factory for the Function App
 # resource "azurerm_data_factory_linked_service_azure_function" "aci_logs_fn" {

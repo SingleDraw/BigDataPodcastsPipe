@@ -403,7 +403,7 @@ module "aci_logs_uploader" {
 resource "azurerm_data_factory_linked_service_azure_function" "aci_logs_fn" {
   name                = "AzureFunctionAciLogsLinkedService"
   data_factory_id     = azurerm_data_factory.adf.id
-  url                 = "https://${azurerm_function_app.aci_logs_uploader.default_hostname}"
+  url                 = "https://${module.aci_logs_uploader.azurerm_linux_function_app.aci_logs_uploader.default_hostname}"
 
   # Option 1: Use direct function key
   key             = var.function_key
