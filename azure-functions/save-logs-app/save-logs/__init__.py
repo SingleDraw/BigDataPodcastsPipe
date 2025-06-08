@@ -1,6 +1,6 @@
+import azure.functions as func
 import os, json, logging
 from datetime import datetime, timezone
-import azure.functions as func
 from azure.identity import DefaultAzureCredential
 # from azure.storage.blob import BlobServiceClient
 # from azure.keyvault.secrets import SecretClient
@@ -18,17 +18,15 @@ from azure.identity import DefaultAzureCredential
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info('Python HTTP trigger function processed a request.')
+    logging.info('Function started - basic imports work')
     
     try:
-        # Simple test response
-        return func.HttpResponse(
-            "Hello! Function is working correctly.",
-            status_code=200
-        )
+        from azure.identity import DefaultAzureCredential
+        logging.info('azure.identity imported successfully')
+        return func.HttpResponse("Success", status_code=200)
     except Exception as e:
-        logging.error(f"Error: {str(e)}")
+        logging.error(f'Import failed: {str(e)}')
         return func.HttpResponse(
-            f"Error: {str(e)}",
+            f"Import error: {str(e)}", 
             status_code=500
         )
