@@ -1,6 +1,7 @@
 import azure.functions as func
 import os, json, logging
 from datetime import datetime, timezone
+
 # from azure.identity import DefaultAzureCredential
 # from azure.storage.blob import BlobServiceClient
 # from azure.keyvault.secrets import SecretClient
@@ -21,6 +22,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Function started - basic imports work')
     
     try:
+        import requests
         from azure.identity import DefaultAzureCredential
         logging.info('azure.identity imported successfully')
         return func.HttpResponse("Success", status_code=200)
