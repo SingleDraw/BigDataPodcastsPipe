@@ -15,6 +15,11 @@ output "function_app_identity" {
   value = azurerm_linux_function_app.aci_logs_uploader.identity[0]
 }
 
+output "aci_logs_uploader_hostname" {
+  value = azurerm_linux_function_app.aci_logs_uploader.default_hostname
+}
+
+
 # App Service Plan
 output "app_service_plan_id" {
   value = azurerm_service_plan.function_plan.id
