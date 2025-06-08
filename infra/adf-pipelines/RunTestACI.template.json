@@ -82,7 +82,7 @@
         ],
         "typeProperties": {
           "expression": {
-            "value": "@equals(coalesce(activity('CheckStatus').output.properties.containers[0].properties.instanceView.currentState.state, 'Pending'), 'Terminated')",
+            "value": "@and(contains(activity('CheckStatus').output.properties.containers[0].properties, 'instanceView'), equals(coalesce(activity('CheckStatus').output.properties.containers[0].properties.instanceView.currentState.state, 'Pending'), 'Terminated'))",
             "type": "Expression"
           },
           "timeout": "00:05:00"
