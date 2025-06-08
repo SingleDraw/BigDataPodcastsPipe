@@ -28,30 +28,21 @@ jobs:
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.SUBSCRIPTION_ID }}
 
-
-      - name: Install compatible wheels for Azure Functions
-        run: |
-          cd azure-functions/save-logs-app
-          pip install --upgrade pip setuptools wheel
-          pip install --no-binary :all: cffi cryptography
-
-      - name: Install Python dependencies into function directory
-        run: |
-          cd azure-functions/save-logs-app
-          pip install -r requirements.txt -t .
-          cd -
+      - name: Build dependencies inside Azure Functions base image
+        uses: addnab/docker-run-action@v3
+        with:
+          image: mcr.microsoft.com/azure-functions/python:4-python3.11
+          options: -v ${{ github.workspace }}/azure-functions/save-logs-app:/app
+          run: |
+              cd /app
+              pip install -r requirements.txt -t .
 
       - name: Zip Function App (clean and package)
         run: |
           cd azure-functions/save-logs-app
-          
-          # Remove unnecessary files to slim down the package
-          # find . -type d -name "*.dist-info" -exec rm -rf {} +
-          # find . -name "*.pyc" -delete
-          # find . -type d -name "__pycache__" -exec rm -rf {} +
-          
+
           # Create the zip archive
-          zip -r ../../save_logs_function.zip . -x "*.git*" "*.DS_Store*"
+          zip -r ../../save_logs_function.zip . -x "*.git*" "*.DS_Store*" "venv/*"
           
           cd -
           
