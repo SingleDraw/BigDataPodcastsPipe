@@ -46,11 +46,6 @@ jobs:
           # find . -name "*.pyc" -delete
           # find . -type d -name "__pycache__" -exec rm -rf {} +
 
-          # Avoid touching the venv
-          find . -path "./venv" -prune -o -type d -name "*.dist-info" -exec rm -rf {} +
-          find . -path "./venv" -prune -o -name "*.pyc" -delete
-          find . -path "./venv" -prune -o -type d -name "__pycache__" -exec rm -rf {} +
-          
           # Create the zip archive
           zip -r ../../save_logs_function.zip . -x "*.git*" "*.DS_Store*" "venv/*"
           
