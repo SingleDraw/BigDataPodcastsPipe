@@ -184,7 +184,7 @@ SP_OBJECT_ID=$(az functionapp identity show --name "$AF_N" --resource-group "$RG
 
 # - Storage Data Owner Role Assignment
 # Allows file share creation
-source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
+source "$UTILS_DIR/import-role-asgn-state.sh" "$SP_OBJECT_ID" \
   "fn_storage_data_owner" \
   "/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.Storage/storageAccounts/$SA_N" \
   "Storage Account Contributor" \
@@ -192,7 +192,7 @@ source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
 
 # - Storage Blob Data Contributor Role Assignment
 # Allows read/write access to blobs
-source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
+source "$UTILS_DIR/import-role-asgn-state.sh" "$SP_OBJECT_ID" \
   "fn_storage_role" \
   "/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.Storage/storageAccounts/$SA_N" \
   "Storage Blob Data Contributor" \
