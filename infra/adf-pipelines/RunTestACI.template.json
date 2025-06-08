@@ -134,6 +134,10 @@
       {
         "name": "SaveLogsToBlob",
         "type": "AzureFunctionActivity",
+        "linkedServiceName": {
+          "referenceName": "AzureFunctionAciLogsLinkedService",
+          "type": "LinkedServiceReference"
+        },
         "dependsOn": [
           {
             "activity": "GetACIContainerLogs",
@@ -141,7 +145,6 @@
           }
         ],
         "typeProperties": {
-          "functionAppUrl": "$FUNCTION_APP_URL",
           "functionName": "$FUNCTION_NAME",
           "method": "POST",
           "body": {

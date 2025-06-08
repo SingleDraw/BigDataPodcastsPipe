@@ -3,6 +3,15 @@
 set -e
 
 # ---------------------------------------------------------
+# Get the absolute path of the directory containing this script
+# and set the path to the utils directory
+# ---------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+UTILS_DIR="$SCRIPT_DIR/utils"
+# ---------------------------------------------------------
+
+
+# ---------------------------------------------------------
 # Script to import existing Azure resources into Terraform state
 # ----------------------------------------------------------
 
@@ -50,6 +59,100 @@ RESOURCES+=(
   "azurerm_user_assigned_identity.storage_identity|az identity show --name \"$STORAGE_IDENTITY_N\" --resource-group \"$RG_N\"|\"$STORAGE_IDENTITY_ID\""
 )
 
+# ---------------------------------------------------------
+# Import Azure Function App and related resources
+# ----------------------------------------------------------
+
+# Service Plan for Azure Function App
+SP_N="aci-fn-plan"
+SP_ID="$RG_ID/providers/Microsoft.Web/serverfarms/$SP_N"
+RESOURCES+=(
+  "azurerm_service_plan.function_plan|az appservice plan show --name \"$SP_N\" --resource-group \"$RG_N\"|\"$SP_ID\""
+)
+
+# Azure Function App
+AF_N="aci-logs-uploader"
+AF_ID="$RG_ID/providers/Microsoft.Web/sites/$AF_N"
+RESOURCES+=(
+  "azurerm_linux_function_app.aci_logs_uploader|az functionapp show --name \"$AF_N\" --resource-group \"$RG_N\"|\"$AF_ID\""
+)
+
+
+
+
+
+# # Access Policy for Function App to Key Vault
+# resource "azurerm_key_vault_access_policy" "fn_access" {
+#     key_vault_id = var.key_vault_id
+#     tenant_id    = data.azurerm_client_config.current.tenant_id
+#     object_id    = azurerm_linux_function_app.aci_logs_uploader.identity[0].principal_id
+
+#     depends_on = [
+#         azurerm_linux_function_app.aci_logs_uploader,
+#         # azurerm_key_vault.kv
+#         null_resource.dependency_guard
+#     ]
+
+#     secret_permissions = ["Get"]
+# }
+
+# Import Access Policy for Data Factory to Key Vault
+APDFKV_N="${RG_N}-adf-kv-access-policy"
+APDFKV_ID="$RG_ID/providers/Microsoft.KeyVault/vaults/$KV_N/accessPolicies/$APDFKV_N"
+RESOURCES+=(
+  "azurerm_key_vault_access_policy.adf_kv_access_policy|az keyvault access-policy show --name \"$APDFKV_N\" --vault-name \"$KV_N\" --resource-group \"$RG_N\"|\"$APDFKV_ID\""
+)
+
+
+# # Role Assignment for GitHub Actions to Function App
+# # - allows GitHub Actions to authenticate with the Function App
+# resource "azurerm_role_assignment" "github_deploy_rights" {
+#     scope                = azurerm_linux_function_app.aci_logs_uploader.id
+#     role_definition_name = "Contributor"           # Allows deployment rights
+#     principal_id         = var.github_oidc_sp_id   # GitHub OIDC Service Principal ID
+
+#     depends_on = [
+#         azurerm_linux_function_app.aci_logs_uploader
+#     ]
+# }
+
+# Import GitHub Actions role assignment for Function App
+GH_AF_ROLE_N="${RG_N}-gh-actions-fn-role"
+GH_AF_ROLE_ID="$RG_ID/providers/Microsoft.Web/sites/$AF_N/providers/Microsoft.Authorization/roleAssignments/$GH_AF_ROLE_N"
+RESOURCES+=(
+  "azurerm_role_assignment.github_actions_function_app|az role assignment show --name \"$GH_AF_ROLE_N\" --scope \"/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.Web/sites/$AF_N\"|\"$GH_AF_ROLE_ID\""
+)
+
+
+
+# # Linked Service to Azure Data Factory for the Function App
+# resource "azurerm_data_factory_linked_service_azure_function" "aci_logs_fn" {
+#   name                = "AzureFunctionAciLogsLinkedService"
+#   data_factory_id     = azurerm_data_factory.adf.id
+#   url                 = "https://${azurerm_function_app.aci_logs_uploader.default_hostname}"
+
+#   # Option 1: Use direct function key
+#   key             = var.function_key
+
+#   # Option 2 (recommended): Use Key Vault
+#   # key_vault_key {
+#   #   linked_service_name = azurerm_data_factory_linked_service_azure_key_vault.example.name
+#   #   secret_name         = azurerm_key_vault_secret.function_key.name
+#   # }
+
+#   depends_on = [module.aci_logs_uploader]
+# }
+# Import Linked Service for Data Factory to Function App
+
+AF_LS_N="${RG_N}-adf-fn-linked-service"
+AF_LS_ID="$RG_ID/providers/Microsoft.DataFactory/factories/$ADF_N/linkedservices/$AF_LS_N"
+RESOURCES+=(
+  "azurerm_data_factory_linked_service_azure_function.adf_fn_linked_service|az datafactory linked-service show --name \"$AF_LS_N\" --factory-name \"$ADF_N\" --resource-group \"$RG_N\"|\"$AF_LS_ID\""
+)
+
+#----------------------------------------------------------
+# > Execute the import commands for each resource
+#----------------------------------------------------------
 for entry in "${RESOURCES[@]}"; do
   IFS="|" read -r tf_name check_cmd res_id <<< "$entry"
 
@@ -64,6 +167,26 @@ for entry in "${RESOURCES[@]}"; do
     echo "$tf_name does not exist. Skipping."
   fi
 done
+
+
+# ----------------------------------------------------------
+# Role Assignments for Azure Function App
+# ----------------------------------------------------------
+
+SP_OBJECT_ID=$(az functionapp identity show --name "$AF_N" --resource-group "$RG_N" --query principalId -o tsv)
+
+# - Storage Data Owner Role Assignment
+source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
+  "fn_storage_data_owner" \
+  "/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.Storage/storageAccounts/$SA_N" \
+  "Storage Account Contributor" # Allows file share creation
+
+source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
+  "fn_storage_role" \
+  "/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.Storage/storageAccounts/$SA_N" \
+  "Storage Blob Data Contributor" # Allows read/write access to blobs
+
+
 
 
 # ------------------------------------------------

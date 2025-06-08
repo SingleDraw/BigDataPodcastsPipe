@@ -397,3 +397,22 @@ module "aci_logs_uploader" {
     azurerm_key_vault.kv
   ]
 }
+
+
+# Linked Service to Azure Data Factory for the Function App
+resource "azurerm_data_factory_linked_service_azure_function" "aci_logs_fn" {
+  name                = "AzureFunctionAciLogsLinkedService"
+  data_factory_id     = azurerm_data_factory.adf.id
+  url                 = "https://${azurerm_function_app.aci_logs_uploader.default_hostname}"
+
+  # Option 1: Use direct function key
+  key             = var.function_key
+
+  # Option 2 (recommended): Use Key Vault
+  # key_vault_key {
+  #   linked_service_name = azurerm_data_factory_linked_service_azure_key_vault.example.name
+  #   secret_name         = azurerm_key_vault_secret.function_key.name
+  # }
+
+  depends_on = [module.aci_logs_uploader]
+}
