@@ -82,7 +82,7 @@
         ],
         "typeProperties": {
           "expression": {
-            "value": "@equals(activity('CheckStatus').output.properties.instanceView.state, 'Terminated')",
+            "value": "@and(activity('CheckStatus').output.properties.instanceView.containers[0].currentState.state, equals(activity('CheckStatus').output.properties.instanceView.containers[0].currentState.state, 'Terminated'))",
             "type": "Expression"
           },
           "timeout": "00:05:00"
