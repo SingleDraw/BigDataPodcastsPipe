@@ -401,7 +401,7 @@ module "aci_logs_uploader" {
 
 # Linked Service to Azure Data Factory for the Function App
 resource "azurerm_data_factory_linked_service_azure_function" "aci_logs_fn" {
-  name                = "AzureFunctionAciLogsLinkedService"
+  name                = "AzureFunctionAciLogsLinkedService" # Same as referenceName in the ADF pipeline
   data_factory_id     = azurerm_data_factory.adf.id
   url                 = "https://${module.aci_logs_uploader.aci_logs_uploader_hostname}"
 
