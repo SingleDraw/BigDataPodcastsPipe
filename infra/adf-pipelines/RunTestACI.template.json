@@ -122,11 +122,11 @@
           },
           {
             "activity": "RunACIContainer",
-            "dependencyConditions": ["TimedOut"]
+            "dependencyConditions": ["Failed"]
           },
           {
             "activity": "GetACIContainerLogs",
-            "dependencyConditions": ["TimedOut", "Failed"]
+            "dependencyConditions": ["Failed"]
           }
         ],
         "typeProperties": {
