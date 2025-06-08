@@ -8,35 +8,6 @@ from azure.core.exceptions import ResourceExistsError
 from typing import Optional
 
 
-def get_blob_service_client(
-        storage_account: Optional[str] = None,
-        key_vault_url: Optional[str] = None,
-        key_vault_secret_name: Optional[str] = None
-    ) -> BlobServiceClient:
-    """
-    Initializes and returns a BlobServiceClient 
-    using the connection string from environment variables.
-    Uses DefaultAzureCredential for authentication if no connection string is provided.
-    """
-    # Fixed logic: if we have key vault info, use it
-    if key_vault_url and key_vault_secret_name:
-        credential = DefaultAzureCredential()
-        secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
-        conn_str = secret_client.get_secret(key_vault_secret_name).value
-        return BlobServiceClient.from_connection_string(conn_str)
-    elif storage_account:
-        credential = DefaultAzureCredential()
-        account_url = f"https://{storage_account}.blob.core.windows.net"
-        return BlobServiceClient(
-            account_url=account_url, 
-            credential=credential
-        )
-    else:
-        raise ValueError(
-            "Either storage_account or key_vault_url "
-            "and key_vault_secret_name must be provided."
-        )
-
 
 # Read environment variables
 AZURE_STORAGE_ACCOUNT = os.getenv("AZURE_STORAGE_ACCOUNT", "")
@@ -44,9 +15,6 @@ KEY_VAULT_URL = os.getenv("AZURE_KEY_VAULT_URL", "")
 KEY_VAULT_SECRET_NAME = os.getenv("AZURE_KEY_VAULT_SECRET_NAME")
 CONTAINER_NAME = os.getenv("BLOB_CONTAINER_NAME", "aci-logs")
 FUNCTION_KEY = os.getenv("FUNCTION_KEY")
-
-import logging
-import azure.functions as func
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
