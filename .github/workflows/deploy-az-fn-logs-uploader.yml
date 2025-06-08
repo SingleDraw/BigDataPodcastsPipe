@@ -34,12 +34,20 @@ jobs:
           pip install -r requirements.txt -t .
           cd -
 
-      - name: Zip Function App
+      - name: Zip Function App (clean and package)
         run: |
           cd azure-functions/save-logs-app
+          
+          # Remove unnecessary files to slim down the package
+          find . -type d -name "*.dist-info" -exec rm -rf {} +
+          find . -name "*.pyc" -delete
+          find . -type d -name "__pycache__" -exec rm -rf {} +
+          
+          # Create the zip archive
           zip -r ../../save_logs_function.zip . -x "*.git*" "*.DS_Store*"
+          
           cd -
-
+          
       - name: Deploy Function App
         uses: azure/functions-action@v1
         with:

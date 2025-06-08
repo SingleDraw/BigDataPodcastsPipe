@@ -24,6 +24,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         import requests
         from azure.identity import DefaultAzureCredential
+        from azure.storage.blob import BlobServiceClient
+        from azure.keyvault.secrets import SecretClient
         logging.info('azure.identity imported successfully')
         return func.HttpResponse("Success", status_code=200)
     except Exception as e:
