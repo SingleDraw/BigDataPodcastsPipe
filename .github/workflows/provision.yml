@@ -32,6 +32,7 @@ env:
     TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
     # Azure Function Aci-Logs Uploader
     TF_VAR_function_key: ${{ secrets.TF_VAR_FUNCTION_KEY }}
+    TF_VAR_function_app_name: ${{ secrets.TF_VAR_FUNCTION_APP_NAME }} # For ACI logs upload
 
 jobs:
   terraform:

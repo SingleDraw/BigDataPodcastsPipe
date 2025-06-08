@@ -11,9 +11,8 @@ env:
     AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
     SUBSCRIPTION_ID: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
     RESOURCE_GROUP_NAME: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} 
-    FUNCTION_APP_NAME: "aci-logs-uploader" # ${{ secrets.TF_VAR_FUNCTION_APP_NAME }} # To be implemented in the Terraform module
-
-
+    FUNCTION_APP_NAME: ${{ secrets.TF_VAR_FUNCTION_APP_NAME }} # To be implemented in the Terraform module
+    
 jobs:
     build-and-deploy:
       runs-on: ubuntu-latest

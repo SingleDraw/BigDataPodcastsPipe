@@ -1,8 +1,6 @@
 variable "location" {}
 variable "resource_group_name" {}
-variable "function_app_name" {
-  default = "aci-logs-uploader"
-}
+variable "function_app_name" {}
 variable "service_plan_name" {
   default = "aci-fn-plan"
 }

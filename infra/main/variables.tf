@@ -54,6 +54,11 @@ variable "function_key" {
   sensitive   = true
 }
 
+variable "function_app_name" {
+  description = "Name of the Azure Function App for ACI logs uploader"
+  type        = string
+}
+
 # Podcasting Index API configuration
 variable "podcasting_index_api_key" {
   description = "API key for Podcasting Index"

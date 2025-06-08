@@ -384,6 +384,7 @@ module "aci_logs_uploader" {
   resource_group_name         = azurerm_resource_group.rg.name
   storage_account_name        = var.storage_account_name
   function_key                = var.function_key
+  function_app_name           = var.function_app_name
   blob_connection_string_name = var.blob_connection_string_name
   blob_container_name_aci_logs = var.blob_container_name_aci_logs
   storage_account_id          = azurerm_storage_account.storage.id
