@@ -1,7 +1,7 @@
 import os, json, logging
 from datetime import datetime, timezone
 import azure.functions as func
-# from azure.identity import DefaultAzureCredential
+from azure.identity import DefaultAzureCredential
 # from azure.storage.blob import BlobServiceClient
 # from azure.keyvault.secrets import SecretClient
 # from azure.core.exceptions import ResourceExistsError
