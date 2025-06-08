@@ -59,6 +59,12 @@ RESOURCES+=(
   "azurerm_user_assigned_identity.storage_identity|az identity show --name \"$STORAGE_IDENTITY_N\" --resource-group \"$RG_N\"|\"$STORAGE_IDENTITY_ID\""
 )
 
+
+
+
+
+
+
 # ---------------------------------------------------------
 # Import Azure Function App and related resources
 # ----------------------------------------------------------
@@ -66,15 +72,16 @@ RESOURCES+=(
 # Service Plan for Azure Function App
 SP_N="aci-fn-plan"
 SP_ID="$RG_ID/providers/Microsoft.Web/serverfarms/$SP_N"
+MODULE="module.aci_logs_uploader"
 RESOURCES+=(
-  "azurerm_service_plan.function_plan|az appservice plan show --name \"$SP_N\" --resource-group \"$RG_N\"|\"$SP_ID\""
+  "$MODULE.azurerm_service_plan.function_plan|az appservice plan show --name \"$SP_N\" --resource-group \"$RG_N\"|\"$SP_ID\""
 )
 
 # Azure Function App
 AF_N="aci-logs-uploader"
 AF_ID="$RG_ID/providers/Microsoft.Web/sites/$AF_N"
 RESOURCES+=(
-  "azurerm_linux_function_app.aci_logs_uploader|az functionapp show --name \"$AF_N\" --resource-group \"$RG_N\"|\"$AF_ID\""
+  "$MODULE.azurerm_linux_function_app.aci_logs_uploader|az functionapp show --name \"$AF_N\" --resource-group \"$RG_N\"|\"$AF_ID\""
 )
 
 
@@ -100,7 +107,7 @@ RESOURCES+=(
 APDFKV_N="${RG_N}-adf-kv-access-policy"
 APDFKV_ID="$RG_ID/providers/Microsoft.KeyVault/vaults/$KV_N/accessPolicies/$APDFKV_N"
 RESOURCES+=(
-  "azurerm_key_vault_access_policy.adf_kv_access_policy|az keyvault access-policy show --name \"$APDFKV_N\" --vault-name \"$KV_N\" --resource-group \"$RG_N\"|\"$APDFKV_ID\""
+  "$MODULE.azurerm_key_vault_access_policy.adf_kv_access_policy|az keyvault access-policy show --name \"$APDFKV_N\" --vault-name \"$KV_N\" --resource-group \"$RG_N\"|\"$APDFKV_ID\""
 )
 
 
@@ -120,7 +127,7 @@ RESOURCES+=(
 GH_AF_ROLE_N="${RG_N}-gh-actions-fn-role"
 GH_AF_ROLE_ID="$RG_ID/providers/Microsoft.Web/sites/$AF_N/providers/Microsoft.Authorization/roleAssignments/$GH_AF_ROLE_N"
 RESOURCES+=(
-  "azurerm_role_assignment.github_actions_function_app|az role assignment show --name \"$GH_AF_ROLE_N\" --scope \"/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.Web/sites/$AF_N\"|\"$GH_AF_ROLE_ID\""
+  "$MODULE.azurerm_role_assignment.github_actions_function_app|az role assignment show --name \"$GH_AF_ROLE_N\" --scope \"/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.Web/sites/$AF_N\"|\"$GH_AF_ROLE_ID\""
 )
 
 
@@ -176,15 +183,20 @@ done
 SP_OBJECT_ID=$(az functionapp identity show --name "$AF_N" --resource-group "$RG_N" --query principalId -o tsv)
 
 # - Storage Data Owner Role Assignment
+# Allows file share creation
 source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
   "fn_storage_data_owner" \
   "/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.Storage/storageAccounts/$SA_N" \
-  "Storage Account Contributor" # Allows file share creation
+  "Storage Account Contributor" \
+  "aci_logs_uploader"
 
+# - Storage Blob Data Contributor Role Assignment
+# Allows read/write access to blobs
 source "$UTILS_DIR/import-role-asgn.sh" "$SP_OBJECT_ID" \
   "fn_storage_role" \
   "/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.Storage/storageAccounts/$SA_N" \
-  "Storage Blob Data Contributor" # Allows read/write access to blobs
+  "Storage Blob Data Contributor" \
+  "aci_logs_uploader"
 
 
 
