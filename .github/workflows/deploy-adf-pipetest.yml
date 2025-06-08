@@ -50,7 +50,7 @@ env:
   # ADF_LINKED_SERVICE_NAME: AzureManagementLSTest
 
   # Function App details for ACI logs upload
-  FUNCTION_NAME: ${{ secrets.TF_VAR_FUNCTION_APP_NAME }} # To be implemented in the Terraform module
+  FUNCTION_NAME: "save-logs" # Function Directory name in the repo
   FUNCTION_APP_URL: "https://${{ secrets.TF_VAR_FUNCTION_APP_NAME }}.azurewebsites.net" # For ACI logs upload
 
 
