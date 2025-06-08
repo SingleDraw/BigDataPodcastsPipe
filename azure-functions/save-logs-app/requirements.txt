@@ -1,15 +1,4 @@
-# Core Azure Functions
-azure-functions
-
-# Azure Identity
-azure-identity==1.12.0
-cryptography<39
-
-azure-core==1.29.5
-
-# Other Azure services (add as needed)
-azure-storage-blob==12.19.0
-azure-keyvault-secrets==4.7.0
-
-# Other dependencies
-requests==2.31.0
+azure-functions>=1.18.0
+azure-storage-blob>=12.19.0
+azure-identity>=1.15.0
+azure-keyvault-secrets>=4.7.0
