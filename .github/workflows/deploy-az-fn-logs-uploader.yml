@@ -41,8 +41,8 @@ jobs:
 
       - name: Zip Function App
         run: |
-          cd ./azure-functions/save-logs
-          zip -r ../../save_logs_function.zip .
+          cd ./azure-functions/save-logs-app
+          zip -r ../../save_logs_function.zip . -x "*.git*" "*.DS_Store*"
           cd -
 
       - name: Deploy Function App

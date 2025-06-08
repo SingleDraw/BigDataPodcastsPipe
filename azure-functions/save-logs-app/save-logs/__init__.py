@@ -8,7 +8,6 @@ from azure.core.exceptions import ResourceExistsError
 from typing import Optional
 
 
-
 def get_blob_service_client(
         storage_account: Optional[str] = None,
         key_vault_url: Optional[str] = None,
@@ -19,8 +18,8 @@ def get_blob_service_client(
     using the connection string from environment variables.
     Uses DefaultAzureCredential for authentication if no connection string is provided.
     """
-    if not storage_account and key_vault_url and key_vault_secret_name:
-        # Fetch storage key from Azure Key Vault
+    # Fixed logic: if we have key vault info, use it
+    if key_vault_url and key_vault_secret_name:
         credential = DefaultAzureCredential()
         secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
         conn_str = secret_client.get_secret(key_vault_secret_name).value
@@ -39,15 +38,12 @@ def get_blob_service_client(
         )
 
 
-
 # Read environment variables
 AZURE_STORAGE_ACCOUNT = os.getenv("AZURE_STORAGE_ACCOUNT", "")
 KEY_VAULT_URL = os.getenv("AZURE_KEY_VAULT_URL", "")
 KEY_VAULT_SECRET_NAME = os.getenv("AZURE_KEY_VAULT_SECRET_NAME")
 CONTAINER_NAME = os.getenv("BLOB_CONTAINER_NAME", "aci-logs")
 FUNCTION_KEY = os.getenv("FUNCTION_KEY")
-
-
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -69,7 +65,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     if not aci_name or not logs:
         return func.HttpResponse("Missing required fields", status_code=400)
-
 
     # Initialize Blob client
     blob_service_client = get_blob_service_client(
@@ -102,3 +97,4 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     blob_client.upload_blob(json.dumps(logs), overwrite=True)
 
     return func.HttpResponse(f"Logs saved to blob {blob_name}", status_code=200)
+
