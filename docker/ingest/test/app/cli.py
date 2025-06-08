@@ -109,12 +109,12 @@ def test_fn(
         run_app()                   # Works !
         if write_blob:
             test_blob_write()       # Works !
-        if write_blob_two:
-            test_blob_write_two()
         if key_vault:               # Works ! 
             test_key_vault(
                 secret_name=key_vault
             )
+        if write_blob_two:
+            test_blob_write_two()   # Works ! - this one will be used as trigger for going further in ADF
     except Exception as e:
         typer.echo(f"Error during the test app: {e}", err=True)
         raise typer.Exit(code=1)
