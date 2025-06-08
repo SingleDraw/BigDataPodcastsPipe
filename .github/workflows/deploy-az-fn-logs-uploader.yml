@@ -21,9 +21,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
   
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-  
       - name: Azure Login via OIDC
         uses: azure/login@v2 # Use v2 for OIDC support
         with:
@@ -31,17 +28,15 @@ jobs:
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.SUBSCRIPTION_ID }}
 
-      # - name: Azure Login using Services Principal
-      #   uses: azure/login@v1
-      #   with:
-      #     creds: ${{ secrets.AZURE_CREDENTIALS }}     
-
-      # - name: List repo files
-      #   run: ls -R
+      - name: Install Python dependencies into function directory
+        run: |
+          cd azure-functions/save-logs-app
+          pip install -r requirements.txt -t .
+          cd -
 
       - name: Zip Function App
         run: |
-          cd ./azure-functions/save-logs-app
+          cd azure-functions/save-logs-app
           zip -r ../../save_logs_function.zip . -x "*.git*" "*.DS_Store*"
           cd -
 
