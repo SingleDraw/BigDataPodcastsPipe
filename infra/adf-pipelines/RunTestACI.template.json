@@ -81,7 +81,7 @@
         "dependsOn": [
           {
             "activity": "RunACIContainer",
-            "dependencyConditions": ["Succeeded", "Failed", "Skipped", "Completed"]
+            "dependencyConditions": ["Completed"]
           }
         ],
         "typeProperties": {
@@ -116,18 +116,9 @@
         "name": "DeleteACIContainer",
         "type": "WebActivity",
         "dependsOn": [
-          {
-            "activity": "SaveLogsToBlob",
-            "dependencyConditions": ["Succeeded"]
-          },
-          {
-            "activity": "RunACIContainer",
-            "dependencyConditions": ["Failed"]
-          },
-          {
-            "activity": "GetACIContainerLogs",
-            "dependencyConditions": ["Failed"]
-          }
+          { "activity": "SaveLogsToBlob", "dependencyConditions": ["Succeeded"] },
+          { "activity": "RunACIContainer", "dependencyConditions": ["Failed"] },
+          { "activity": "GetACIContainerLogs", "dependencyConditions": ["Failed"] }
         ],
         "typeProperties": {
           "url": "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ContainerInstance/containerGroups/$ACI_NAME?api-version=2021-07-01",
