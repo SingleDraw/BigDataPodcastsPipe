@@ -24,6 +24,9 @@ jobs:
 
   clean-registry:
     runs-on: ubuntu-latest
+    permissions:
+        id-token: write
+        contents: read
     needs: [check-infra]
     if: github.ref == 'refs/heads/main'
     
