@@ -18,7 +18,7 @@ jobs:
     runs-on: self-hosted # ubuntu-latest 
     defaults:
         run:
-          shell: bash  # Use Git Bash instead of PowerShell
+          shell: "C:\\Program Files\\Git\\bin\\bash.exe {0}"
     timeout-minutes: 5
     
     steps:
