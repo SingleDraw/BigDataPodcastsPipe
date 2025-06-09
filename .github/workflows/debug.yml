@@ -15,7 +15,7 @@ on:
 
 jobs:
   debug:
-    runs-on: ubuntu-latest # self-hosted
+    runs-on: self-hosted # ubuntu-latest 
     timeout-minutes: 5
     
     steps:
