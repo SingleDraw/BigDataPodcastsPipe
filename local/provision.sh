@@ -37,7 +37,12 @@ set -o allexport
 source .env
 set +o allexport
 
-gh workflow run "$workflow_file" --repo "$GITHUB_REPOSITORY" 
+# Run the GitHub Actions workflow
+echo "Triggering GitHub Actions workflow '$workflow_file' for environment '$env'..."
+gh workflow run "$workflow_file" \
+    --repo "$GITHUB_REPOSITORY" \
+    -f tagMode="latest" # Set tag mode to latest, affects only build and push workflows
+
 if [ $? -ne 0 ]; then
     echo "Error: Failed to trigger the provision workflow for '$env'. Please check your permissions and try again."
     exit 1
