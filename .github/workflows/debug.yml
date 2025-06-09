@@ -16,6 +16,9 @@ on:
 jobs:
   debug:
     runs-on: self-hosted # ubuntu-latest 
+    defaults:
+        run:
+          shell: bash  # Use Git Bash instead of PowerShell
     timeout-minutes: 5
     
     steps:
