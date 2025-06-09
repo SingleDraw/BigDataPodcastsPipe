@@ -43,8 +43,8 @@ set +o allexport
 # Run the GitHub Actions workflow
 echo "Triggering GitHub Actions workflow '$workflow_file' for environment '$env'..."
 gh workflow run "$workflow_file" \
-    --repo "$GITHUB_REPOSITORY" \
-    -f tagMode="$TAG_MODE"
+    --repo "$GITHUB_REPOSITORY" # \
+    # -f tagMode="$TAG_MODE"
 
 if [ $? -ne 0 ]; then
     echo "Error: Failed to trigger the provision workflow for '$env'. Please check your permissions and try again."
