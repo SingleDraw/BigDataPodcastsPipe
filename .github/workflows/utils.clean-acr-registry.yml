@@ -1,5 +1,10 @@
 name: Clean Azure Container Registry
 
+# This workflow cleans up the Azure Container Registry 
+# by leaving only the most recent image and removing all other images with custom tags.
+# It is designed to be run manually after the infrastructure is ready.
+# It requires the infrastructure to be set up first, so it checks the INFRA_READY variable.
+
 on:
   workflow_dispatch:  # Manual trigger
 
@@ -50,6 +55,8 @@ jobs:
         done
 
     - name: Clean Azure Container Registry from custom tagged images
+      # disable this step
+      if: false
       run: |
         echo "Cleaning up Azure Container Registry: $ACR_NAME"
         # List all images with custom tags
@@ -61,6 +68,7 @@ jobs:
 
         for IMAGE in $IMAGES; do
           echo "Processing image: $IMAGE"
+
           # List tags for the image
           TAGS=$(az acr repository show-tags --name $ACR_NAME --repository $IMAGE --output tsv)
           for TAG in $TAGS; do
@@ -75,6 +83,61 @@ jobs:
         done
 
         echo "✅ Cleanup completed successfully."
+
+    - name: Erase all except the most recent latest image
+      if: false
+      run: |
+        # List all repositories (images)
+        repos=$(az acr repository list --name "$ACR_NAME" -o tsv)
+
+        for repo in $repos; do
+            echo "Processing $repo"
+            latest_digest=$(az acr repository show-manifests --name "$ACR_NAME" --repository "$repo" --query "[?tags[?@=='latest']].digest | [0]" -o tsv)
+            echo "Keeping latest digest: $latest_digest"
+            digests=$(az acr repository show-manifests --name "$ACR_NAME" --repository "$repo" --query "[].digest" -o tsv)
+            for digest in $digests; do
+                if [[ "$digest" != "$latest_digest" ]]; then
+                    echo "Deleting $digest"
+                    az acr repository delete --name "$ACR_NAME" --repository "$repo" --manifest "$digest" --yes
+                fi
+            done
+        done
+        echo "✅ All except the most recent image have been erased."
+
+    - name: Erase all except the most recent image
+      # all have latest tag anyway, so we can just keep the most recent one
+      run: |
+        # List all repositories (images)
+        repos=$(az acr repository list --name "$ACR_NAME" -o tsv)
+
+        for repo in $repos; do
+            echo "Processing image: $repo"
+
+            # List all manifests (digests), sorted by last update time (desc)
+            digests=$(az acr repository show-manifests \
+                --name "$ACR_NAME" \
+                --repository "$repo" \
+                --orderby time_desc \
+                --query "[].digest" -o tsv)
+
+            # Get the first (most recent) digest
+            keep_digest=$(echo "$digests" | head -n1)
+
+            echo "Keeping digest: $keep_digest"
+
+            # Delete all other digests
+            to_delete=$(echo "$digests" | tail -n +2)
+
+            for digest in $to_delete; do
+                echo "Deleting digest: $digest"
+                az acr repository delete \
+                --name "$ACR_NAME" \
+                --repository "$repo" \
+                --manifest "$digest" \
+                --yes
+            done
+        done
+        echo "✅ All except the most recent image have been erased."
 
     - name: List ACR images after cleanup
       run: |
