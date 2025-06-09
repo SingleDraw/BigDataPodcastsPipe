@@ -1,0 +1,56 @@
+name: Build and Push Brick - Whisperer Docker Image
+
+on:
+  push:       
+    branches:
+      - main  
+    paths:    
+      - 'docker/process/brick-whisperer/**'
+
+  workflow_dispatch: 
+    inputs:
+      tagMode:
+        description: 'Tag mode for the Docker image: latest or both (latest+sha)'
+        required: false
+        default: latest
+        type: choice
+        options:
+          - latest
+          - both # Allows both latest and sha tags
+
+
+jobs:
+  build:
+    uses: ./.github/workflows/template.build-and-push.yml
+    with:
+      tagMode: ${{ inputs.tagMode }}
+      appRepoPath: ./docker/process/brick-whisperer
+    secrets:
+      imageName: ${{ secrets.BRICK_WHISPERER_IMAGE_NAME }}
+      acrLoginServer: ${{ secrets.ACR_LOGIN_SERVER }}
+      acrUsername: ${{ secrets.ACR_USERNAME }}
+      acrPassword: ${{ secrets.ACR_PASSWORD }}
+      tfResourceGroup: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
+      # APP_NAME: brick-whisperer-app - for deployment, not needed for build
+
+
+
+  # deploy-app:
+  #   name: 'Deploy Application'
+  #   runs-on: ubuntu-latest
+  #   # needs: [terraform, build-and-push]
+  #   needs: [build-and-push]
+  #   # if: github.ref == 'refs/heads/main'
+            
+  #   steps:
+  #     - name: Login to Azure
+  #       uses: azure/login@v1
+  #       with:
+  #         creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
+  #     - name: Deploy to Azure Container Apps
+  #       run: |
+  #         az containerapp update \
+  #           --name "${{ env.APP_NAME }}" \
+  #           --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+  #           --image "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_SCRAPER }}:${{ github.sha }}"

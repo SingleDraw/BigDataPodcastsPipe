@@ -6,4 +6,6 @@ docker/scaffold
 *.md
 !README.md
 **/_backup/
+**/_backup/**
 azure-credentials.md
+aca-config

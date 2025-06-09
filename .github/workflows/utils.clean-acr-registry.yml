@@ -1,0 +1,93 @@
+name: Clean Azure Container Registry
+
+on:
+  workflow_dispatch:  # Manual trigger
+
+env:
+  REGISTRY: ${{ secrets.ACR_LOGIN_SERVER }}
+  REGISTRY_USERNAME: ${{ secrets.ACR_USERNAME }}
+  REGISTRY_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+  AZURE_RESOURCE_GROUP: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
+  ACR_NAME: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
+
+jobs:
+  check-infra:
+    runs-on: ubuntu-latest
+    environment: infra-ready  # this is required to access environment-scoped variables
+    steps:
+      - name: Fail if infra not ready
+        run: |
+          if [[ "${{ vars.INFRA_READY }}" != "true" ]]; then
+            echo "Infrastructure is not ready. Please run the bootstrap workflow first."
+            exit 1
+          fi
+
+  clean-registry:
+    runs-on: ubuntu-latest
+    needs: [check-infra]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+
+    - name: Login to Azure Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ env.REGISTRY_USERNAME }}
+        password: ${{ env.REGISTRY_PASSWORD }}
+
+    - name: Check ACR access
+      run: |
+        echo "Pinging ACR: $REGISTRY"
+        echo "$REGISTRY_PASSWORD" | docker login "$REGISTRY" -u "$REGISTRY_USERNAME" --password-stdin || {
+          echo "❌ Failed to authenticate with ACR. Aborting build."
+          exit 1
+        }
+        echo "✅ ACR login successful."
+
+    - name: List ACR images before cleanup
+      run: |
+        echo "Images before cleanup:"
+        for IMAGE in $(az acr repository list --name $ACR_NAME --output tsv); do
+          echo "🔹 $IMAGE"
+          az acr repository show-tags --name $ACR_NAME --repository $IMAGE --output tsv | sed "s/^/    - /"
+        done
+
+    - name: Clean Azure Container Registry from custom tagged images
+      run: |
+        echo "Cleaning up Azure Container Registry: $ACR_NAME"
+        # List all images with custom tags
+        IMAGES=$(az acr repository list --name $ACR_NAME --output tsv)
+        if [ -z "$IMAGES" ]; then
+          echo "No images found in ACR."
+          exit 0
+        fi
+
+        for IMAGE in $IMAGES; do
+          echo "Processing image: $IMAGE"
+          # List tags for the image
+          TAGS=$(az acr repository show-tags --name $ACR_NAME --repository $IMAGE --output tsv)
+          for TAG in $TAGS; do
+            if [[ "$TAG" != "latest" && "$TAG" != "stable" ]]; then
+              echo "Deleting image: $IMAGE:$TAG"
+              az acr repository delete --name $ACR_NAME --image "$IMAGE:$TAG" --yes || {
+                echo "❌ Failed to delete image: $IMAGE:$TAG"
+                exit 1
+              }
+            fi
+          done
+        done
+
+        echo "✅ Cleanup completed successfully."
+
+    - name: List ACR images after cleanup
+      run: |
+        echo "Images after cleanup:"
+        for IMAGE in $(az acr repository list --name $ACR_NAME --output tsv); do
+          echo "🔹 $IMAGE"
+          az acr repository show-tags --name $ACR_NAME --repository $IMAGE --output tsv | sed "s/^/    - /"
+        done
+  

@@ -8,8 +8,11 @@
 # - Azure Container Registry
 # ---------------------------------------------------------
 
+TAG_MODE="latest" # Default tag mode for build and push workflows
+
 declare -A workflow_map=(
-    [test]="azurelogin.yml"                 # -- Login to Azure - test workflow  
+    [test]="azurelogin.yml"                                   # -- Login to Azure - test workflow  
+    [cleanacr]="utils.clean-acr-registry.yml"                 # -- Clean up Azure Container Registry
     [bootstrap]="bootstrap.yml"             # Bootstrap workflow - creates the initial setup    
     [infra]="provision.yml"                 # Provisioning resources - triggered by bootstrap workflow too
     [images]="build-and-push-scraper.yml"   # Build and push scraper image
@@ -41,7 +44,7 @@ set +o allexport
 echo "Triggering GitHub Actions workflow '$workflow_file' for environment '$env'..."
 gh workflow run "$workflow_file" \
     --repo "$GITHUB_REPOSITORY" \
-    -f tagMode="latest" # Set tag mode to latest, affects only build and push workflows
+    -f tagMode="$TAG_MODE"
 
 if [ $? -ne 0 ]; then
     echo "Error: Failed to trigger the provision workflow for '$env'. Please check your permissions and try again."

@@ -43,12 +43,6 @@ env:
   TRIGGER_NAME: DailyTriggerTest
   ADF_NAME: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}-adf
 
-
-  # STORAGE_ACCOUNT_KEY: ${{ secrets.STORAGE_ACCOUNT_KEY }}
-  # IDENTITY_RESOURCE_ID: ${{ secrets.IDENTITY_RESOURCE_ID }} # For container identity
-  # IDENTITY_CLIENT_ID: ${{ secrets.IDENTITY_CLIENT_ID }}     # For ADF authentication
-  # ADF_LINKED_SERVICE_NAME: AzureManagementLSTest
-
   # Function App details for ACI logs upload
   FUNCTION_NAME: "save-logs" # Function Directory name in the repo
   FUNCTION_APP_URL: "https://${{ secrets.TF_VAR_FUNCTION_APP_NAME }}.azurewebsites.net" # For ACI logs upload
@@ -65,11 +59,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    # - name: Azure Login
-    #   uses: azure/login@v1
-    #   with:
-    #     creds: ${{ secrets.AZURE_CREDENTIALS }}
-
     - name: Azure Login via OIDC
       uses: azure/login@v1
       with:
@@ -77,15 +66,8 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-
     - name: Install jq
       run: sudo apt-get update && sudo apt-get install -y jq
-
-    # - name: Set environment variables for container - not secure, for testing only
-    #   run: |
-    #     echo "AZURE_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" >> $GITHUB_ENV
-    #     echo "AZURE_TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" >> $GITHUB_ENV
-    #     echo "AZURE_CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" >> $GITHUB_ENV
 
     - name: Generate pipeline JSON with env vars and create trigger JSON
       run: |

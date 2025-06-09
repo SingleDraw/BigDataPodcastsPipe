@@ -12,23 +12,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Terraform
-      uses: hashicorp/setup-terraform@v3
-
     - name: Azure Login
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-
-    - name: Make script executable
-      run: chmod +x ../scripts/test.sh
-      working-directory: infra/bootstrap
-  
-    - name: Run test bash script (checking path resolution)
-      run: ../scripts/test.sh
-      working-directory: infra/bootstrap
-      shell: bash
 
     - name: Test Azure CLI
       run: |
