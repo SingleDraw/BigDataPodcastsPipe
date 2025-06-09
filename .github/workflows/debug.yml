@@ -23,7 +23,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Setup Git Bash Path
+    - name: Setup Git Bash Path - needed for Windows runners
       shell: powershell
       run: |
           # Add Git to PATH if not already there

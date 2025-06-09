@@ -1,0 +1,23 @@
+# job-submitter.yaml
+apiVersion: apps/v1alpha1
+kind: Job
+metadata:
+  name: job-submitter
+spec:
+  template:
+    spec:
+      containers:
+      - name: submitter
+        image: myacr.azurecr.io/job-submitter:latest
+        env:
+        - name: BLOB_URL
+          value: "https://mystorage.blob.core.windows.net/jobs/job-data.json"
+        - name: REDIS_URL  
+          secretRef:
+            name: redis-connection
+        - name: STORAGE_KEY
+          secretRef:
+            name: storage-key
+      restartPolicy: Never
+  parallelism: 1
+  completions: 1

@@ -1,0 +1,16 @@
+# .github/workflows/deploy.yml
+- name: Build and Push Images
+  run: |
+    docker build -t $ACR_NAME.azurecr.io/job-submitter:$GITHUB_SHA ./job-submitter
+    docker push $ACR_NAME.azurecr.io/job-submitter:$GITHUB_SHA
+
+- name: Deploy Infrastructure
+  run: |
+    terraform apply -var="image_tag=$GITHUB_SHA"
+
+- name: Update Container App Job (if needed)
+  run: |
+    az containerapp job update \
+      --name job-submitter \
+      --resource-group $RG \
+      --image $ACR_NAME.azurecr.io/job-submitter:$GITHUB_SHA

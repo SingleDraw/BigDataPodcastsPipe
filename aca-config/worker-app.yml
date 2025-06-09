@@ -1,0 +1,27 @@
+# worker-app.yaml
+apiVersion: apps/v1alpha1
+kind: ContainerApp
+metadata:
+  name: job-worker
+spec:
+  template:
+    containers:
+    - name: worker
+      image: myacr.azurecr.io/job-worker:latest
+      env:
+      - name: REDIS_URL
+        secretRef:
+          name: redis-connection
+      - name: WORKER_ID
+        value: "worker-{replica-index}"
+  scale:
+    minReplicas: 1
+    maxReplicas: 10
+    rules:
+    - name: redis-queue-length
+      custom:
+        type: redis
+        metadata:
+          address: "$REDIS_HOST:6379"
+          listName: "job_queue"
+          listLength: "5"

@@ -1,0 +1,15 @@
+# redis-app.yaml (if self-hosting)
+apiVersion: apps/v1alpha1  
+kind: ContainerApp
+metadata:
+  name: redis-broker
+spec:
+  template:
+    containers:
+    - name: redis
+      image: redis:alpine
+      ports:
+      - containerPort: 6379
+  scale:
+    minReplicas: 1
+    maxReplicas: 1
