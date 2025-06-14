@@ -610,7 +610,7 @@ resource "azurerm_container_app" "worker" {
 
     custom_scale_rule {
       name             = "redis-queue-length"
-      custom_rule_type = "keda"
+      custom_rule_type = "redis"
       metadata = {
         "type"            = "redis"
         "address"         = "redis://whisperer-redis:6379"
