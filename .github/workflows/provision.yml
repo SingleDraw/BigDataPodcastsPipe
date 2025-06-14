@@ -76,6 +76,17 @@ jobs:
     - name: Make script executable
       run: chmod +x "$PROJECT_ROOT/infra/scripts/import.sh"
 
+    
+    - name: Remove resoures
+      run: |
+        terraform state rm 'azurerm_container_app.redis'
+        terraform state rm 'azurerm_container_app.worker[0]'
+        terraform state rm 'azurerm_container_app.worker'
+        terraform state rm 'azurerm_container_app.redis_test'
+      shell: bash
+      continue-on-error: true
+
+
     - name: Run conditional import script
       run: "$PROJECT_ROOT/infra/scripts/import.sh"
       shell: bash
