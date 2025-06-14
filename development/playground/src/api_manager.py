@@ -28,6 +28,7 @@ class PodcastApiManager:
     def get_episodes_by_podcast_id(
             self,
             id: str,
+            title: str,  # Optional title for logging purposes
             since: int,
             limit: int = 5,  # Limit the number of episodes to fetch
             podcast_api_id: str = "itunes_id"  # Column name for podcast ID in the DataFrame
@@ -50,11 +51,19 @@ class PodcastApiManager:
         if not api:
             raise ValueError(f"API not found for podcast column ID: {podcast_api_id}")
 
-        return api.get_episodes_by_podcast_id(
+        episodes = api.get_episodes_by_podcast_id(
             id=id, 
             since=since, 
             limit=limit
         )
+
+        print(f"""Fetched {
+                [t for t in episodes if t.get('title') is not None]
+            } episodes for podcast '{title}' with ID '{id}' using {api.__class__.__name__}
+            """)
+
+
+        return episodes
 
 
 
@@ -94,10 +103,11 @@ class PodcastApiManager:
                 
                 # Check if any of the found podcasts match the title
                 # - uses fuzzy matching method to compare titles
-                best_title, podcast_id = self._compare_titles(
-                    original_title=podcats_title, 
-                    found_podcasts=[
-                        (podcast.get("title", ""), podcast.get("id", "")) for podcast in found_podcasts],
+                best_title, podcast_id, similarity = self._compare_titles(
+                    searched_phrase=podcats_title, 
+                    found_phrases=[
+                        (podcast.get("title", ""), podcast.get("id", "")) for podcast in found_podcasts
+                    ],
                     threshold=threshold
                 )
 
@@ -122,6 +132,7 @@ class PodcastApiManager:
                     and df.loc[row_idx, podcast_id_column_key].eq("").any()
                 ):
                     df.loc[row_idx, podcast_id_column_key] = str(podcast_id)
+                    print(f"Updated podcast ID for '{podcats_title}' to {best_title}/'{podcast_id}' with similarity {similarity}")
 
         return df
 
@@ -140,10 +151,10 @@ class PodcastApiManager:
 
     def _compare_titles(
             self,
-            original_title: str, 
-            found_podcasts: list[tuple[str,str]], # list of tuples with (title, podcast_id) pairs
+            searched_phrase: str, 
+            found_phrases: list[tuple[str,str]], # list of tuples with (title, podcast_id) pairs
             threshold: int = 90                   # similarity threshold for matching - default is 90
-        ) -> tuple[str, str] | None:
+        ) -> tuple[str, str, int] | None:
         """
         Compare two podcast titles using fuzzy matching.
         Returns the best matching title and its podcast_id if similarity exceeds the threshold.
@@ -161,24 +172,24 @@ class PodcastApiManager:
         # list of tuples with (title, podcast_id, similarity)
         matched_titles: list[tuple[str,str,int]] = [] 
 
-        for found_title, podcast_id in found_podcasts:
+        for phrase, id in found_phrases:
             similarity = fuzz.ratio(
-                self.normalize_title(original_title), 
-                self.normalize_title(found_title)
+                self.normalize_title(searched_phrase), 
+                self.normalize_title(phrase)
             )
             if similarity > threshold:
-                # print(f"Matched '{original_title}' with '{found_title}' (similarity: {similarity})")
-                matched_titles.append((found_title, podcast_id, similarity))
+                # print(f"Matched '{searched_phrase}' with '{phrase}' (similarity: {similarity})")
+                matched_titles.append((phrase, id, similarity))
 
         # get the best match
         if matched_titles:
             # Get the tuple with the highest similarity score
             best_match = max(matched_titles, key=lambda x: x[2])  
 
-            print(f"Best match for '{original_title}': '{best_match[0]}' with similarity {best_match[2]}")
+            print(f"Best match for '{searched_phrase}': '{best_match[0]}' with similarity {best_match[2]}")
             
-            # Return the title and podcast_id of the best match
-            return best_match[0], best_match[1]  
+            # Return the title and phrase of the best match
+            return best_match[0], best_match[1], best_match[2]  # Return the title, podcast_id, and similarity score
         else:
-            print(f"No match found for '{original_title}'")
-            return None, None
+            print(f"No match found for '{searched_phrase}'")
+            return None, None, None  # Return None if no match is found

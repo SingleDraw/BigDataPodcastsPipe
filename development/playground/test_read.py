@@ -35,9 +35,12 @@ print("List of Azure Containers:", res)
 
 #  whisperer/raw_podcasts_data/date=2025-06-11/top_podcasts.parquet
 CONTAINER_NAME = "whisperer"
-SINK_DIR = "raw_podcasts_data"
+# SINK_DIR = "raw_podcasts_data"
+SINK_DIR = "full_podcasts_data"
 SINK_DATE = datetime.now().strftime("%Y-%m-%d")
-STORAGE_KEY = f"{SINK_DIR}/date={SINK_DATE}/top_podcasts.parquet"
+# STORAGE_KEY = f"{SINK_DIR}/date={SINK_DATE}/top_podcasts.parquet"
+STORAGE_KEY = f"{SINK_DIR}/date={SINK_DATE}/pl/master_episodes.parquet"
+STORAGE_KEY = f"{SINK_DIR}/date={SINK_DATE}/pl/master_ranking.parquet"
 
 bytesIOres = s3_client.storage_client.download_object(
     container_name="whisperer",

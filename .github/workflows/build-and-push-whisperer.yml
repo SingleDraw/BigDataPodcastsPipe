@@ -29,6 +29,17 @@ jobs:
       tfResourceGroup: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
       # APP_NAME: brick-whisperer-app - for deployment, not needed for build
 
+  set_images_ready:
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Set images ready flag
+      run: |
+        gh variable set IMAGES_READY --body "true"
+      env:
+        GH_TOKEN: ${{ secrets.GH_PAT_TOKEN }}
 
 
   # deploy-app:

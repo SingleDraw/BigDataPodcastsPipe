@@ -9,7 +9,9 @@ setup(
     install_requires=[
         "typer[all]",
         "pandas",
-        "pyarrow",
+        # NOTE: violet-storage-lib is not included here,
+        #      it should be installed separately in the Dockerfile
+        # "pip install libs/violet-storage-lib[pyarrow]",
         "python-dotenv",
         "rapidfuzz"
     ],

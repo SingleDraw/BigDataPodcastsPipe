@@ -251,3 +251,26 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Environment 'infra-ready' has been created successfully."
+
+
+
+# echo "Creating the 'images-ready' environment in GitHub repository '$TF_VAR_GITHUB_REPOSITORY'..."
+
+# gh api \
+#   -X PUT \
+#   -H "Accept: application/vnd.github+json" \
+#   repos/$TF_VAR_GITHUB_REPOSITORY/environments/infra-ready
+
+
+# if [ $? -ne 0 ]; then
+#     echo "Error: Failed to create the 'infra-ready' environment. Please check your permissions and try again."
+#     exit 1
+# fi
+
+# gh variable set INFRA_READY --env infra-ready --body "false"
+# if [ $? -ne 0 ]; then
+#     echo "Error: Failed to set the INFRA_READY variable in the 'infra-ready' environment. Please check your permissions and try again."
+#     exit 1
+# fi
+
+# echo "Environment 'infra-ready' has been created successfully."

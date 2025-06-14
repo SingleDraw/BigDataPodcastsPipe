@@ -417,3 +417,171 @@ resource "azurerm_data_factory_linked_service_azure_function" "aci_logs_fn" {
 
   depends_on = [module.aci_logs_uploader]
 }
+
+
+
+
+# ----------------------------------------------------------------------
+# # 11. ACA - Azure Container Apps for Big Data Processing
+# # ----------------------------------------------------------------------
+
+# # Azure Log Analytics Workspace for ACA
+# resource "azurerm_log_analytics_workspace" "log_analytics" {
+#   name                = "${var.resource_group_name}-law"
+#   location            = azurerm_resource_group.rg.location
+#   resource_group_name = azurerm_resource_group.rg.name
+#   sku                 = "PerGB2018"
+
+#   retention_in_days   = 30
+
+#   identity {
+#     type = "SystemAssigned"
+#   }
+
+#   tags = {
+#     environment = "production"
+#     project     = "big-data-pipeline"
+#   }
+# }
+
+# Create ACA environment
+resource "azurerm_container_app_environment" "aca_env" {
+  name                = "whisperer-aca-env"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  # Optional, use internal load balancer for private networking:
+  internal_load_balancer_enabled = true
+}
+
+# Create user-assigned managed identity for ACA
+resource "azurerm_user_assigned_identity" "aca_identity" {
+  name                = "whisperer-aca-identity"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+}
+
+# Assign AcrPull role to managed identity
+resource "azurerm_role_assignment" "aca_identity_acr_pull" {
+  scope                = azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_user_assigned_identity.aca_identity.principal_id
+}
+
+
+
+
+
+
+
+
+
+# Create Azure Container App for Redis
+# Access it with azurerm_container_app.redis[0].id since it's now a list.
+resource "azurerm_container_app" "redis" {
+  count                        = var.images_ready ? 1 : 0
+  name                         = "whisperer-redis"
+  container_app_environment_id = azurerm_container_app_environment.aca_env.id
+  resource_group_name          = azurerm_resource_group.rg.name
+  location                     = azurerm_resource_group.rg.location
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.aca_identity.id]
+  }
+
+  template {
+    container {
+      name   = "redis"
+      # image  = "${azurerm_container_registry.acr.login_server}/your-redis-image:tag"
+      image = "redis:7.2-bookworm"
+      cpu    = 0.5
+      memory = "1.0Gi"
+
+      env {
+        name  = "ALLOW_EMPTY_PASSWORD"
+        value = "yes"
+      }
+    }
+
+    scale {
+      min_replicas = 1
+      max_replicas = 1
+    }
+  }
+
+  registry {
+    server   = azurerm_container_registry.acr.login_server
+    identity = azurerm_user_assigned_identity.aca_identity.id
+  }
+
+  ingress {
+    external_enabled = false  # not exposed publicly
+    target_port      = 6379
+    transport        = "tcp"
+  }
+}
+
+
+
+
+
+
+# # --------------------------------------------------------------------
+# # 12. DATABRICKS - Big Data Processing Spark NLP
+# # --------------------------------------------------------------------
+
+# # Databricks Workspace for Big Data Processing
+# # Required for running Spark NLP jobs, creating clusters, and managing jobs
+# resource "azurerm_databricks_workspace" "nlp_workspace" {
+#   name                = "nlp-workspace"
+#   location            = azurerm_resource_group.rg.location
+#   resource_group_name = azurerm_resource_group.rg.name
+#   sku                 = "standard"
+# }
+
+# # Databricks Provider configuration (after creating the workspace)
+# provider "databricks" {
+#   alias  = "workspace"
+
+#   azure_workspace_resource_id = azurerm_databricks_workspace.nlp_workspace.id
+#   host                        = azurerm_databricks_workspace.nlp_workspace.workspace_url
+# }
+
+# # Databricks Cluster for Spark NLP
+# # This cluster will be used to run Spark NLP jobs
+# resource "databricks_cluster" "nlp" {
+#   provider                = databricks.workspace
+
+#   cluster_name            = "spark-nlp"
+#   spark_version           = "13.3.x-scala2.12"
+#   node_type_id            = "Standard_DS3_v2"
+#   autotermination_minutes = 10
+#   num_workers             = 1
+
+#   library {
+#     pypi {
+#       package = "pyspark==3.5.0"
+#     }
+#   }
+
+#   library {
+#     pypi {
+#       package = "spark-nlp==5.1.4"
+#     }
+#   }
+
+#   library {
+#     pypi {
+#       package = "numpy"
+#     }
+#   }
+
+  
+#   # notebook_task {
+#   #   notebook_path = "/Users/you@example.com/your_notebook"
+#   # }
+
+#   max_concurrent_runs = 1
+
+# }

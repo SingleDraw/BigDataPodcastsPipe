@@ -329,9 +329,11 @@ class Enricher:
 
                 # Get the podcast ID from the row
                 podcast_api_id = 'podcasting_index_id'
+                # podcast_api_id = 'itunes_id'
                 podcast_id = row.get(podcast_api_id)
                 if not podcast_id:
                     podcast_api_id = 'itunes_id'
+                    # podcast_api_id = 'podcasting_index_id'
                     podcast_id = row.get(podcast_api_id)
                 if not podcast_id:
                     podcast_id = None
@@ -345,6 +347,7 @@ class Enricher:
                 # Fetch episodes for each podcast in the master ranking
                 episodes = self.api_manager.get_episodes_by_podcast_id(
                     id=podcast_id,
+                    title=podcast_title, # for debugging purposes
                     since=since_date_fetch,
                     limit=episodes_fetch_limit_per_podcast,
                     podcast_api_id=podcast_api_id

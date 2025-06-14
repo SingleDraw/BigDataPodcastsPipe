@@ -2,10 +2,10 @@ name: Build and Push Test App Docker Image
 
 on:
   push:      
-    branches:
-      - main  
-    paths:    
-      - 'docker/test/**'
+    # branches:
+    #   - main  
+    # paths:    
+    #   - 'docker/test/**'
   workflow_dispatch:  # Manual trigger
 
 permissions:

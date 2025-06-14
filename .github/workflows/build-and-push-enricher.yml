@@ -2,11 +2,11 @@ name: Build and Push Brick Enricher Docker Image
 
 on:
   push:       # Trigger when code is pushed to the repository
-    branches:
-      - main  # Only trigger on main branch
-    paths:    # Only trigger when changes are made in the specified path
-      - 'docker/Dockerfile.process.enricher'
-      - 'libs/brick-process-enricher/**'
+    # branches:
+    #   - main  # Only trigger on main branch
+    # paths:    # Only trigger when changes are made in the specified path
+    #   - 'docker/Dockerfile.process.enricher'
+    #   - 'libs/brick-process-enricher/**'
 
   workflow_dispatch:  # Manual trigger
     inputs:

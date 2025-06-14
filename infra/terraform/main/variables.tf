@@ -79,6 +79,11 @@ variable "brick_pcaster_image_name" {
 }
 
 
+# Conditional variables for Azure Container Apps
+variable "images_ready" {
+  type    = bool
+  default = false
+}
 
 
 # variable "container_group_name" {

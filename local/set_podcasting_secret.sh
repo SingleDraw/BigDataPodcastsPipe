@@ -5,6 +5,12 @@ set -a
 source .env
 set +a
 
+# gh secret set BRICK_WHISPERER_IMAGE_NAME \
+#     --body "$BRICK_WHISPERER_IMAGE_NAME" \
+#     --repo "$TF_VAR_GITHUB_REPOSITORY"
+
+# exit 0
+
 # Set the Podcasting Index API secret
 # Due to dollar sign in the secret, we need to escape it
 if [ -z "$PODCASTING_INDEX_API_SECRET" ]; then
