@@ -593,7 +593,8 @@ resource "azurerm_container_app" "worker" {
       custom_rule_type = "redis"
       metadata = {
         "type"            = "redis"
-        "address"         = "redis://whisperer-redis:6379"
+        # Use the full internal FQDN for the scaler
+        "address"         = "redis://whisperer-redis.internal.${azurerm_container_app_environment.aca_env.default_domain}:6379"
         "listName"        = "celery"
         "listLength"      = "5"
         "activationValue" = "1"

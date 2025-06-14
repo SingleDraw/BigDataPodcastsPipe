@@ -1,13 +1,23 @@
 #!/bin/bash
 
-az network vnet subnet show \
-  --resource-group rg-demo-storage \
-  --vnet-name aca-vnet \
-  --name aca-subnet \
-  --query "delegations"
+# az network vnet subnet show \
+#   --resource-group rg-demo-storage \
+#   --vnet-name aca-vnet \
+#   --name aca-subnet \
+#   --query "delegations"
 
 
+# Check Redis
+az containerapp show --name whisperer-redis --resource-group rg-demo-storage
 
+# Get your container app environment details
+# az containerapp env show --name whisperer-aca-env --resource-group rg-demo-storage
+
+# Check scaling rules
+az containerapp show --name whisperer-worker --resource-group rg-demo-storage
+
+# Get container app environment's default domain
+az containerapp env show --name whisperer-aca-env --resource-group rg-demo-storage --query "properties.defaultDomain" -o tsv
 
 # az config set extension.use_dynamic_install=yes_without_prompt
 # az config set extension.use_dynamic_install_allow_preview=true
