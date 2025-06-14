@@ -226,8 +226,10 @@
                       "enricher",
                       "--overwrite",
                       "--verbose",
-                      "--target-protocol az",
-                      "--countries us",
+                      "--target-protocol",
+                      "az",
+                      "--countries",
+                      "us",
                       "--azure-storage-account",
                       "$STORAGE_ACCOUNT_NAME"
                     ],
