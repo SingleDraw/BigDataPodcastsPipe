@@ -125,6 +125,91 @@ RESOURCES+=(
 
 
 
+# # Import ACA environment
+# resource "azurerm_container_app_environment" "aca_env" {
+#   name                = "whisperer-aca-env"
+#   location            = azurerm_resource_group.rg.location
+#   resource_group_name = azurerm_resource_group.rg.name
+
+#   # This configuration will automatically handle the subnet delegation
+#   internal_load_balancer_enabled  = true
+#   infrastructure_subnet_id        = azurerm_subnet.aca_subnet.id
+# }
+
+# Import Azure Container App Environment
+ACA_ENV_N="${RG_N}-whisperer-aca-env"
+ACA_ENV_ID="$RG_ID/providers/Microsoft.App/managedEnvironments/$ACA_ENV_N"
+RESOURCES+=(
+  "azurerm_container_app_environment.aca_env|az containerapp env show --name \"$ACA_ENV_N\" --resource-group \"$RG_N\"|\"$ACA_ENV_ID\""
+)
+
+
+
+# Import user-assigned managed identity for ACA
+# resource "azurerm_user_assigned_identity" "aca_identity" {
+#   name                = "whisperer-aca-identity"
+#   resource_group_name = azurerm_resource_group.rg.name
+#   location            = azurerm_resource_group.rg.location
+
+#   depends_on = [
+#     azurerm_container_app_environment.aca_env
+#   ]
+# }
+
+# Import user-assigned managed identity for Azure Container Apps
+ACA_IDENTITY_N="${RG_N}-whisperer-aca-identity"
+ACA_IDENTITY_ID="$RG_ID/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$ACA_IDENTITY_N"
+RESOURCES+=(
+  "azurerm_user_assigned_identity.aca_identity|az identity show --name \"$ACA_IDENTITY_N\" --resource-group \"$RG_N\"|\"$ACA_IDENTITY_ID\""
+)
+
+# Import AcrPull role to managed identity
+# resource "azurerm_role_assignment" "aca_identity_acr_pull" {
+#   scope                = azurerm_container_registry.acr.id
+#   role_definition_name = "AcrPull"
+#   principal_id         = azurerm_user_assigned_identity.aca_identity.principal_id
+
+#   depends_on = [
+#     azurerm_user_assigned_identity.aca_identity,
+#     azurerm_container_app_environment.aca_env
+#   ]
+# }
+
+
+
+# Import role assignment for ACR Pull
+# resource "azurerm_role_assignment" "aca_identity_network" {
+#   scope                = azurerm_virtual_network.vnet.id
+#   role_definition_name = "Network Contributor"
+#   principal_id         = azurerm_user_assigned_identity.aca_identity.principal_id
+
+#   depends_on = [
+#     azurerm_user_assigned_identity.aca_identity,
+#     azurerm_virtual_network.vnet
+#   ]
+# }
+
+# Import role assignment for ACR Pull
+ACR_PULL_ROLE_N="${RG_N}-aca-identity-acr-pull"
+ACR_PULL_ROLE_ID="$RG_ID/providers/Microsoft.ContainerRegistry/registries/$CR_N/providers/Microsoft.Authorization/roleAssignments/$ACR_PULL_ROLE_N"
+RESOURCES+=(
+  "azurerm_role_assignment.aca_identity_acr_pull|az role assignment show --name \"$ACR_PULL_ROLE_N\" --scope \"/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.ContainerRegistry/registries/$CR_N\"|\"$ACR_PULL_ROLE_ID\""
+)
+# Import role assignment for Network Contributor
+NETWORK_ROLE_N="${RG_N}-aca-identity-network"
+NETWORK_ROLE_ID="$RG_ID/providers/Microsoft.Network/virtualNetworks/$VNET_N/providers/Microsoft.Authorization/roleAssignments/$NETWORK_ROLE_N"
+RESOURCES+=(
+  "azurerm_role_assignment.aca_identity_network|az role assignment show --name \"$NETWORK_ROLE_N\" --scope \"/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.Network/virtualNetworks/$VNET_N\"|\"$NETWORK_ROLE_ID\""
+)
+
+
+
+
+
+
+
+
+
 
 
 # ---------------------------------------------------------
