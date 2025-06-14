@@ -560,7 +560,7 @@ resource "azurerm_container_app" "redis" {
 }
 
 resource "azurerm_container_app" "worker" {
-  count                        = var.images_ready ? 1 : 0
+  # count                        = var.images_ready ? 1 : 0
   name                         = "whisperer-worker"
   container_app_environment_id = azurerm_container_app_environment.aca_env.id
   resource_group_name          = azurerm_resource_group.rg.name
@@ -610,7 +610,7 @@ resource "azurerm_container_app" "worker" {
   depends_on = [
     azurerm_user_assigned_identity.aca_identity,
     azurerm_role_assignment.aca_identity_acr_pull,
-    azurerm_container_app.redis,
+    azurerm_container_app.redis
   ]
 }
 
