@@ -444,6 +444,37 @@ resource "azurerm_data_factory_linked_service_azure_function" "aci_logs_fn" {
 #   }
 # }
 
+
+resource "azurerm_virtual_network" "vnet" {
+  name                = "aca-vnet"
+  address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
+resource "azurerm_subnet" "aca_subnet" {
+  name                 = "aca-subnet"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.0.1.0/24"]
+
+  # For ACA internal load balancer, subnet delegation is required:
+  delegation {
+    name = "delegation"
+    service_delegation {
+      name = "Microsoft.Web/containerApps"
+      actions = [
+        "Microsoft.Network/virtualNetworks/subnets/join/action",
+        "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action"
+      ]
+    }
+  }
+}
+
+
+
+
+
 # Create ACA environment
 resource "azurerm_container_app_environment" "aca_env" {
   name                = "whisperer-aca-env"
@@ -451,7 +482,8 @@ resource "azurerm_container_app_environment" "aca_env" {
   resource_group_name = azurerm_resource_group.rg.name
 
   # Optional, use internal load balancer for private networking:
-  internal_load_balancer_enabled = true
+  internal_load_balancer_enabled  = true
+  infrastructure_subnet_id        = azurerm_subnet.aca_subnet.id
 }
 
 # Create user-assigned managed identity for ACA
