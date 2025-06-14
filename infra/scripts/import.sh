@@ -140,7 +140,7 @@ RESOURCES+=(
 ACA_ENV_N="${RG_N}-whisperer-aca-env"
 ACA_ENV_ID="$RG_ID/providers/Microsoft.App/managedEnvironments/$ACA_ENV_N"
 RESOURCES+=(
-  "azurerm_container_app_environment.aca_env|az containerapp env show --name \"$ACA_ENV_N\" --resource-group \"$RG_N\"|\"$ACA_ENV_ID\""
+  "azurerm_container_app_environment.aca_env|az containerapp env show --name \"$ACA_ENV_N\" --resource-group \"$RG_N\"|$ACA_ENV_ID"
 )
 
 
