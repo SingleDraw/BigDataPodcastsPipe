@@ -1,0 +1,36 @@
+name: Build and Push Brick Enricher Docker Image
+
+on:
+  push:       # Trigger when code is pushed to the repository
+    branches:
+      - main  # Only trigger on main branch
+    paths:    # Only trigger when changes are made in the specified path
+      - 'docker/Dockerfile.process.enricher'
+      - 'libs/brick-process-enricher/**'
+
+  workflow_dispatch:  # Manual trigger
+    inputs:
+      tagMode:
+        description: 'Tag mode for the Docker image: latest or both (latest+sha)'
+        required: false
+        default: 'latest' 
+        type: choice
+        options:
+          - latest
+          - both # Allows both latest and sha tags
+
+jobs:
+  build:
+    uses: ./.github/workflows/template.build-and-push.yml
+    with:
+      tagMode: ${{ inputs.tagMode }}  # Optional, only when manually triggered
+      # appRepoPath: ./docker/ingest/brick-pcaster
+      contextPath: ./
+      dockerfilePath: docker/Dockerfile.process.enricher
+    secrets:
+      imageName: ${{ secrets.BRICK_ENRICHER_IMAGE_NAME }}
+      acrLoginServer: ${{ secrets.ACR_LOGIN_SERVER }}
+      acrUsername: ${{ secrets.ACR_USERNAME }}
+      acrPassword: ${{ secrets.ACR_PASSWORD }}
+      tfResourceGroup: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
+

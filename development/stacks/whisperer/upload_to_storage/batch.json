@@ -1,0 +1,10 @@
+[
+    {
+        "input": "https://d38nvwmjovqyq6.cloudfront.net/va90web25003/companions/ws_smith/1%20Comparison%20Of%20Vernacular%20And%20Refined%20Speech.mp3",
+        "output": "default+az://whisperer/transcribed_raw/output_speech_sample_transcription.txt"
+    },
+    {
+        "input": "seaweedfs+s3://whisperer/sample2.mp3",
+        "output": "default+az://whisperer/transcribed_raw/french_nasal_vowels_sample_transcription.txt"
+    }
+]

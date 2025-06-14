@@ -1,11 +1,12 @@
-name: Build and Push Brick - Pcaster Scraper App Docker Image
+name: Build and Push Brick Pcaster Docker Image
 
 on:
   push:       # Trigger when code is pushed to the repository
     branches:
       - main  # Only trigger on main branch
     paths:    # Only trigger when changes are made in the specified path
-      - 'docker/ingest/brick-pcaster/**'
+      - 'docker/Dockerfile.ingest.pcaster'  
+      - 'libs/brick-ingest-pcaster/**'    
 
   workflow_dispatch:  # Manual trigger
     inputs:
@@ -23,7 +24,9 @@ jobs:
     uses: ./.github/workflows/template.build-and-push.yml
     with:
       tagMode: ${{ inputs.tagMode }}  # Optional, only when manually triggered
-      appRepoPath: ./docker/ingest/brick-pcaster
+      # appRepoPath: ./docker/ingest/brick-pcaster
+      contextPath: ./
+      dockerfilePath: docker/Dockerfile.ingest.pcaster
     secrets:
       imageName: ${{ secrets.BRICK_PCASTER_IMAGE_NAME }}
       acrLoginServer: ${{ secrets.ACR_LOGIN_SERVER }}

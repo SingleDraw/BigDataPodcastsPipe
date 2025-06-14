@@ -1,12 +1,6 @@
-name: Build and Push Brick - Whisperer Docker Image
+name: Build and Push Brick Whisperer Docker Image
 
 on:
-  # push:       
-  #   branches:
-  #     - main  
-  #   paths:    
-  #     - 'docker/process/brick-whisperer/**'
-
   workflow_dispatch: 
     inputs:
       tagMode:
@@ -24,7 +18,9 @@ jobs:
     uses: ./.github/workflows/template.build-and-push.yml
     with:
       tagMode: ${{ inputs.tagMode }}
-      appRepoPath: ./docker/process/brick-whisperer
+      # appRepoPath: ./docker/process/brick-whisperer
+      contextPath: ./
+      dockerfilePath: docker/Dockerfile.process.whisperer
     secrets:
       imageName: ${{ secrets.BRICK_WHISPERER_IMAGE_NAME }}
       acrLoginServer: ${{ secrets.ACR_LOGIN_SERVER }}

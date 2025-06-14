@@ -1,0 +1,67 @@
+FROM python:3.11-slim
+
+ARG ENVIRONMENT=production
+ENV ENVIRONMENT=${ENVIRONMENT}
+
+# Install dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      libglib2.0-0 libnss3 libx11-6 libxcomposite1 libxdamage1 \
+      libxext6 libxrandr2 libxcb1 libxkbcommon0 libasound2 \
+      libatk1.0-0 libatk-bridge2.0-0 libxfixes3 libgbm1 libexpat1 \
+      libnspr4 libdbus-1-3 libatspi2.0-0 libcairo2 && \
+    apt-get purge -y --auto-remove && \
+    rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man /usr/share/locale
+
+
+# Set working directory
+WORKDIR /app
+
+# Copy only necessary files
+COPY libs/brick-ingest-pcaster/app ./app
+COPY libs/brick-ingest-pcaster/setup.py ./setup.py
+
+# Copy and install local violet-storage-lib with parquet support
+COPY libs/violet-storage-lib ../violet-storage-lib
+RUN pip install --no-cache-dir ../violet-storage-lib[parquet]
+
+# Add entrypoint
+RUN cat <<"EOF" > /app/entrypoint && \
+chmod +x /app/entrypoint && \
+sed -i 's/\r$//' /app/entrypoint
+#!/bin/bash
+
+echo "                                __                  " 
+echo " ______   ____ _____    _______/  |_  ___________   "
+echo " \____ \_/ ___\\__   \  /  ___/\   __\/ __ \_  __ \ "
+echo " |  |_> >  \___ / __ \_\___  \ |  | \  ___/|  | \/  "
+echo " |   __/ \___  >____  /____  > |__|  \___  >__|     "
+echo " |__|        \/     \/     \/            \/         "
+echo "                                                    "
+
+if [ -z "$1" ]; then
+  exec pcaster --help
+fi
+
+case "$1" in
+  scrape|scraper|pcaster)
+    echo "Starting pcaster..."
+    exec pcaster "${@:2}"
+    ;;
+  *)
+    echo "Unknown command: $1"
+    echo "Usage: pcaster [args]"
+    exit 1
+    ;;
+esac
+EOF
+
+# Install Python deps
+RUN pip install --no-cache-dir .
+
+# Install only Chromium (Playwright's default browser)
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN playwright install chromium && rm -rf ~/.cache/ms-playwright
+
+ENTRYPOINT ["/app/entrypoint"]
+CMD ["scrape"]

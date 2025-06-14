@@ -1,0 +1,28 @@
+clustered_title,podcast_title,source,platform,country,sort_by,rank,borda_score,scraped_at,itunes_id,podcasting_index_id,normalized_title
+daily,The Daily,podchaser,"['apple', 'spotify']",['us'],"['top_podcasts', 'news']",3.0,1.0,2025-06-13 01:06:52,1200361736,,daily
+joe rogan experience,The Joe Rogan Experience,podchaser,"['apple', 'spotify']",['us'],"['top_podcasts', 'trending']",1.5,0.8144329896907216,2025-06-13 01:06:52,360084272,550168,joe rogan experience
+past weekend theo von,This Past Weekend w/ Theo Von,podchaser,['spotify'],['us'],"['top_podcasts', 'trending']",2.6666666666666665,0.4639175257731959,2025-06-13 01:06:52,1190981360,444331,past weekend theo von
+up first npr,Up First from NPR,podchaser,"['apple', 'spotify']",['us'],['news'],2.6666666666666665,0.4639175257731959,2025-06-13 01:06:52,1222114325,946759,up first npr
+good hang amy poehler,Good Hang with Amy Poehler,podchaser,"['apple', 'spotify']",['us'],"['top_podcasts', 'trending']",4.25,0.4089347010309278,2025-06-13 01:06:52,1795483480,7207593,good hang amy poehler
+pod force one,Pod Force One,podchaser,['apple'],['us'],"['top_podcasts', 'news']",4.6,0.39518901030927833,2025-06-13 01:06:52,1818418128,7367859,pod force one
+pod save america,Pod Save America,podchaser,"['apple', 'spotify']",['us'],['news'],5.333333333333333,0.3402061855670103,2025-06-13 01:06:52,1192761536,221620,pod save america
+best people nicolle wallace,The Best People with Nicolle Wallace,podchaser,['apple'],['us'],['top_podcasts'],1.0,0.21649484536082475,2025-06-13 01:06:52,1817225413,7353285,best people nicolle wallace
+tucker carlson,The Tucker Carlson Show,podchaser,['spotify'],['us'],['news'],3.0,0.17525773195876287,2025-06-13 01:06:52,1719657632,6711332,tucker carlson
+empower podcast,Empower: The Podcast,rephonic,['spotify'],['us'],['trending'],4.0,0.15463917525773196,2025-06-13 01:06:52,1772981706,,empower podcast
+journal,The Journal.,podchaser,['spotify'],['us'],['news'],4.0,0.15463917525773196,2025-06-13 01:06:52,1469394914,,journal
+your world within podcast eddie pinero,Your World Within Podcast by Eddie Pinero,podchaser,['spotify'],['us'],['top_podcasts'],4.0,0.15463917525773196,2025-06-13 01:06:52,1504184065,683256,your world within podcast eddie pinero
+mel robbins podcast,The Mel Robbins Podcast,podchaser,['apple'],['us'],['top_podcasts'],4.333333333333333,0.14776632989690722,2025-06-13 01:06:52,1646101002,5698881,mel robbins podcast
+diary ceo steven bartlett,The Diary Of A CEO with Steven Bartlett,rephonic,['spotify'],['us'],['trending'],5.0,0.13402061855670103,2025-06-13 01:06:52,1291423644,499394,diary ceo steven bartlett
+megyn kelly,The Megyn Kelly Show,podchaser,['apple'],['us'],['news'],5.0,0.13402061855670103,2025-06-13 01:06:52,1532976305,1317670,megyn kelly
+meidastouch podcast,The MeidasTouch Podcast,podchaser,['apple'],['us'],['news'],5.0,0.13402061855670103,2025-06-13 01:06:52,1510240831,127384,meidastouch podcast
+npr news now,NPR News Now,podchaser,['spotify'],['us'],['news'],5.0,0.13402061855670103,2025-06-13 01:06:52,121493675,7041115,npr news now
+ray william johnson true story podcast,Ray William Johnson: True Story Podcast,podchaser,['spotify'],['us'],['top_podcasts'],5.0,0.13402061855670103,2025-06-13 01:06:52,1795844824,7212041,ray william johnson true story podcast
+shawn ryan,Shawn Ryan Show,rephonic,['spotify'],['us'],['trending'],6.0,0.1134020618556701,2025-06-13 01:06:52,1492492083,103345,shawn ryan
+call her daddy,Call Her Daddy,podchaser,['apple'],['us'],['top_podcasts'],6.666666666666667,0.09965635051546391,2025-06-13 01:06:52,1418960261,634542,call her daddy
+ben shapiro,The Ben Shapiro Show,podchaser,['spotify'],['us'],['news'],7.0,0.09278350515463918,2025-06-13 01:06:52,1047335260,743081,ben shapiro
+pivot,Pivot,podchaser,['apple'],['us'],['news'],7.0,0.09278350515463918,2025-06-13 01:06:52,1073226719,174725,pivot
+rotten mango,Rotten Mango,rephonic,['spotify'],['us'],['trending'],7.0,0.09278350515463918,2025-06-13 01:06:52,1517954480,490022,rotten mango
+spotify presents,Spotify Presents,podchaser,['spotify'],['us'],['top_podcasts'],2.0,0.05154639175257732,2025-06-13 01:06:52,,,spotify presents
+jacksepisodeticeye,JackSepticEye,podchaser,['spotify'],['us'],['top_podcasts'],3.0,0.041237113402061855,2025-06-13 01:06:52,,,jacksepisodeticeye
+modern wisdom,Modern Wisdom,rephonic,['spotify'],['us'],['top_podcasts'],6.0,0.010309278350515464,2025-06-13 01:06:52,1347973549,229239,modern wisdom
+bad friends,Bad Friends,rephonic,['spotify'],['us'],['top_podcasts'],7.0,0.0,2025-06-13 01:06:52,1496265971,6309280,bad friends

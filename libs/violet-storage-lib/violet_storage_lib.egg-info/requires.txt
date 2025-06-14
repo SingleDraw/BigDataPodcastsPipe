@@ -1,0 +1,6 @@
+azure-storage-blob
+azure-identity
+boto3
+
+[parquet]
+pyarrow

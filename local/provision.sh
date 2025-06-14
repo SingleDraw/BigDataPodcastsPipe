@@ -1,12 +1,9 @@
 #!/bin/bash
 
-# ---------------------------------------------------------
-# Script to trigger the GitHub Actions workflow for provisioning project setup resources:
-# Resources include:
-# - Azure Resource Group
-# - Azure Storage Account
-# - Azure Container Registry
-# ---------------------------------------------------------
+# Provision script for GitHub Actions workflows
+# This script triggers the appropriate GitHub Actions workflow based on the provided environment.
+# Usage: ./provision.sh --env {test|bootstrap|infra|images|adf|pipetest|azfnlogs|cleanacr|image_scraper|image_enricher|image_whisperer|buildtest}
+# 
 
 TAG_MODE="latest" # Default tag mode for build and push workflows
 
@@ -24,7 +21,9 @@ declare -A workflow_map=(
 # Map for build and push workflows - these use tagMode flag
 # to specify the tag mode for the images being built and pushed.
 declare -A builders_map=(
-    [images]="build-and-push-scraper.yml"   # Build and push scraper image  
+    [image_scraper]="build-and-push-scraper.yml"   # Build and push scraper image  
+    [image_enricher]="build-and-push-enricher.yml" # Build and push enricher image
+    [image_whisperer]="build-and-push-whisperer.yml" # Build and push whisperer image
     [buildtest]="build-and-push-test.yml"       # -- Build and push test image
 )
 

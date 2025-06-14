@@ -1,0 +1,5 @@
+
+# Dockerfile for Brick Whisperer Broker
+# docker build -t brick-whisperer-broker:1.0.1 -f Dockerfile.broker ./
+FROM redis:7.2-bookworm
+# docker image inspect brick-whisperer-broker:1.0.1 --format='{{.Size}}' | numfmt --to=iec

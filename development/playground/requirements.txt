@@ -1,0 +1,4 @@
+-e ../../libs/violet-storage-lib[parquet]
+python-dotenv
+pandas
+rapidfuzz

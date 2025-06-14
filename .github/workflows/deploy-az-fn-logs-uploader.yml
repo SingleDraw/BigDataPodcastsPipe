@@ -32,10 +32,22 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: mcr.microsoft.com/azure-functions/python:4-python3.11
-          options: -v ${{ github.workspace }}/azure-functions/save-logs-app:/app
+          options: -v ${{ github.workspace }}/azure-functions/save-logs-app:/app # Mount the app directory
           run: |
               cd /app
               pip install -r requirements.txt -t .
+
+      # - name: Build dependencies inside Azure Functions base image
+      #   uses: addnab/docker-run-action@v3
+      #   with:
+      #     image: mcr.microsoft.com/azure-functions/python:4-python3.11
+      #     # Mount whole repo to have access to local libraries
+      #     # This is needed to install dependencies from requirements.txt
+      #     options: -v ${{ github.workspace }}:/repo -w /repo/azure-functions/save-logs-app
+      #     run: |
+      #         # cd /app
+      #         cd /repo/azure-functions/save-logs-app
+      #         pip install -r requirements.txt -t .
 
       - name: Zip Function App
         run: |

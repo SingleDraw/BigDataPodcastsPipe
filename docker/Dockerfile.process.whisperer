@@ -1,0 +1,97 @@
+# docker build -t whisperer-worker:1.0.2 -f Dockerfile.worker ./
+FROM python:3.10-slim-bookworm
+
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ffmpeg netcat-openbsd git ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man /usr/share/locale
+
+# Use built wheels & cache install
+ENV PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_DEFAULT_TIMEOUT=100
+
+RUN pip install --upgrade pip setuptools wheel
+
+WORKDIR /app
+
+# Copy only necessary files
+COPY libs/brick-process-whisperer .
+
+# Environment defaults (cleaned)
+ENV WORKER_CONCURRENCY=1 \
+    WORKER_POOL=threads \
+    CHUNK_CLEANUP_TIMEOUT=600 \
+    CHUNK_MAX_DURATION=600 \
+    TASK_TIME_LIMIT=600
+# TASK_SOFT_TIME_LIMIT = TASK_TIME_LIMIT - 50
+# ENV BROKER_VISIBILITY_TIMEOUT=${BROKER_VISIBILITY_TIMEOUT:-3600}
+
+RUN cat <<"EOF" > /usr/local/bin/whisperer-worker && \
+chmod +x /usr/local/bin/whisperer-worker && \
+sed -i 's/\r$//' /usr/local/bin/whisperer-worker
+#!/bin/bash
+celery -A app.worker worker -E \
+    --loglevel=info \
+    --concurrency=${WORKER_CONCURRENCY:-1} \
+    --pool=${WORKER_POOL:-threads} \
+    "$@"
+EOF
+
+RUN cat <<"EOF" > /app/whisperer.sh && \
+chmod +x /app/whisperer.sh && \
+sed -i 's/\r$//' /app/whisperer.sh
+#!/bin/bash
+
+export TASK_SOFT_TIME_LIMIT=$((TASK_TIME_LIMIT - 50))
+if [ $TASK_SOFT_TIME_LIMIT -lt 0 ]; then
+  echo "TASK_TIME_LIMIT must be greater than 50 seconds"
+  exit 1
+fi  
+
+echo " _       ____    _                                "
+echo "| |     / / /_  (_)________  ___  ________  _____ "
+echo "| | /| / / __ \/ / ___/ __ \/ _ \/ ___/ _ \/ ___/ "
+echo "| |/ |/ / / / / (__  ) /_/ /  __/ /  /  __/ /     "
+echo "|__/|__/_/ /_/_/____/ .___/\___/_/   \___/_/      "
+echo "                   /_/                            "
+# Wait for Redis to be ready
+while ! nc -z $REDIS_HOST $REDIS_PORT; do
+  sleep 1
+done
+
+# Decide what to run based on the first argument
+if [ -z "$1" ]; then
+  echo "No command provided. Starting in worker mode..."
+  exec whisperer-worker
+fi
+case "$1" in
+  worker|whisperer-worker)
+    echo "Starting in worker mode..."
+    exec whisperer-worker "${@:2}"
+    ;;
+  submit|whisperer-submit)
+    echo "Starting in submitter mode..."
+    exec whisperer-submit "${@:2}"
+    ;;
+  server|whisperer-server)
+    echo "Starting in server mode..."
+    exec whisperer-server --host 0.0.0.0 --port 8000 "${@:2}"
+    ;;
+  *)
+    echo "Unknown command: $1"
+    echo "Usage: whisperer-server|whisperer-worker [args]"
+    exit 1
+    ;;
+esac
+EOF
+
+# Preload model to image on build
+RUN python3 -c "from faster_whisper import WhisperModel; \
+    model = WhisperModel('tiny', compute_type='int8'); \
+    model.transcribe('/dev/null')" || true
+
+RUN pip install .
+
+ENTRYPOINT ["/app/whisperer.sh"]

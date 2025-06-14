@@ -1,12 +1,22 @@
 name: Clean Azure Container Registry
 
 # This workflow cleans up the Azure Container Registry 
-# by leaving only the most recent image and removing all other images with custom tags.
-# It is designed to be run manually after the infrastructure is ready.
+# by leaving only the most recent image per repo and removing the rest.
+# It is designed to be run manually or automatically after building and pushing Docker images.
 # It requires the infrastructure to be set up first, so it checks the INFRA_READY variable.
 
 on:
-  workflow_dispatch:  # Manual trigger
+  # Manual trigger
+  workflow_dispatch: 
+  # on end of certain workflows
+  workflow_run:
+    workflows: 
+      - "Build and Push Brick Pcaster Docker Image"
+      - "Build and Push Brick Whisperer Docker Image"
+      - "Build and Push Test App Docker Image"
+    types:
+      - completed
+
 
 env:
   REGISTRY: ${{ secrets.ACR_LOGIN_SERVER }}

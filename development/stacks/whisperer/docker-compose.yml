@@ -1,0 +1,80 @@
+services:
+  redis-whisperer:
+    image: violetvi/whisperer-broker:1.0.0
+    restart: always
+    container_name: redis-whisperer
+    ports:
+      - "6379:6379"
+
+  whisperer-submitter:
+    image: violetvi/whisperer:1.0.0
+    container_name: whisperer-submitter
+    ports:
+      - "8043:8000"
+    depends_on:
+      - redis-whisperer
+      - whisperer-worker
+    secrets:
+      - aws_access_key
+      - aws_secret_key
+    environment:
+      - AZURE_STORAGE_ACCOUNT_NAME=${AZURE_STORAGE_ACCOUNT_NAME}
+      - AZURE_STORAGE_ACCOUNT_KEY=${AZURE_STORAGE_ACCOUNT_KEY}
+      # # Below config for s3 is just representational, 
+      # # its baked into the image anyway
+      # - S3_ENDPOINT_URL=http://host.docker.internal:8333
+      # - AWS_SECRET_ACCESS_KEY_FILE=/run/secrets/aws_secret_key
+      # - AWS_ACCESS_KEY_ID_FILE=/run/secrets/aws_access_key
+      - CELERY_BROKER_URL=redis://redis-whisperer:6379/0
+      - TASK_TIME_LIMIT=1000 # 300 = 5 min
+      - REDIS_HOST=redis-whisperer
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      # - BROKER_VISIBILITY_TIMEOUT=30 # 3600s
+      - TRANSCRIPTION_LANGUAGE=en
+      - TZ=Europe/Warsaw
+    command: whisperer-server
+
+  whisperer-worker:
+    image: violetvi/whisperer:1.0.0
+    container_name: whisperer-worker
+    # mem_limit: 16g
+    depends_on:
+      - redis-whisperer
+    secrets:
+      - aws_access_key
+      - aws_secret_key
+    environment:
+      - AZURE_STORAGE_ACCOUNT_NAME=${AZURE_STORAGE_ACCOUNT_NAME}
+      - AZURE_STORAGE_ACCOUNT_KEY=${AZURE_STORAGE_ACCOUNT_KEY}
+      # - S3_ENDPOINT_URL=http://host.docker.internal:8333
+      # - AWS_SECRET_ACCESS_KEY_FILE=/run/secrets/aws_secret_key
+      # - AWS_ACCESS_KEY_ID_FILE=/run/secrets/aws_access_key
+      - CELERY_BROKER_URL=redis://redis-whisperer:6379/0
+      - TASK_TIME_LIMIT=1000 # 5 min @ soft will happen 50s earlier
+      - REDIS_HOST=redis-whisperer
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      # - BROKER_VISIBILITY_TIMEOUT=30 # 3600s
+      - TRANSCRIPTION_LANGUAGE=en
+      - TZ=Europe/Warsaw
+    command: whisperer-worker
+
+  # Flower for monitoring Celery tasks
+  # whisperer-flower:
+  #   image: whisperer-flower:1.0.0
+  #   container_name: whisperer-flower
+  #   depends_on:
+  #     - redis-whisperer
+  #   ports:
+  #     - "5555:5555"
+  #   environment:
+  #     # Allow unauthenticated access to the API
+  #     - FLOWER_UNAUTHENTICATED_API=true                   
+  #     - CELERY_BROKER_URL=redis://redis-whisperer:6379/0
+
+secrets:
+  aws_access_key:
+    file: ./secrets/s3_access_key.txt
+  aws_secret_key:
+    file: ./secrets/s3_secret_key.txt

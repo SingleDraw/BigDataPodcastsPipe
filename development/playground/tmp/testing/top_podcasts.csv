@@ -1,0 +1,21 @@
+clustered_title,podcast_title,source,platform,country,sort_by,rank,borda_score,scraped_at,itunes_id,podcasting_index_id,normalized_title
+kryminatorium,Kryminatorium,podchaser,"['apple', 'spotify']",['pl'],"['top_podcasts', 'trending']",1.1666666666666667,1.0,2025-06-13 01:06:52,1403172116,12017,kryminatorium
+zurnalista rozmowy bez kompromisow,Żurnalista - Rozmowy bez kompromisów,podchaser,"['apple', 'spotify']",['pl'],"['top_podcasts', 'trending']",1.8333333333333333,0.9754098362671325,2025-06-13 01:06:52,1702830056,,zurnalista rozmowy bez kompromisow
+raport o stanie swiata dariusza rosiaka,Raport o stanie świata Dariusza Rosiaka,podchaser,"['apple', 'spotify']",['pl'],"['top_podcasts', 'news']",3.5714285714285716,0.8442623045552269,2025-06-13 01:06:52,1500480464,769946,raport o stanie swiata dariusza rosiaka
+przemek gorczyk podcast,Przemek Górczyk Podcast,podchaser,"['apple', 'spotify']",['pl'],"['top_podcasts', 'trending']",4.833333333333333,0.7459016496237569,2025-06-13 01:06:52,1570490820,3927447,przemek gorczyk podcast
+wojewodzkikedzierski,WojewódzkiKędzierski,podchaser,"['apple', 'spotify']",['pl'],['top_podcasts'],3.6,0.5245901760279494,2025-06-13 01:06:52,1614415455,5221071,wojewodzkikedzierski
+co bedzie,Co to będzie,podchaser,"['apple', 'spotify']",['pl'],"['news', 'trending']",5.0,0.4344262341440473,2025-06-13 01:06:52,1731311401,6798362,co bedzie
+dzia zagraniczny,Dział Zagraniczny,podchaser,['apple'],['pl'],['news'],2.0,0.2622950880139747,2025-06-13 01:06:52,1471343337,88685,dzia zagraniczny
+cyprian majcher,Cyprian Majcher,rephonic,['spotify'],['pl'],['trending'],3.0,0.2377049242811072,2025-06-13 01:06:52,1347731235,229202,cyprian majcher
+dwie lewe rece,Dwie lewe ręce,podchaser,['apple'],['pl'],['news'],3.0,0.2377049242811072,2025-06-13 01:06:52,1635522094,5602585,dwie lewe rece
+piate nie zabijaj,Piąte: Nie zabijaj,podchaser,['spotify'],['pl'],['top_podcasts'],3.0,0.2377049242811072,2025-06-13 01:06:52,1454107197,242645,piate nie zabijaj
+rezultaty,Rezultaty,rephonic,['spotify'],['pl'],['trending'],5.0,0.18852459681537218,2025-06-13 01:06:52,1789122927,7160605,rezultaty
+global news podcast,Global News Podcast,podchaser,['apple'],['pl'],['news'],5.5,0.17622951494893843,2025-06-13 01:06:52,135067274,204504,global news podcast
+o zmierzchu,O Zmierzchu,rephonic,['spotify'],['pl'],['trending'],6.0,0.16393443308250466,2025-06-13 01:06:52,1465709276,778630,o zmierzchu
+podcast wojenne historie,Podcast Wojenne Historie,podchaser,['apple'],['pl'],['top_podcasts'],6.333333333333333,0.15573772003493674,2025-06-13 01:06:52,1586606803,4435332,podcast wojenne historie
+besties,besties,podchaser,['spotify'],['pl'],['top_podcasts'],7.0,0.13934426934963715,2025-06-13 01:06:52,505516789,745210,besties
+dudek o polityce,DUDEK o polityce,podchaser,['apple'],['pl'],['news'],7.0,0.13934426934963715,2025-06-13 01:06:52,1718193428,6699054,dudek o polityce
+nauka lubie,Nauka To Lubię,podchaser,['apple'],['pl'],['top_podcasts'],7.0,0.06557377815103461,2025-06-13 01:06:52,1533686367,3321990,nauka lubie
+tomasz drwal na pienku,"Tomasz Drwal ""Na pieńku""",podchaser,['apple'],['pl'],['news'],5.0,0.05327869628460085,2025-06-13 01:06:52,1798171984,7262299,tomasz drwal na pienku
+stan wyjatkowy,Stan Wyjątkowy,rephonic,['apple'],['pl'],['news'],6.0,0.04098361441816709,2025-06-13 01:06:52,1458835881,834356,stan wyjatkowy
+radio naukowe,Radio Naukowe,apple_podcasts,['apple'],['pl'],['top_podcasts'],6.0,0.0,2025-06-13 01:06:52,1545487547,2986889,radio naukowe

@@ -1,0 +1,128 @@
+services:
+  sfs_master:
+    image: chrislusf/seaweedfs
+    container_name: sfs_master
+    environment: 
+      S3_ACCESS_KEY_FILE: /run/secrets/s3_access_key 
+      S3_SECRET_KEY_FILE: /run/secrets/s3_secret_key 
+      MASTER_HOST: sfs_master
+    ports:
+      - 9333:9333     # Master server port
+      - 19333:19333   # Volume server communication port
+      - 9324:9324     # Metrics port
+    command:
+      - master 
+      - -ip=sfs_master
+      - -port=9333
+      - -ip.bind=0.0.0.0
+      - -metricsPort=9324
+      # - -publicUrl=sfs_master:9333
+    entrypoint:
+      - /sw-conf.sh
+    volumes:
+      - ./configs/seaweed-config.sh:/sw-conf.sh:ro
+    restart: always
+    networks:
+      - s3_network
+    secrets:
+      - s3_access_key
+      - s3_secret_key
+
+  # SeaweedFS Volume (Storage Node)
+  sfs_volume:
+    image: chrislusf/seaweedfs
+    container_name: sfs_volume
+    ports:
+      - 8085:8085     # Volume server UI port
+      - 18080:18080   # Another metrics/debug port
+      - 9325:9325     # Metrics port
+    command:
+      - volume 
+      # - -ip=localhost                    
+      # url for UI
+      - -publicUrl=127.0.0.1.nip.io:8066/seaweedfs_vol
+      - -mserver=sfs_master:9333
+      - -ip.bind=0.0.0.0 
+      - -port=8085 
+      - -metricsPort=9325
+    volumes:
+      - ./volumes/volume:/data
+    restart: always
+    depends_on:
+      - sfs_master
+    networks:
+      - s3_network
+
+  # SeaweedFS Filer (File System Metadata Handler)
+  sfs_filer:
+    image: chrislusf/seaweedfs
+    container_name: sfs_filer
+    ports:
+      - 8899:8899     # Filer UI port
+      - 18888:18888   # Metrics port
+      - 9326:9326     # Metrics port
+    command:
+      - filer
+      # - -ip=localhost
+      - -master=sfs_master:9333
+      - -ip.bind=0.0.0.0
+      - -metricsPort=9326
+      - -port=8899
+    tty: true
+    stdin_open: true
+    depends_on:
+      - sfs_volume
+    restart: always
+    volumes:
+      - ./volumes/filer:/data  # persist filer state (filesystem metadata)
+    networks:
+      - s3_network
+
+  # S3-Compatible Interface
+  s3:
+    image: chrislusf/seaweedfs
+    container_name: sfs_s3
+    ports:
+      - 8333:8333  # S3-compatible HTTP port (for testing)
+      - 8334:8334  # S3-compatible HTTPS port
+      - 9327:9327  # Metrics port
+    environment:
+      S3_ACCESS_KEY_FILE: /run/secrets/s3_access_key
+      S3_SECRET_KEY_FILE: /run/secrets/s3_secret_key
+      FILER_HOST: sfs_filer
+      FILER_PORT: 8888    
+    command:
+      - s3
+      - -filer=sfs_filer:8899               # Use the Filer service for metadata              
+      - -ip.bind=0.0.0.0
+      - -metricsPort=9327
+      - -config=/etc/seaweedfs/config.json
+      - -port=8333
+      - -port.https=8334
+      - -cert.file=/etc/seaweedfs/certs/s3.crt
+      - -key.file=/etc/seaweedfs/certs/s3.key
+    entrypoint:
+      - /sw-conf.sh
+    volumes:
+      - ./configs/seaweed-config.sh:/sw-conf.sh:ro  # Mount the wrapper script here  
+      - ./certs/s3.crt:/etc/seaweedfs/certs/s3.crt:ro
+      - ./certs/s3.key:/etc/seaweedfs/certs/s3.key:ro
+    depends_on:
+      - sfs_filer
+    restart: always
+    networks:
+      - s3_network
+    secrets:
+      - s3_access_key
+      - s3_secret_key
+
+
+networks:
+  s3_network:
+    driver: bridge
+
+secrets:
+  s3_access_key:
+    file: ./secrets/s3_access_key.txt
+  s3_secret_key:
+    file: ./secrets/s3_secret_key.txt

@@ -1,6 +1,7 @@
 .env
+!.example.env
 azure-credentials*.json
-.knowledge*.md
+.knowledge*
 .architecture
 docker/scaffold
 *.md
@@ -9,3 +10,8 @@ docker/scaffold
 **/_backup/**
 azure-credentials.md
 aca-config
+# globally ingore __pycache__ directories and .pyc files
+__pycache__/
+*.pyc
+
+

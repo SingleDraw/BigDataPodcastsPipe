@@ -7,7 +7,10 @@ on:
         required: false
         type: string
         default: latest
-      appRepoPath:
+      contextPath:
+        required: true
+        type: string
+      dockerfilePath:
         required: true
         type: string
     secrets:
@@ -63,8 +66,9 @@ jobs:
       REGISTRY_USERNAME: ${{ secrets.acrUsername }}
       REGISTRY_PASSWORD: ${{ secrets.acrPassword }}
       AZURE_RESOURCE_GROUP: ${{ secrets.tfResourceGroup }}
-      IMAGE_NAME: ${{ inputs.imageName }}
-      APP_REPO_PATH: ${{ inputs.appRepoPath }}
+      IMAGE_NAME: ${{ secrets.imageName }}
+      CONTEXT_PATH: ${{ inputs.contextPath }}
+      DOCKERFILE_PATH: ${{ inputs.dockerfilePath }}
 
     steps:
       - name: Checkout code
@@ -91,8 +95,8 @@ jobs:
         if: needs.setup-tag-mode.outputs.tagMode == 'both'
         uses: docker/build-push-action@v4
         with:
-          context: ${{ env.APP_REPO_PATH }}
-          file: ${{ env.APP_REPO_PATH }}/Dockerfile
+          context: ${{ env.CONTEXT_PATH }}
+          file: ${{ env.DOCKERFILE_PATH }}
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
@@ -102,8 +106,8 @@ jobs:
         if: needs.setup-tag-mode.outputs.tagMode == 'latest'
         uses: docker/build-push-action@v4
         with:
-          context: ${{ env.APP_REPO_PATH }}
-          file: ${{ env.APP_REPO_PATH }}/Dockerfile
+          context: ${{ env.CONTEXT_PATH }}
+          file: ${{ env.DOCKERFILE_PATH }}
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest

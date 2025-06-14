@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: violet-storage-lib
+Version: 1.0.0
+Requires-Python: >=3.8
+Requires-Dist: azure-storage-blob
+Requires-Dist: azure-identity
+Requires-Dist: boto3
+Provides-Extra: parquet
+Requires-Dist: pyarrow; extra == "parquet"
+Dynamic: provides-extra
+Dynamic: requires-dist
+Dynamic: requires-python
