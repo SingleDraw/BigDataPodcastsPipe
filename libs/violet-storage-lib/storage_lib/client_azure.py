@@ -47,13 +47,17 @@ class AzureBlobStorageClient:
             Use DefaultAzureCredential for authentication.
             """
             credential = DefaultAzureCredential()
-            try:
-                # Get a token for the Azure Storage service
-                # This is necessary to ensure the credential is valid and raises an error if not
-                # Otherwise it wont exit the program if the credential is invalid
-                _ = credential.get_token("https://storage.azure.com/.default")
-            except Exception as e:
-                raise ValueError(f"Failed to get Azure token: {e}")
+
+            if not credential:
+                raise ValueError("DefaultAzureCredential could not be initialized.")
+
+            # try:
+            #     # Get a token for the Azure Storage service
+            #     # This is necessary to ensure the credential is valid and raises an error if not
+            #     # Otherwise it wont exit the program if the credential is invalid
+            #     _ = credential.get_token("https://storage.azure.com/.default")
+            # except Exception as e:
+            #     raise ValueError(f"Failed to get Azure token: {e}")
 
             self.blob_service_client = BlobServiceClient(
                 account_url=f"https://{azure_storage_account}.blob.core.windows.net",
