@@ -526,6 +526,8 @@ resource "azurerm_container_app" "redis" {
   resource_group_name          = azurerm_resource_group.rg.name
   location                     = azurerm_resource_group.rg.location
 
+  revision_mode = "Single"  # Single revision mode for simplicity
+
   identity {
     type         = "UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.aca_identity.id]
@@ -545,10 +547,14 @@ resource "azurerm_container_app" "redis" {
       }
     }
 
-    scale {
-      min_replicas = 1
-      max_replicas = 1
-    }
+    min_replicas = 1
+    max_replicas = 1
+
+    # tcp_scale_rule {
+    #   name               = "tcp-scaling"
+    #   concurrent_requests = 100
+    # }
+    
   }
 
   registry {
@@ -560,6 +566,12 @@ resource "azurerm_container_app" "redis" {
     external_enabled = false  # not exposed publicly
     target_port      = 6379
     transport        = "tcp"
+
+    traffic_weight {
+      label         = "redis"
+      revision_name = "latest"  # Use the latest revision
+      weight        = 100
+    }
   }
 
   depends_on = [
