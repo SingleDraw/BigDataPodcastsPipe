@@ -458,22 +458,10 @@ resource "azurerm_subnet" "aca_subnet" {
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.0.0/23"]
 
-  # For ACA internal load balancer, subnet delegation is required:
-  delegation {
-    name = "delegation"
-    service_delegation {
-      name = "Microsoft.App/environments"
-      actions = [
-        "Microsoft.Network/virtualNetworks/subnets/join/action",
-        "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action"
-      ]
-    }
-  }
+  # Remove the delegation block entirely
+  # The Container App Environment will handle the subnet configuration
+  # when using infrastructure_subnet_id with internal_load_balancer_enabled
 }
-
-
-
-
 
 # Create ACA environment
 resource "azurerm_container_app_environment" "aca_env" {
@@ -481,7 +469,7 @@ resource "azurerm_container_app_environment" "aca_env" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
-  # Optional, use internal load balancer for private networking:
+  # This configuration will automatically handle the subnet delegation
   internal_load_balancer_enabled  = true
   infrastructure_subnet_id        = azurerm_subnet.aca_subnet.id
 }
@@ -509,23 +497,24 @@ resource "azurerm_role_assignment" "aca_identity_acr_pull" {
   ]
 }
 
+resource "azurerm_role_assignment" "aca_identity_network" {
+  scope                = azurerm_virtual_network.vnet.id
+  role_definition_name = "Network Contributor"
+  principal_id         = azurerm_user_assigned_identity.aca_identity.principal_id
 
-
-
-
-
-
-
+  depends_on = [
+    azurerm_user_assigned_identity.aca_identity,
+    azurerm_virtual_network.vnet
+  ]
+}
 
 # Create Azure Container App for Redis
-# Access it with azurerm_container_app.redis[0].id since it's now a list.
 resource "azurerm_container_app" "redis" {
-  # count                        = var.images_ready ? 1 : 0
   name                         = "whisperer-redis"
   container_app_environment_id = azurerm_container_app_environment.aca_env.id
   resource_group_name          = azurerm_resource_group.rg.name
 
-  revision_mode = "Single"  # Single revision mode for simplicity
+  revision_mode = "Single"
 
   identity {
     type         = "UserAssigned"
@@ -535,8 +524,7 @@ resource "azurerm_container_app" "redis" {
   template {
     container {
       name   = "redis"
-      # image  = "${azurerm_container_registry.acr.login_server}/your-redis-image:tag"
-      image = "redis:7.2-bookworm"
+      image  = "redis:7.2-bookworm"
       cpu    = 0.5
       memory = "1.0Gi"
 
@@ -548,12 +536,6 @@ resource "azurerm_container_app" "redis" {
 
     min_replicas = 1
     max_replicas = 1
-
-    # tcp_scale_rule {
-    #   name               = "tcp-scaling"
-    #   concurrent_requests = 100
-    # }
-    
   }
 
   registry {
@@ -562,13 +544,12 @@ resource "azurerm_container_app" "redis" {
   }
 
   ingress {
-    external_enabled = false  # not exposed publicly
+    external_enabled = false
     target_port      = 6379
-    # transport        = "tcp"
 
     traffic_weight {
       latest_revision = true
-      percentage = 100
+      percentage      = 100
     }
   }
 
@@ -584,7 +565,7 @@ resource "azurerm_container_app" "worker" {
   container_app_environment_id = azurerm_container_app_environment.aca_env.id
   resource_group_name          = azurerm_resource_group.rg.name
 
-  revision_mode = "Single"  # Single revision mode for simplicity
+  revision_mode = "Single"
 
   identity {
     type         = "UserAssigned"
@@ -602,7 +583,6 @@ resource "azurerm_container_app" "worker" {
         name  = "CELERY_BROKER_URL"
         value = "redis://whisperer-redis:6379"
       }
-      # Add other env vars as needed
     }
 
     min_replicas = 0
@@ -614,9 +594,9 @@ resource "azurerm_container_app" "worker" {
       metadata = {
         "type"            = "redis"
         "address"         = "redis://whisperer-redis:6379"
-        "listName"        = "celery"  # Redis queue name for Celery tasks
-        "listLength"      = "5"       # Scale if queue length exceeds 5
-        "activationValue" = "1"       # Activate scaling when queue length is 1 or more
+        "listName"        = "celery"
+        "listLength"      = "5"
+        "activationValue" = "1"
       }
     }
   }
@@ -629,10 +609,9 @@ resource "azurerm_container_app" "worker" {
   depends_on = [
     azurerm_user_assigned_identity.aca_identity,
     azurerm_role_assignment.aca_identity_acr_pull,
-    azurerm_container_app.redis,  # Ensure Redis is created before worker
+    azurerm_container_app.redis,
   ]
 }
-
 
 
 
