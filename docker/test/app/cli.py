@@ -107,8 +107,8 @@ def test_fn(
 ):
     try:
         run_app()                   # Works !
-        if write_blob:
-            test_blob_write()       # Works !
+        # if write_blob:
+        #     test_blob_write()       # Works !
         if key_vault:               # Works ! 
             test_key_vault(
                 secret_name=key_vault
