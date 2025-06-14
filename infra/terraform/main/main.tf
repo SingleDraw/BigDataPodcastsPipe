@@ -586,7 +586,7 @@ resource "azurerm_container_app" "redis_test" {
 }
 
 resource "azurerm_container_app" "worker" {
-  count                        = var.images_ready ? 1 : 0
+  # count                        = var.images_ready ? 1 : 0
   name                         = "whisperer-worker"
   container_app_environment_id = azurerm_container_app_environment.aca_env.id
   resource_group_name          = azurerm_resource_group.rg.name
