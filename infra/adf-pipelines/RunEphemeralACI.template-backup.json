@@ -146,6 +146,103 @@
             "logs": "@activity('GetACIContainerLogs').output"
           }
         }
+      },
+      {
+        "name": "DeleteACIContainer",
+        "type": "WebActivity",
+        "dependsOn": [
+          { "activity": "SaveLogsToBlob", "dependencyConditions": ["Completed"] }
+        ],
+        "typeProperties": {
+          "url": "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ContainerInstance/containerGroups/$ACI_NAME?api-version=2021-07-01",
+          "method": "DELETE",
+          "authentication": {
+            "type": "MSI",
+            "resource": "https://management.azure.com/"
+          },
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        "policy": {
+          "timeout": "00:02:00",
+          "retry": 1
+        }
+      },
+
+
+      {
+        "name": "RunACIContainerEnricher",
+        "type": "WebActivity",
+        "dependsOn": [
+          { "activity": "SaveLogsToBlob", "dependencyConditions": ["Succeeded"] }
+        ],
+        "typeProperties": {
+          "url": "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ContainerInstance/containerGroups/$ACI_NAME_ENRICHER?api-version=2021-03-01",
+          "method": "PUT",
+          "authentication": {
+            "type": "MSI",
+            "resource": "https://management.azure.com/"
+          },
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "location": "$LOCATION",
+            "properties": {
+              "containers": [
+                {
+                  "name": "$ACI_NAME_ENRICHER",
+                  "properties": {
+                    "image": "$ACR_NAME.azurecr.io/$IMAGE_NAME_ENRICHER:latest",
+                    "resources": {
+                      "requests": {
+                        "cpu": 1,
+                        "memoryInGb": 1.5
+                      }
+                    },
+                    "command": [
+                      "enricher",
+                      "--overwrite",
+                      "--verbose",
+                      "--target-protocol az",
+                      "--countries us",
+                      "--azure-storage-account",
+                      "$STORAGE_ACCOUNT_NAME"
+                    ],
+                    "environmentVariables": [
+                      {
+                        "name": "AZURE_STORAGE_ACCOUNT",
+                        "value": "$STORAGE_ACCOUNT_NAME"
+                      },
+                      {
+                        "name": "AZURE_KEY_VAULT_URL",
+                        "value": "https://$KEY_VAULT_NAME.vault.azure.net/"
+                      },
+                      {
+                        "name": "PODCAST_INDEX_API_KEY",
+                        "value": "$PODCASTING_INDEX_API_KEY"
+                      },
+                      {
+                        "name": "PODCAST_INDEX_API_SECRET",
+                        "value": "$PODCASTING_INDEX_API_SECRET"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "osType": "Linux",
+              "restartPolicy": "Never",
+              "imageRegistryCredentials": [
+                {
+                  "server": "$ACR_NAME.azurecr.io",
+                  "username": "$ACR_USERNAME",
+                  "password": "$ACR_PASSWORD"
+                }
+              ]
+            }
+          }
+        }
       }
 
 
