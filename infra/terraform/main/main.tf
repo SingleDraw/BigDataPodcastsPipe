@@ -462,7 +462,7 @@ resource "azurerm_subnet" "aca_subnet" {
   delegation {
     name = "delegation"
     service_delegation {
-      name = "Microsoft.Web/containerApps"
+      name = "Microsoft.App/environments"
       actions = [
         "Microsoft.Network/virtualNetworks/subnets/join/action",
         "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action"

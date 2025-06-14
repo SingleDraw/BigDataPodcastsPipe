@@ -65,6 +65,54 @@ RESOURCES+=(
 
 
 
+# Import Azure Virtual Network
+# ----------------------------------------------------------
+# resource "azurerm_virtual_network" "vnet" {
+#   name                = "aca-vnet"
+#   address_space       = ["10.0.0.0/16"]
+#   location            = azurerm_resource_group.rg.location
+#   resource_group_name = azurerm_resource_group.rg.name
+# }
+
+VNET_N="${RG_N}-vnet"
+VNET_ID="$RG_ID/providers/Microsoft.Network/virtualNetworks/$VNET_N"
+RESOURCES+=(
+  "azurerm_virtual_network.vnet|az network vnet show --name \"$VNET_N\" --resource-group \"$RG_N\"|\"$VNET_ID\""
+)
+
+# ----------------------------------------------------------
+# Import Azure Subnet
+# ----------------------------------------------------------
+# resource "azurerm_subnet" "aca_subnet" {
+#   name                 = "aca-subnet"
+#   resource_group_name  = azurerm_resource_group.rg.name
+#   virtual_network_name = azurerm_virtual_network.vnet.name
+#   address_prefixes     = ["10.0.1.0/24"]
+
+#   # For ACA internal load balancer, subnet delegation is required:
+#   delegation {
+#     name = "delegation"
+#     service_delegation {
+#       name = "Microsoft.App/environments"
+#       actions = [
+#         "Microsoft.Network/virtualNetworks/subnets/join/action",
+#         "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action"
+#       ]
+#     }
+#   }
+# }
+
+SUBNET_N="${RG_N}-aca-subnet"
+SUBNET_ID="$RG_ID/providers/Microsoft.Network/virtualNetworks/$VNET_N/subnets/$SUBNET_N"
+RESOURCES+=(
+  "azurerm_subnet.aca_subnet|az network vnet subnet show --name \"$SUBNET_N\" --resource-group \"$RG_N\" --vnet-name \"$VNET_N\"|\"$SUBNET_ID\""
+)
+
+
+
+
+
+
 # ---------------------------------------------------------
 # Import Azure Function App and related resources
 # ----------------------------------------------------------
@@ -167,6 +215,12 @@ AF_LS_ID="$RG_ID/providers/Microsoft.DataFactory/factories/$ADF_N/linkedservices
 RESOURCES+=(
   "azurerm_data_factory_linked_service_azure_function.adf_fn_linked_service|az datafactory linked-service show --name \"$AF_LS_N\" --factory-name \"$ADF_N\" --resource-group \"$RG_N\"|\"$AF_LS_ID\""
 )
+
+
+
+
+
+
 
 #----------------------------------------------------------
 # > Execute the import commands for each resource
