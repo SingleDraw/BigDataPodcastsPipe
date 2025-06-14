@@ -1,0 +1,168 @@
+# docker build -t bigdata/spark-nlp -f Dockerfile.spark-nlp ./
+# docker run --rm -it bigdata/spark-nlp
+# docker image inspect bigdata/spark-nlp --format='{{.Size}}' | numfmt --to=iec 
+# Base image with Spark NLP + PySpark + Java
+# FROM bitnami/spark:latest
+# 814 MB - without storage support and with aws-java-sdk-bundle-1.11.375.jar
+# with AWS S3 support = 988 MB and newer aws-java-sdk-bundle-1.12.262.jar
+FROM openjdk:11-jre-slim
+
+# Set working dir
+WORKDIR /app
+
+# Install Python and pip
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip wget procps \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy your Spark NLP scripts into the container
+COPY stage_nlp.py . 
+
+
+ENV HADOOP_AWS_VERSION=3.3.4
+ENV HADOOP_AZURE_VERSION=3.3.2
+ENV AWS_SDK_VERSION=1.12.262
+ENV JARS_DIR=./jars
+
+# ENV AWS_JAVA_SDK_BUNDLE_VERSION=1.11.375
+ENV AWS_JAVA_SDK_BUNDLE_VERSION=1.12.262
+
+# Download Spark NLP jars
+RUN mkdir -p ${JARS_DIR} && \
+    wget -q https://repo1.maven.org/maven2/com/johnsnowlabs/nlp/spark-nlp_2.12/5.1.0/spark-nlp_2.12-5.1.0.jar -P ${JARS_DIR} && \
+    wget -q https://repo1.maven.org/maven2/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar -P ${JARS_DIR} && \
+    wget -q https://repo1.maven.org/maven2/commons-logging/commons-logging/1.1.3/commons-logging-1.1.3.jar -P ${JARS_DIR}
+
+# For AWS S3 support, download the AWS SDK and Hadoop AWS JARs
+RUN wget https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/${AWS_JAVA_SDK_BUNDLE_VERSION}/aws-java-sdk-bundle-${AWS_JAVA_SDK_BUNDLE_VERSION}.jar -P ${JARS_DIR} && \
+    wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/${HADOOP_AWS_VERSION}/hadoop-aws-${HADOOP_AWS_VERSION}.jar -P ${JARS_DIR}
+
+
+# RUN wget https://repo1.maven.org/maven2/io/delta/delta-spark_2.12/3.0.0/delta-spark_2.12-3.0.0.jar -P ${JARS_DIR} && \
+#     wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-azure/3.3.4/hadoop-azure-3.3.4.jar -P ${JARS_DIR} && \
+#     wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-azure-datalake/3.3.4/hadoop-azure-datalake-3.3.4.jar -P ${JARS_DIR} && \
+#     wget https://repo1.maven.org/maven2/com/microsoft/azure/azure-storage/8.6.6/azure-storage-8.6.6.jar -P ${JARS_DIR} && \
+#     wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-common/${HADOOP_AWS_VERSION}/hadoop-common-${HADOOP_AWS_VERSION}.jar -P ${JARS_DIR}
+
+
+
+
+
+# Optional: install additional Python dependencies
+RUN pip install --no-cache-dir setuptools pyspark==3.5.0 spark-nlp==5.1.4 numpy
+
+
+# Script to build and download Spark NLP models
+RUN cat <<"EOF" > build_models.py && \
+sed -i "s|\${AWS_JAVA_SDK_BUNDLE_VERSION}|$AWS_JAVA_SDK_BUNDLE_VERSION|g" build_models.py
+from pyspark.sql import SparkSession
+from pyspark import SparkConf
+import sparknlp
+from sparknlp.base import *
+from sparknlp.annotator import *
+
+conf = SparkConf() \
+    .setAppName("ModelBuilder") \
+    .set("spark.jars", ",".join([
+        "/app/jars/commons-logging-1.1.3.jar",
+        "/app/jars/jsr305-3.0.2.jar",
+        "/app/jars/spark-nlp_2.12-5.1.0.jar",
+        "/app/jars/aws-java-sdk-bundle-${AWS_JAVA_SDK_BUNDLE_VERSION}.jar",
+    ]))
+
+# "/app/jars/aws-java-sdk-bundle-1.11.375.jar",
+
+spark = SparkSession.builder.config(conf=conf).getOrCreate()
+sparknlp.start(spark)
+
+# Download lemmatizer model locally
+lemmatizer = LemmatizerModel.pretrained("lemma_antbnc", "en") \
+    .write().overwrite().save("/app/models/lemma_antbnc")
+
+spark.stop()
+EOF
+
+# Run the build script to bake pretrained models 
+# into the image at build time in /app/models
+RUN python3 build_models.py
+
+
+
+# Create spark-defaults.conf
+RUN cat <<"EOF" > /usr/local/bin/generate-config.sh && \
+    chmod +x /usr/local/bin/generate-config.sh && \
+    sed -i 's/\r$//' /usr/local/bin/generate-config.sh
+#!/bin/bash
+
+# Read secrets from mounted files
+export AWS_ACCESS_KEY_ID=$(<"${AWS_ACCESS_KEY_ID_FILE}")
+export AWS_SECRET_ACCESS_KEY=$(<"${AWS_SECRET_ACCESS_KEY_FILE}")
+
+# Default values if not set
+export SPARK_MASTER=${SPARK_MASTER:-"local[*]"}
+export S3_ENDPOINT_URL=${S3_ENDPOINT_URL:-"http://localhost:8333"}
+export SPARK_CONF_DIR=/usr/local/bin
+
+# Generate spark-defaults.conf
+cat > $SPARK_CONF_DIR/spark-defaults.conf <<EOCONF && \
+    chmod 644 $SPARK_CONF_DIR/spark-defaults.conf && \
+    sed -i 's/\r$//' $SPARK_CONF_DIR/spark-defaults.conf
+spark.master                                ${SPARK_MASTER}
+spark.additional.jars                       /app/jars/*
+
+# for storage writes
+spark.hadoop.fs.s3a.access.key              ${AWS_ACCESS_KEY_ID}
+spark.hadoop.fs.s3a.secret.key              ${AWS_SECRET_ACCESS_KEY}
+spark.hadoop.fs.s3a.endpoint                ${S3_ENDPOINT_URL}
+spark.hadoop.fs.s3a.path.style.access       true
+spark.hadoop.fs.s3a.impl                    org.apache.hadoop.fs.s3a.S3AFileSystem
+spark.hadoop.fs.s3a.aws.credentials.provider org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider
+spark.hadoop.fs.s3.impl                     org.apache.hadoop.fs.s3a.S3AFileSystem
+spark.hadoop.fs.s3a.committer.name          magic
+spark.hadoop.fs.s3a.change.detection.mode   none
+spark.hadoop.fs.s3a.connection.ssl.enabled  false
+spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version 2
+spark.hadoop.fs.s3a.committer.staging.conflict-mode replace
+spark.hadoop.fs.s3a.committer.magic.enabled true
+EOCONF
+
+# Optional: log output or verify file
+echo "Generated spark-defaults.conf:"
+cat $SPARK_CONF_DIR/spark-defaults.conf
+
+# Continue with CMD
+# Check if first argument is 'spark-submit'
+if [ "$1" = "spark-submit" ]; then
+  # Replace CMD with full spark-submit command
+  set -- spark-submit \
+    --master "${SPARK_MASTER}" \
+    --jars /app/jars/commons-logging-1.1.3.jar,/app/jars/jsr305-3.0.2.jar,/app/jars/spark-nlp_2.12-5.1.0.jar,/app/jars/aws-java-sdk-bundle-1.12.262.jar,/app/jars/hadoop-aws-3.3.4.jar \
+    --conf spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version=2 \
+    --conf spark.hadoop.fs.s3a.committer.name=magic \
+    --conf spark.hadoop.fs.s3a.committer.magic.enabled=true \
+    --conf spark.hadoop.fs.s3a.committer.staging.conflict-mode=replace \
+    --conf spark.executor.memory=2g \
+    --conf spark.driver.memory=2g \
+    --conf spark.cores.max=2 \
+    --conf spark.executor.cores=2 \
+    "${@:2}"
+fi
+
+# Run command
+exec "$@"
+
+EOF
+
+
+
+# Set environment variables to suppress Java warnings
+ENV PYSPARK_PYTHON=python3
+ENV PYSPARK_DRIVER_PYTHON=python3
+ENV JAVA_OPTS="--add-opens=java.base/java.lang=ALL-UNNAMED --illegal-access=deny"
+
+
+# Default command to run your main script
+ENTRYPOINT ["/usr/local/bin/generate-config.sh"]
+CMD ["python3", "stage_nlp.py"]
+
