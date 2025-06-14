@@ -564,9 +564,10 @@ resource "azurerm_container_app" "redis" {
   ingress {
     external_enabled = false  # not exposed publicly
     target_port      = 6379
-    transport        = "tcp"
+    # transport        = "tcp"
 
     traffic_weight {
+      latest_revision = true
       percentage = 100
     }
   }
