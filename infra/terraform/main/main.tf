@@ -524,7 +524,6 @@ resource "azurerm_container_app" "redis" {
   name                         = "whisperer-redis"
   container_app_environment_id = azurerm_container_app_environment.aca_env.id
   resource_group_name          = azurerm_resource_group.rg.name
-  location                     = azurerm_resource_group.rg.location
 
   revision_mode = "Single"  # Single revision mode for simplicity
 
