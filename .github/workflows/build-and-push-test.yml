@@ -5,7 +5,7 @@ on:
     branches:
       - main  
     paths:    
-      - 'docker/ingest/test/**'
+      - 'docker/test/**'
   workflow_dispatch:  # Manual trigger
 
 permissions:
@@ -18,7 +18,7 @@ env:
   REGISTRY_USERNAME: ${{ secrets.ACR_USERNAME }}
   REGISTRY_PASSWORD: ${{ secrets.ACR_PASSWORD }}
   AZURE_RESOURCE_GROUP: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
-  APP_REPO_PATH: ./docker/ingest/test
+  APP_REPO_PATH: ./docker/test
   IMAGE_NAME: test-app-image
   IMAGE_TAG: latest
 
