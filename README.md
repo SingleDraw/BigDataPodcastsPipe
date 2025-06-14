@@ -1,3 +1,7 @@
+### BigData Podcast Analysis Pipeline
+
+![Alt text](public/adf-pipeline.png)
+
 
 # 🔧 Setting GitHub Secrets from Local Machine
 
