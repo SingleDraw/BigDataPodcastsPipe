@@ -1,88 +1,73 @@
 
-## ✅ 1. Generate Azure Credentials JSON file
+# 🔧 Setting GitHub Secrets from Local Machine
 
-Using AzureCLI and subscription id generate credentials file:
-```bash
-az ad sp create-for-rbac --name "gha-terraform" --role="Contributor" --scopes="/subscriptions/<your-subscription-id>" --sdk-auth
-```
-It creates file azure-credentials.json, which content will be needed for github actions.
+This guide describes how to configure GitHub secrets using local scripts.
+
+## ✅ Prerequisites
+
+Ensure the following tools are **installed and configured**:
+
+* [GitHub CLI (`gh`)](https://cli.github.com/)
+* [Azure CLI (`az`)](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
+* On **Windows**, run the scripts using **Git Bash** or a compatible shell environment.
 
 ---
 
-### ✅ 2. **Create GitHub Secret**
+## 📁 Environment Setup
+Clone this repo to local machine and go to [local] directory.
+Create and fill in .env file like shown in .example.env.
 
-Go to your GitHub repo → **Settings** → **Secrets and variables** → **Actions** → click **New repository secret**.
+Run the `init.sh` script to set secrets and create service principal for azure.
 
-Name it:
+---
 
-```plaintext
-AZURE_CREDENTIALS
-```
-
-Paste the **entire contents** of your `azure-credentials.json`.
-
-or run usin GitHubCLI (gh):
-
+## ☁️ Run Terraform Provisioning Scripts for Azure resources
+Run scripts to set infrastructure with following order using GitBash.
+These scripts trigger proper GitHub Workflows in the repo.
+[NOTE] All scripts are indempotent and can be run repeteadly (gh workflow check and import resources before running terraform scripts)
 ```bash
-gh secret set AZURE_CREDENTIALS --body '{"clientId":"<your-client-id>","clientSecret":"<your-client-secret>","subscriptionId":"<your-subscription-id>","tenantId":"<your-tenant-id>"}'
+# 1. Set resource group, OIDC for token based login, 
+#    and storage with initial role assignments.
+#    It also sets remote backend for the Terraform state in freshly spinned up azure storage
+./provision.sh --env bootstrap 
+
+# 2. Set rest of needed resources for BigData pipe:
+./provision.sh --env main
+
+# 3. build images and push them to spinned Azure Container Registry:
+./provision.sh --env image_scraper
+./provision.sh --env image_enricher
+./provision.sh --env buildtest # [optional] for testing purposes
+#./provision.sh --env image_whisperer
+
+# 4. deploy Azure Function for saving logs of ephemeral Azure Contianer Instances to storage
+./provision.sh --env azfnlogs
+
+# 5. deploy Azure Data Factory as an Orchestrator of BigData Pipeline for Podcasts Analysis
+./provision.sh --env adf
+./provision.sh --env pipetest # [optional] test pipeline for debuging
+
+## Bonus scripts
+./provision.sh --env cleanacr # Remove all images from ACR besides last pushed for each repository
+
 ```
 
+## ☁️ Local development and testing:
+[./development.sh] in repo root directory serves as entrypoint for running individual services of this pipe locally:
 
+[Local-S3-compatibile-storage]
+> Run SeaweedFS with local S3 Storage
 
-### or run from your local machine init.sh with propely populated .env file (read REAMDE from local directory)
-## GitHub Token (Required for setting other secrets):
-- `GH_PAT_TOKEN` - GitHub Personal Access Token with repo and admin:repo_hook permissions
+[Docker-images-builds]
+> Build image - PCaster - podcast rankings scraper
+> Build image - Enricher - podcast metadata enricher
+> Build image - Whisperer - scalable audio transcriber
 
-## How to create GitHub Personal Access Token:
-1. Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
-2. Click "Generate new token (classic)"
-3. Select scopes:
-   - `repo` (Full control of private repositories)
-   - `admin:repo_hook` (Admin repo hooks)
-4. Copy the token and add it as `GH_PAT_TOKEN` secret and paste it in .env file
+[Run-pipe-bricks]
+> Run PCaster with local S3 - Pipeline Stage 1 (Ingest) - Apple Podcasts, Apple Platform, US Region
+> Run PCaster with local S3 - Pipeline Stage 1 (Ingest) - Full Range
+> Run Enricher with local S3 - Pipeline Stage 2 (Process) - Enrich metadata for podcasts & generate batch_job.json for Whisperer
 
-
-
-
-📁 Project structure:
-```bash
-/infra/                     # Infra: ACR, Container Apps, Storage, etc.
-/docker/ingest/             # Dockerfile + code for ingest stage
-/docker/process/            # Dockerfile + code for processing
-/docker/export/             # Dockerfile + code for export/output
-/app/                       # Shared libs or CLI code
-.github/workflows/          # GitHub Actions CI/CD workflows
-README.md
-```
-
-
-RUN bootstrap, provision, build-and-push, deploy-adf-pipeline
-
-
-.
-├── .github
-│   └── workflows
-│       ├── azurelogin.yml
-│       ├── build-and-push.yml
-│       └── provision.yml
-├── docker
-│   ├── export
-│   ├── ingest
-│   └── process
-├── infra
-│   ├── main
-│   │   ├── main.tf
-│   │   ├── providers.tf
-│   │   ├── README.md
-│   │   ├── terraform.tfvars
-│   │   └── variables.tf
-│   └── scripts
-│       └── import.sh
-├── local
-│   ├── .env
-│   ├── init.sh
-│   ├── provision.sh
-│   ├── README.md
-│   └── test.sh
-├── .gitignore
-└── README.md
+[Transcription-cluster]
+> Run Whisperer cluster with local S3 baked in and Azure defined connection - Pipeline Stage 3 (Process) - listening for job submissions
+> Run Whisperer Batch Job - Pipeline Stage 4 (Process) - run Whisperer batch job generated by Enricher
