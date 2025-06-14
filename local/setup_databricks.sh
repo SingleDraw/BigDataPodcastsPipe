@@ -1,5 +1,8 @@
 #!/bin/bash
 
+az resource list --resource-group rg-demo-storage --query "[?contains(name,'KUBERNETES')]" -o table
+
+
 # az network vnet subnet show \
 #   --resource-group rg-demo-storage \
 #   --vnet-name aca-vnet \

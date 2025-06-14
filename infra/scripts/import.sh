@@ -67,47 +67,18 @@ RESOURCES+=(
 
 # Import Azure Virtual Network
 # ----------------------------------------------------------
-# resource "azurerm_virtual_network" "vnet" {
-#   name                = "aca-vnet"
-#   address_space       = ["10.0.0.0/16"]
-#   location            = azurerm_resource_group.rg.location
-#   resource_group_name = azurerm_resource_group.rg.name
-# }
+# VNET_N="aca-vnet"
+# VNET_ID="$RG_ID/providers/Microsoft.Network/virtualNetworks/$VNET_N"
+# RESOURCES+=(
+#   "azurerm_virtual_network.vnet|az network vnet show --name \"$VNET_N\" --resource-group \"$RG_N\"|$VNET_ID"
+# )
 
-VNET_N="aca-vnet"
-VNET_ID="$RG_ID/providers/Microsoft.Network/virtualNetworks/$VNET_N"
-RESOURCES+=(
-  "azurerm_virtual_network.vnet|az network vnet show --name \"$VNET_N\" --resource-group \"$RG_N\"|$VNET_ID"
-)
 
-# ----------------------------------------------------------
-# Import Azure Subnet
-# ----------------------------------------------------------
-# resource "azurerm_subnet" "aca_subnet" {
-#   name                 = "aca-subnet"
-#   resource_group_name  = azurerm_resource_group.rg.name
-#   virtual_network_name = azurerm_virtual_network.vnet.name
-#   address_prefixes     = ["10.0.1.0/24"]
-
-#   # For ACA internal load balancer, subnet delegation is required:
-#   delegation {
-#     name = "delegation"
-#     service_delegation {
-#       name = "Microsoft.App/environments"
-#       actions = [
-#         "Microsoft.Network/virtualNetworks/subnets/join/action",
-#         "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action"
-#       ]
-#     }
-#   }
-# }
-
-SUBNET_N="aca-subnet"
-SUBNET_ID="$RG_ID/providers/Microsoft.Network/virtualNetworks/$VNET_N/subnets/$SUBNET_N"
-RESOURCES+=(
-  "azurerm_subnet.aca_subnet|az network vnet subnet show --name \"$SUBNET_N\" --resource-group \"$RG_N\" --vnet-name \"$VNET_N\"|$SUBNET_ID"
-)
-
+# SUBNET_N="aca-subnet"
+# SUBNET_ID="$RG_ID/providers/Microsoft.Network/virtualNetworks/$VNET_N/subnets/$SUBNET_N"
+# RESOURCES+=(
+#   "azurerm_subnet.aca_subnet|az network vnet subnet show --name \"$SUBNET_N\" --resource-group \"$RG_N\" --vnet-name \"$VNET_N\"|$SUBNET_ID"
+# )
 
 # # Import Azure Container App for Redis
 # CA_REDIS_N="whisperer-redis"
@@ -129,84 +100,31 @@ RESOURCES+=(
 #   "azurerm_container_app.redis_test|az containerapp show --name \"$CA_TEST_N\" --resource-group \"$RG_N\"|$CA_TEST_ID"
 # )
 
-
-
 # # Import ACA environment
-# resource "azurerm_container_app_environment" "aca_env" {
-#   name                = "whisperer-aca-env"
-#   location            = azurerm_resource_group.rg.location
-#   resource_group_name = azurerm_resource_group.rg.name
+# ACA_ENV_N="whisperer-aca-env"
+# ACA_ENV_ID="$RG_ID/providers/Microsoft.App/managedEnvironments/$ACA_ENV_N"
+# RESOURCES+=(
+#   "azurerm_container_app_environment.aca_env|az containerapp env show --name \"$ACA_ENV_N\" --resource-group \"$RG_N\"|$ACA_ENV_ID"
+# )
 
-#   # This configuration will automatically handle the subnet delegation
-#   internal_load_balancer_enabled  = true
-#   infrastructure_subnet_id        = azurerm_subnet.aca_subnet.id
-# }
-
-# Import Azure Container App Environment
-ACA_ENV_N="whisperer-aca-env"
-ACA_ENV_ID="$RG_ID/providers/Microsoft.App/managedEnvironments/$ACA_ENV_N"
-RESOURCES+=(
-  "azurerm_container_app_environment.aca_env|az containerapp env show --name \"$ACA_ENV_N\" --resource-group \"$RG_N\"|$ACA_ENV_ID"
-)
-
-
-
-# Import user-assigned managed identity for ACA
-# resource "azurerm_user_assigned_identity" "aca_identity" {
-#   name                = "whisperer-aca-identity"
-#   resource_group_name = azurerm_resource_group.rg.name
-#   location            = azurerm_resource_group.rg.location
-
-#   depends_on = [
-#     azurerm_container_app_environment.aca_env
-#   ]
-# }
-
-# Import user-assigned managed identity for Azure Container Apps
-ACA_IDENTITY_N="whisperer-aca-identity"
-ACA_IDENTITY_ID="$RG_ID/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$ACA_IDENTITY_N"
-RESOURCES+=(
-  "azurerm_user_assigned_identity.aca_identity|az identity show --name \"$ACA_IDENTITY_N\" --resource-group \"$RG_N\"|$ACA_IDENTITY_ID"
-)
-
-# Import AcrPull role to managed identity
-# resource "azurerm_role_assignment" "aca_identity_acr_pull" {
-#   scope                = azurerm_container_registry.acr.id
-#   role_definition_name = "AcrPull"
-#   principal_id         = azurerm_user_assigned_identity.aca_identity.principal_id
-
-#   depends_on = [
-#     azurerm_user_assigned_identity.aca_identity,
-#     azurerm_container_app_environment.aca_env
-#   ]
-# }
-
-
-
-# Import role assignment for ACR Pull
-# resource "azurerm_role_assignment" "aca_identity_network" {
-#   scope                = azurerm_virtual_network.vnet.id
-#   role_definition_name = "Network Contributor"
-#   principal_id         = azurerm_user_assigned_identity.aca_identity.principal_id
-
-#   depends_on = [
-#     azurerm_user_assigned_identity.aca_identity,
-#     azurerm_virtual_network.vnet
-#   ]
-# }
-
-# Import role assignment for ACR Pull
-ACR_PULL_ROLE_N="${RG_N}-aca-identity-acr-pull"
-ACR_PULL_ROLE_ID="$RG_ID/providers/Microsoft.ContainerRegistry/registries/$CR_N/providers/Microsoft.Authorization/roleAssignments/$ACR_PULL_ROLE_N"
-RESOURCES+=(
-  "azurerm_role_assignment.aca_identity_acr_pull|az role assignment show --name \"$ACR_PULL_ROLE_N\" --scope \"/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.ContainerRegistry/registries/$CR_N\"|\"$ACR_PULL_ROLE_ID\""
-)
-# Import role assignment for Network Contributor
-NETWORK_ROLE_N="${RG_N}-aca-identity-network"
-NETWORK_ROLE_ID="$RG_ID/providers/Microsoft.Network/virtualNetworks/$VNET_N/providers/Microsoft.Authorization/roleAssignments/$NETWORK_ROLE_N"
-RESOURCES+=(
-  "azurerm_role_assignment.aca_identity_network|az role assignment show --name \"$NETWORK_ROLE_N\" --scope \"/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.Network/virtualNetworks/$VNET_N\"|\"$NETWORK_ROLE_ID\""
-)
+# # Import user-assigned managed identity for ACA
+# ACA_IDENTITY_N="whisperer-aca-identity"
+# ACA_IDENTITY_ID="$RG_ID/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$ACA_IDENTITY_N"
+# RESOURCES+=(
+#   "azurerm_user_assigned_identity.aca_identity|az identity show --name \"$ACA_IDENTITY_N\" --resource-group \"$RG_N\"|$ACA_IDENTITY_ID"
+# )
+# # Import role assignment for ACR Pull
+# ACR_PULL_ROLE_N="${RG_N}-aca-identity-acr-pull"
+# ACR_PULL_ROLE_ID="$RG_ID/providers/Microsoft.ContainerRegistry/registries/$CR_N/providers/Microsoft.Authorization/roleAssignments/$ACR_PULL_ROLE_N"
+# RESOURCES+=(
+#   "azurerm_role_assignment.aca_identity_acr_pull|az role assignment show --name \"$ACR_PULL_ROLE_N\" --scope \"/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.ContainerRegistry/registries/$CR_N\"|\"$ACR_PULL_ROLE_ID\""
+# )
+# # Import role assignment for Network Contributor
+# NETWORK_ROLE_N="${RG_N}-aca-identity-network"
+# NETWORK_ROLE_ID="$RG_ID/providers/Microsoft.Network/virtualNetworks/$VNET_N/providers/Microsoft.Authorization/roleAssignments/$NETWORK_ROLE_N"
+# RESOURCES+=(
+#   "azurerm_role_assignment.aca_identity_network|az role assignment show --name \"$NETWORK_ROLE_N\" --scope \"/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.Network/virtualNetworks/$VNET_N\"|\"$NETWORK_ROLE_ID\""
+# )
 
 
 

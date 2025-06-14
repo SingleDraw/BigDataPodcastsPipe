@@ -445,79 +445,79 @@ resource "azurerm_data_factory_linked_service_azure_function" "aci_logs_fn" {
 # }
 
 
-resource "azurerm_virtual_network" "vnet" {
-  name                = "aca-vnet"
-  address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-}
+# resource "azurerm_virtual_network" "vnet" {
+#   name                = "aca-vnet"
+#   address_space       = ["10.0.0.0/16"]
+#   location            = azurerm_resource_group.rg.location
+#   resource_group_name = azurerm_resource_group.rg.name
+# }
 
-resource "azurerm_subnet" "aca_subnet" {
-  name                 = "aca-subnet"
-  resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.0.0.0/23"]
+# resource "azurerm_subnet" "aca_subnet" {
+#   name                 = "aca-subnet"
+#   resource_group_name  = azurerm_resource_group.rg.name
+#   virtual_network_name = azurerm_virtual_network.vnet.name
+#   address_prefixes     = ["10.0.0.0/23"]
 
-  # Remove the delegation block entirely
-  # The Container App Environment will handle the subnet configuration
-  # when using infrastructure_subnet_id with internal_load_balancer_enabled
+#   # Remove the delegation block entirely
+#   # The Container App Environment will handle the subnet configuration
+#   # when using infrastructure_subnet_id with internal_load_balancer_enabled
 
-  delegation {
-    name = "aciDelegation"
+#   delegation {
+#     name = "aciDelegation"
 
-    service_delegation {
-      name = "Microsoft.ContainerInstance/containerGroups"
-      actions = [
-        "Microsoft.Network/virtualNetworks/subnets/action"
-      ]
-    }
-  }
-}
+#     service_delegation {
+#       name = "Microsoft.ContainerInstance/containerGroups"
+#       actions = [
+#         "Microsoft.Network/virtualNetworks/subnets/action"
+#       ]
+#     }
+#   }
+# }
 
-# Create ACA environment
-resource "azurerm_container_app_environment" "aca_env" {
-  name                = "whisperer-aca-env"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+# # Create ACA environment
+# resource "azurerm_container_app_environment" "aca_env" {
+#   name                = "whisperer-aca-env"
+#   location            = azurerm_resource_group.rg.location
+#   resource_group_name = azurerm_resource_group.rg.name
 
-  # This configuration will automatically handle the subnet delegation
-  internal_load_balancer_enabled  = true
-  infrastructure_subnet_id        = azurerm_subnet.aca_subnet.id
-}
+#   # This configuration will automatically handle the subnet delegation
+#   internal_load_balancer_enabled  = true
+#   infrastructure_subnet_id        = azurerm_subnet.aca_subnet.id
+# }
 
-# Create user-assigned managed identity for ACA
-resource "azurerm_user_assigned_identity" "aca_identity" {
-  name                = "whisperer-aca-identity"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+# # Create user-assigned managed identity for ACA
+# resource "azurerm_user_assigned_identity" "aca_identity" {
+#   name                = "whisperer-aca-identity"
+#   resource_group_name = azurerm_resource_group.rg.name
+#   location            = azurerm_resource_group.rg.location
 
-  depends_on = [
-    azurerm_container_app_environment.aca_env
-  ]
-}
+#   depends_on = [
+#     azurerm_container_app_environment.aca_env
+#   ]
+# }
 
-# Assign AcrPull role to managed identity
-resource "azurerm_role_assignment" "aca_identity_acr_pull" {
-  scope                = azurerm_container_registry.acr.id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_user_assigned_identity.aca_identity.principal_id
+# # Assign AcrPull role to managed identity
+# resource "azurerm_role_assignment" "aca_identity_acr_pull" {
+#   scope                = azurerm_container_registry.acr.id
+#   role_definition_name = "AcrPull"
+#   principal_id         = azurerm_user_assigned_identity.aca_identity.principal_id
 
-  depends_on = [
-    azurerm_user_assigned_identity.aca_identity,
-    azurerm_container_app_environment.aca_env
-  ]
-}
+#   depends_on = [
+#     azurerm_user_assigned_identity.aca_identity,
+#     azurerm_container_app_environment.aca_env
+#   ]
+# }
 
-resource "azurerm_role_assignment" "aca_identity_network" {
-  scope                = azurerm_virtual_network.vnet.id
-  role_definition_name = "Network Contributor"
-  principal_id         = azurerm_user_assigned_identity.aca_identity.principal_id
+# resource "azurerm_role_assignment" "aca_identity_network" {
+#   scope                = azurerm_virtual_network.vnet.id
+#   role_definition_name = "Network Contributor"
+#   principal_id         = azurerm_user_assigned_identity.aca_identity.principal_id
 
-  depends_on = [
-    azurerm_user_assigned_identity.aca_identity,
-    azurerm_virtual_network.vnet
-  ]
-}
+#   depends_on = [
+#     azurerm_user_assigned_identity.aca_identity,
+#     azurerm_virtual_network.vnet
+#   ]
+# }
 
 
 
