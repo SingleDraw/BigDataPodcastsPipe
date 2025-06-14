@@ -538,10 +538,10 @@ resource "azurerm_container_app" "redis" {
     max_replicas = 1
   }
 
-  registry {
-    server   = azurerm_container_registry.acr.login_server
-    identity = azurerm_user_assigned_identity.aca_identity.id
-  }
+  # registry {
+  #   server   = azurerm_container_registry.acr.login_server
+  #   identity = azurerm_user_assigned_identity.aca_identity.id
+  # }
 
   ingress {
     external_enabled = false
@@ -557,6 +557,32 @@ resource "azurerm_container_app" "redis" {
     azurerm_user_assigned_identity.aca_identity,
     azurerm_role_assignment.aca_identity_acr_pull
   ]
+}
+
+
+resource "azurerm_container_app" "redis_test" {
+  name                         = "redis-test"
+  container_app_environment_id = azurerm_container_app_environment.aca_env.id
+  resource_group_name          = azurerm_resource_group.rg.name
+
+  revision_mode = "Single"
+
+  template {
+    container {
+      name   = "redis-test"
+      image  = "redis:7.2-bookworm"
+      cpu    = 0.25
+      memory = "0.5Gi"
+
+      command = [
+        "sh", "-c", 
+        "while true; do redis-cli -h whisperer-redis -p 6379 ping && echo 'Redis is reachable' || echo 'Redis connection failed'; sleep 10; done"
+      ]
+    }
+
+    min_replicas = 1
+    max_replicas = 1
+  }
 }
 
 resource "azurerm_container_app" "worker" {
@@ -594,7 +620,7 @@ resource "azurerm_container_app" "worker" {
       metadata = {
         "type"            = "redis"
         # Use the full internal FQDN for the scaler
-        "address"         = "redis://whisperer-redis.internal.${azurerm_container_app_environment.aca_env.default_domain}:6379"
+        "address"         = "whisperer-redis.internal.${azurerm_container_app_environment.aca_env.default_domain}:6379"
         "listName"        = "celery"
         "listLength"      = "5"
         "activationValue" = "1"
