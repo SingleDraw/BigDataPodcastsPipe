@@ -37,6 +37,8 @@ env:
     TF_VAR_function_key: ${{ secrets.TF_VAR_FUNCTION_KEY }}
     TF_VAR_function_app_name: ${{ secrets.TF_VAR_FUNCTION_APP_NAME }} # For ACI logs upload
 
+    TF_VAR_images_ready: ${{ vars.IMAGES_READY == 'true' }}
+
 jobs:
   terraform:
     runs-on: ubuntu-latest
@@ -83,15 +85,6 @@ jobs:
 
     # - name: Terraform Apply
     #   run: terraform apply -auto-approve
-
-    - name: Get IMAGES_READY from GitHub repo variables
-      id: get_images_ready
-      run: |
-        val=$(gh variable get IMAGES_READY --repo ${{ github.repository }} 2>/dev/null || echo "false")
-        echo "TF_VAR_images_ready=$val" >> $GITHUB_ENV
-      env:
-        GH_TOKEN: ${{ secrets.GH_PAT_TOKEN }}
-
 
     - name: 'Terraform Plan - Access Policies First'
       run: terraform plan -target=azurerm_key_vault_access_policy.github_actions
