@@ -508,83 +508,59 @@ resource "azurerm_role_assignment" "aca_identity_network" {
   ]
 }
 
-# Create Azure Container App for Redis
-resource "azurerm_container_app" "redis" {
-  name                         = "whisperer-redis"
-  container_app_environment_id = azurerm_container_app_environment.aca_env.id
-  resource_group_name          = azurerm_resource_group.rg.name
 
-  revision_mode = "Single"
 
-  identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.aca_identity.id]
-  }
 
-  template {
-    container {
-      name   = "redis"
-      image  = "redis:7.2-bookworm"
-      cpu    = 0.5
-      memory = "1.0Gi"
 
-      env {
-        name  = "ALLOW_EMPTY_PASSWORD"
-        value = "yes"
-      }
+
+
+
+
+# Azure Container Instance for Redis
+resource "azurerm_container_group" "redis" {
+  name                = "whisperer-redis"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  ip_address_type     = "Private"
+  subnet_ids          = [azurerm_subnet.aca_subnet.id]
+  os_type             = "Linux"
+
+  container {
+    name   = "redis"
+    image  = "redis:7.2-bookworm"
+    cpu    = "0.5"
+    memory = "1"
+
+    ports {
+      port     = 6379
+      protocol = "TCP"
     }
 
-    min_replicas = 1
-    max_replicas = 1
-  }
+    # Proper Redis configuration
+    commands = [
+      "redis-server",
+      "--appendonly", "yes",
+      "--protected-mode", "no",
+      "--bind", "0.0.0.0",
+      "--port", "6379"
+    ]
 
-  # registry {
-  #   server   = azurerm_container_registry.acr.login_server
-  #   identity = azurerm_user_assigned_identity.aca_identity.id
-  # }
-
-  ingress {
-    external_enabled = false
-    target_port      = 6379
-
-    traffic_weight {
-      latest_revision = true
-      percentage      = 100
-    }
-  }
-
-  depends_on = [
-    azurerm_user_assigned_identity.aca_identity,
-    azurerm_role_assignment.aca_identity_acr_pull
-  ]
-}
-
-
-resource "azurerm_container_app" "redis_test" {
-  name                         = "redis-test"
-  container_app_environment_id = azurerm_container_app_environment.aca_env.id
-  resource_group_name          = azurerm_resource_group.rg.name
-
-  revision_mode = "Single"
-
-  template {
-    container {
-      name   = "redis-test"
-      image  = "redis:7.2-bookworm"
-      cpu    = 0.25
-      memory = "0.5Gi"
-
-      command = [
-        "sh", "-c", 
-        "while true; do redis-cli -h whisperer-redis -p 6379 ping && echo 'Redis is reachable' || echo 'Redis connection failed'; sleep 10; done"
-      ]
-    }
-
-    min_replicas = 1
-    max_replicas = 1
+    # Mount for persistence (optional)
+    # volume {
+    #   name                 = "redis-data"
+    #   mount_path          = "/data"
+    #   read_only           = false
+    #   empty_dir           = {}
+    # }
   }
 }
 
+# Output the private IP for the worker to use
+output "redis_private_ip" {
+  value = azurerm_container_group.redis.ip_address
+}
+
+# Updated worker configuration to use Redis private IP
 resource "azurerm_container_app" "worker" {
   count                        = var.images_ready ? 1 : 1
   name                         = "whisperer-worker"
@@ -607,7 +583,8 @@ resource "azurerm_container_app" "worker" {
 
       env {
         name  = "CELERY_BROKER_URL"
-        value = "redis://whisperer-redis:6379"
+        # Use the private IP of the ACI Redis instance
+        value = "redis://${azurerm_container_group.redis.ip_address}:6379"
       }
     }
 
@@ -619,8 +596,8 @@ resource "azurerm_container_app" "worker" {
       custom_rule_type = "redis"
       metadata = {
         "type"            = "redis"
-        # Use the full internal FQDN for the scaler
-        "address"         = "whisperer-redis.internal.${azurerm_container_app_environment.aca_env.default_domain}:6379"
+        # Use the private IP for KEDA as well
+        "address"         = "${azurerm_container_group.redis.ip_address}:6379"
         "listName"        = "celery"
         "listLength"      = "5"
         "activationValue" = "1"
@@ -636,9 +613,169 @@ resource "azurerm_container_app" "worker" {
   depends_on = [
     azurerm_user_assigned_identity.aca_identity,
     azurerm_role_assignment.aca_identity_acr_pull,
-    azurerm_container_app.redis
+    azurerm_container_group.redis
   ]
 }
+
+
+
+
+# # Create Azure Container App for Redis
+# resource "azurerm_container_app" "redis" {
+#   name                         = "whisperer-redis"
+#   container_app_environment_id = azurerm_container_app_environment.aca_env.id
+#   resource_group_name          = azurerm_resource_group.rg.name
+
+#   revision_mode = "Single"
+
+#   identity {
+#     type         = "UserAssigned"
+#     identity_ids = [azurerm_user_assigned_identity.aca_identity.id]
+#   }
+
+#   template {
+#     container {
+#       name   = "redis"
+#       image  = "redis:7.2-bookworm"
+#       cpu    = 0.5
+#       memory = "1.0Gi"
+
+#       env {
+#         name  = "ALLOW_EMPTY_PASSWORD"
+#         value = "yes"
+#       }
+#     }
+
+#     min_replicas = 1
+#     max_replicas = 1
+#   }
+
+#   # registry {
+#   #   server   = azurerm_container_registry.acr.login_server
+#   #   identity = azurerm_user_assigned_identity.aca_identity.id
+#   # }
+
+#   ingress {
+#     external_enabled = false
+#     target_port      = 6379
+
+#     traffic_weight {
+#       latest_revision = true
+#       percentage      = 100
+#     }
+#   }
+
+#   depends_on = [
+#     azurerm_user_assigned_identity.aca_identity,
+#     azurerm_role_assignment.aca_identity_acr_pull
+#   ]
+# }
+
+
+
+
+# resource "azurerm_container_group" "redis" {
+#   name                = "whisperer-redis"
+#   location            = azurerm_resource_group.rg.location
+#   resource_group_name = azurerm_resource_group.rg.name
+#   ip_address_type     = "Private"
+#   subnet_ids          = [azurerm_subnet.aca_subnet.id]
+#   os_type             = "Linux"
+
+#   container {
+#     name   = "redis"
+#     image  = "redis:7.2-bookworm"
+#     cpu    = "0.5"
+#     memory = "1"
+
+#     ports {
+#       port     = 6379
+#       protocol = "TCP"
+#     }
+#   }
+# }
+
+
+
+# resource "azurerm_container_app" "redis_test" {
+#   name                         = "redis-test"
+#   container_app_environment_id = azurerm_container_app_environment.aca_env.id
+#   resource_group_name          = azurerm_resource_group.rg.name
+
+#   revision_mode = "Single"
+
+#   template {
+#     container {
+#       name   = "redis-test"
+#       image  = "redis:7.2-bookworm"
+#       cpu    = 0.25
+#       memory = "0.5Gi"
+
+#       command = [
+#         "sh", "-c", 
+#         "while true; do redis-cli -h whisperer-redis -p 6379 ping && echo 'Redis is reachable' || echo 'Redis connection failed'; sleep 10; done"
+#       ]
+#     }
+
+#     min_replicas = 1
+#     max_replicas = 1
+#   }
+# }
+
+# resource "azurerm_container_app" "worker" {
+#   count                        = var.images_ready ? 1 : 1
+#   name                         = "whisperer-worker"
+#   container_app_environment_id = azurerm_container_app_environment.aca_env.id
+#   resource_group_name          = azurerm_resource_group.rg.name
+
+#   revision_mode = "Single"
+
+#   identity {
+#     type         = "UserAssigned"
+#     identity_ids = [azurerm_user_assigned_identity.aca_identity.id]
+#   }
+
+#   template {
+#     container {
+#       name   = "worker"
+#       image  = "${azurerm_container_registry.acr.login_server}/${var.brick_whisperer_image_name}:latest"
+#       cpu    = 1
+#       memory = "2.0Gi"
+
+#       env {
+#         name  = "CELERY_BROKER_URL"
+#         value = "redis://whisperer-redis:6379"
+#       }
+#     }
+
+#     min_replicas = 0
+#     max_replicas = 5
+
+#     custom_scale_rule {
+#       name             = "redis-queue-length"
+#       custom_rule_type = "redis"
+#       metadata = {
+#         "type"            = "redis"
+#         # Use the full internal FQDN for the scaler
+#         "address"         = "whisperer-redis.internal.${azurerm_container_app_environment.aca_env.default_domain}:6379"
+#         "listName"        = "celery"
+#         "listLength"      = "5"
+#         "activationValue" = "1"
+#       }
+#     }
+#   }
+
+#   registry {
+#     server   = azurerm_container_registry.acr.login_server
+#     identity = azurerm_user_assigned_identity.aca_identity.id
+#   }
+
+#   depends_on = [
+#     azurerm_user_assigned_identity.aca_identity,
+#     azurerm_role_assignment.aca_identity_acr_pull,
+#     azurerm_container_app.redis
+#   ]
+# }
 
 
 
