@@ -109,6 +109,20 @@ RESOURCES+=(
 )
 
 
+# Import Azure Container App for Redis
+CA_REDIS_N="${RG_N}-whisperer-redis"
+CA_REDIS_ID="$RG_ID/providers/Microsoft.App/containerApps/$CA_REDIS_N"
+RESOURCES+=(
+  "azurerm_container_app.redis|az containerapp show --name \"$CA_REDIS_N\" --resource-group \"$RG_N\"|\"$CA_REDIS_ID\""
+)
+
+# Import Azure Container App for Worker
+CA_WORKER_N="${RG_N}-whisperer-worker"
+CA_WORKER_ID="$RG_ID/providers/Microsoft.App/containerApps/$CA_WORKER_N"
+RESOURCES+=(
+  "azurerm_container_app.worker|az containerapp show --name \"$CA_WORKER_N\" --resource-group \"$RG_N\"|\"$CA_WORKER_ID\""
+)
+
 
 
 

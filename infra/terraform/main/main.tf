@@ -584,6 +584,8 @@ resource "azurerm_container_app" "worker" {
   resource_group_name          = azurerm_resource_group.rg.name
   location                     = azurerm_resource_group.rg.location
 
+  revision_mode = "Single"  # Single revision mode for simplicity
+
   identity {
     type         = "UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.aca_identity.id]
@@ -603,20 +605,18 @@ resource "azurerm_container_app" "worker" {
       # Add other env vars as needed
     }
 
-    scale {
-      min_replicas = 0
-      max_replicas = 5
+    min_replicas = 0
+    max_replicas = 5
 
-      rule {
-        name = "redis-queue-length"
-        type = "keda"
-        metadata = {
-          "type"            = "redis"
-          "address"         = "redis://whisperer-redis:6379"
-          "listName"        = "celery"        # your redis queue name
-          "listLength"      = "5"             # scale threshold
-          "activationValue" = "1"
-        }
+    custom_scale_rule {
+      name             = "redis-queue-length"
+      custom_rule_type = "keda"
+      metadata = {
+        "type"            = "redis"
+        "address"         = "redis://whisperer-redis:6379"
+        "listName"        = "celery"  # Redis queue name for Celery tasks
+        "listLength"      = "5"       # Scale if queue length exceeds 5
+        "activationValue" = "1"       # Activate scaling when queue length is 1 or more
       }
     }
   }
@@ -624,10 +624,6 @@ resource "azurerm_container_app" "worker" {
   registry {
     server   = azurerm_container_registry.acr.login_server
     identity = azurerm_user_assigned_identity.aca_identity.id
-  }
-
-  ingress {
-    external_enabled = false
   }
 
   depends_on = [
