@@ -78,6 +78,11 @@ variable "brick_pcaster_image_name" {
   type        = string
 }
 
+variable "brick_whisperer_image_name" {
+  description = "Docker image name for Whisperer App"
+  type        = string
+}
+
 
 # Conditional variables for Azure Container Apps
 variable "images_ready" {

@@ -27,6 +27,8 @@ env:
     TF_VAR_podcasting_index_api_key: ${{ secrets.PODCASTING_INDEX_API_KEY }}
     TF_VAR_podcasting_index_api_secret: ${{ secrets.PODCASTING_INDEX_API_SECRET }}
     TF_VAR_brick_pcaster_image_name: ${{ secrets.BRICK_PCASTER_IMAGE_NAME }}
+    TF_VAR_brick_enricher_image_name: ${{ secrets.BRICK_ENRICHER_IMAGE_NAME }}
+    TF_VAR_brick_whisperer_image_name: ${{ secrets.BRICK_WHISPERER_IMAGE_NAME }}
     #
     TF_VAR_azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
     TF_VAR_azure_object_id: ${{ secrets.AZURE_OBJECT_ID }}  # If using this approach
@@ -81,6 +83,14 @@ jobs:
 
     # - name: Terraform Apply
     #   run: terraform apply -auto-approve
+
+    - name: Get IMAGES_READY from GitHub repo variables
+      id: get_images_ready
+      run: |
+        val=$(gh variable get IMAGES_READY --repo ${{ github.repository }} 2>/dev/null || echo "false")
+        echo "TF_VAR_images_ready=$val" >> $GITHUB_ENV
+      env:
+        GH_TOKEN: ${{ secrets.GH_PAT_TOKEN }}
 
 
     - name: 'Terraform Plan - Access Policies First'

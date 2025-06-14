@@ -459,6 +459,10 @@ resource "azurerm_user_assigned_identity" "aca_identity" {
   name                = "whisperer-aca-identity"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
+
+  depends_on = [
+    azurerm_container_app_environment.aca_env
+  ]
 }
 
 # Assign AcrPull role to managed identity
@@ -466,6 +470,11 @@ resource "azurerm_role_assignment" "aca_identity_acr_pull" {
   scope                = azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_user_assigned_identity.aca_identity.principal_id
+
+  depends_on = [
+    azurerm_user_assigned_identity.aca_identity,
+    azurerm_container_app_environment.aca_env
+  ]
 }
 
 
@@ -479,7 +488,7 @@ resource "azurerm_role_assignment" "aca_identity_acr_pull" {
 # Create Azure Container App for Redis
 # Access it with azurerm_container_app.redis[0].id since it's now a list.
 resource "azurerm_container_app" "redis" {
-  count                        = var.images_ready ? 1 : 0
+  # count                        = var.images_ready ? 1 : 0
   name                         = "whisperer-redis"
   container_app_environment_id = azurerm_container_app_environment.aca_env.id
   resource_group_name          = azurerm_resource_group.rg.name
@@ -520,8 +529,72 @@ resource "azurerm_container_app" "redis" {
     target_port      = 6379
     transport        = "tcp"
   }
+
+  depends_on = [
+    azurerm_user_assigned_identity.aca_identity,
+    azurerm_role_assignment.aca_identity_acr_pull
+  ]
 }
 
+resource "azurerm_container_app" "worker" {
+  count                        = var.images_ready ? 1 : 0
+  name                         = "whisperer-worker"
+  container_app_environment_id = azurerm_container_app_environment.aca_env.id
+  resource_group_name          = azurerm_resource_group.rg.name
+  location                     = azurerm_resource_group.rg.location
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.aca_identity.id]
+  }
+
+  template {
+    container {
+      name   = "worker"
+      image  = "${azurerm_container_registry.acr.login_server}/${var.brick_whisperer_image_name}:latest"
+      cpu    = 1
+      memory = "2.0Gi"
+
+      env {
+        name  = "CELERY_BROKER_URL"
+        value = "redis://whisperer-redis:6379"
+      }
+      # Add other env vars as needed
+    }
+
+    scale {
+      min_replicas = 0
+      max_replicas = 5
+
+      rule {
+        name = "redis-queue-length"
+        type = "keda"
+        metadata = {
+          "type"            = "redis"
+          "address"         = "redis://whisperer-redis:6379"
+          "listName"        = "celery"        # your redis queue name
+          "listLength"      = "5"             # scale threshold
+          "activationValue" = "1"
+        }
+      }
+    }
+  }
+
+  registry {
+    server   = azurerm_container_registry.acr.login_server
+    identity = azurerm_user_assigned_identity.aca_identity.id
+  }
+
+  ingress {
+    external_enabled = false
+  }
+
+  depends_on = [
+    azurerm_user_assigned_identity.aca_identity,
+    azurerm_role_assignment.aca_identity_acr_pull,
+    azurerm_container_app.redis,  # Ensure Redis is created before worker
+  ]
+}
 
 
 
