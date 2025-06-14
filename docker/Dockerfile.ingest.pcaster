@@ -22,8 +22,12 @@ COPY libs/brick-ingest-pcaster/app ./app
 COPY libs/brick-ingest-pcaster/setup.py ./setup.py
 
 # Copy and install local violet-storage-lib with parquet support
-COPY libs/violet-storage-lib ../violet-storage-lib
-RUN pip install --no-cache-dir ../violet-storage-lib[parquet]
+# COPY libs/violet-storage-lib ../violet-storage-lib
+# RUN pip install --no-cache-dir ../violet-storage-lib[parquet]
+
+COPY libs/violet-storage-lib ./violet-storage-lib
+RUN pip install --no-cache-dir ./violet-storage-lib[parquet]
+
 
 # Add entrypoint
 RUN cat <<"EOF" > /app/entrypoint && \
