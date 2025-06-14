@@ -38,22 +38,12 @@
                     ],
                     "environmentVariables": [
                       {
-                        "name": "AZURE_CLIENT_ID",
-                        "value": "$AZURE_CLIENT_ID"
+                        "name": "AZURE_STORAGE_ACCOUNT",
+                        "value": "$STORAGE_ACCOUNT_NAME"
                       },
                       {
-                        "name": "AZURE_TENANT_ID",
-                        "value": "$AZURE_TENANT_ID"
-                      },
-                      {
-                        "name": "AZURE_CLIENT_SECRET",
-                        "value": "$AZURE_CLIENT_SECRET"
-                      }
-                    ],
-                    "secretEnvironmentVariables": [
-                      {
-                        "name": "MY_SECRET_VAR",
-                        "value": "@Microsoft.KeyVault(SecretUri=https://$KEY_VAULT_NAME.vault.azure.net/secrets/my-secret-var)"
+                        "name": "AZURE_KEY_VAULT_URL",
+                        "value": "https://$KEY_VAULT_NAME.vault.azure.net/"
                       }
                     ]
                   }
@@ -181,7 +171,7 @@
       },
 
 
- {
+      {
         "name": "RunACIContainerEnricher",
         "type": "WebActivity",
         "dependsOn": [
@@ -214,27 +204,28 @@
                     "command": [
                       "enricher",
                       "--overwrite",
+                      "--verbose",
+                      "--target-protocol az",
+                      "--countries us",
                       "--azure-storage-account",
                       "$STORAGE_ACCOUNT_NAME"
                     ],
                     "environmentVariables": [
                       {
-                        "name": "AZURE_CLIENT_ID",
-                        "value": "$AZURE_CLIENT_ID"
+                        "name": "AZURE_STORAGE_ACCOUNT",
+                        "value": "$STORAGE_ACCOUNT_NAME"
                       },
                       {
-                        "name": "AZURE_TENANT_ID",
-                        "value": "$AZURE_TENANT_ID"
+                        "name": "AZURE_KEY_VAULT_URL",
+                        "value": "https://$KEY_VAULT_NAME.vault.azure.net/"
                       },
                       {
-                        "name": "AZURE_CLIENT_SECRET",
-                        "value": "$AZURE_CLIENT_SECRET"
-                      }
-                    ],
-                    "secretEnvironmentVariables": [
+                        "name": "PODCAST_INDEX_API_KEY",
+                        "value": "$PODCASTING_INDEX_API_KEY"
+                      },
                       {
-                        "name": "MY_SECRET_VAR",
-                        "value": "@Microsoft.KeyVault(SecretUri=https://$KEY_VAULT_NAME.vault.azure.net/secrets/my-secret-var)"
+                        "name": "PODCAST_INDEX_API_SECRET",
+                        "value": "$PODCASTING_INDEX_API_SECRET"
                       }
                     ]
                   }
@@ -252,47 +243,13 @@
             }
           }
         }
-      },
-
-
-
-
-
-      {
-        "name": "StartJobProcessing",
-        "type": "WebActivity",
-        "dependsOn": [
-          { "activity": "SaveLogsToBlob", "dependencyConditions": ["Succeeded"] }
-        ],
-        "typeProperties": {
-          "url": "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.App/jobs/whisperer-job-submitter/start?api-version=2023-05-01",
-          "method": "POST",
-          "authentication": {
-            "type": "MSI",
-            "resource": "https://management.azure.com/"
-          },
-          "body": {
-            "properties": {
-              "template": {
-                "containers": [{
-                  "name": "whisperer-job-submitter",
-                  "command": [
-                    "app-submit",
-                    "--input",
-                    "@variables('inputBlobPath')",
-                    "--output",
-                    "@variables('outputBlobPath')"
-                  ],
-                  "env": [
-                    { "name": "BLOB_URL", "value": "@variables('processingBlobUrl')" },
-                    { "name": "JOB_ID", "value": "@pipeline().RunId" }
-                  ]
-                }]
-              }
-            }
-          }
-        }
       }
+
+
+
+
+
+
 
     ]
   }
