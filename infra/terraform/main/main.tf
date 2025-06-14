@@ -461,6 +461,17 @@ resource "azurerm_subnet" "aca_subnet" {
   # Remove the delegation block entirely
   # The Container App Environment will handle the subnet configuration
   # when using infrastructure_subnet_id with internal_load_balancer_enabled
+
+  delegation {
+    name = "aciDelegation"
+
+    service_delegation {
+      name = "Microsoft.ContainerInstance/containerGroups"
+      actions = [
+        "Microsoft.Network/virtualNetworks/subnets/action"
+      ]
+    }
+  }
 }
 
 # Create ACA environment
