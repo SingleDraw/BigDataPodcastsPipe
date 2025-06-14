@@ -9,13 +9,13 @@ on:
   # Manual trigger
   workflow_dispatch: 
   # on end of certain workflows
-  workflow_run:
-    workflows: 
-      - "Build and Push Brick Pcaster Docker Image"
-      - "Build and Push Brick Whisperer Docker Image"
-      - "Build and Push Test App Docker Image"
-    types:
-      - completed
+  # workflow_run:
+  #   workflows: 
+  #     - "Build and Push Brick Pcaster Docker Image"
+  #     - "Build and Push Brick Whisperer Docker Image"
+  #     - "Build and Push Test App Docker Image"
+  #   types:
+  #     - completed
 
 
 env:

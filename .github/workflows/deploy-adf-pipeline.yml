@@ -7,26 +7,44 @@ permissions:
   id-token: write
   contents: read
 
+
 env:
-  ADF_NAME: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}-adf       # ${{ secrets.ADF_NAME }} # make use of it or remove it
-  RESOURCE_GROUP: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} 
-  LOCATION: westeurope
   SUBSCRIPTION_ID: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
+  RESOURCE_GROUP: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}
+
   ACI_NAME: ephemeral-job
   ACI_NAME_ENRICHER: ephemeral-job-enricher
-  ACR_NAME: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
+
+  LOCATION: westeurope
+  UAMI_NAME: aci-uami 
   IMAGE_NAME: ${{ secrets.BRICK_PCASTER_IMAGE_NAME }}
   IMAGE_NAME_ENRICHER: ${{ secrets.BRICK_ENRICHER_IMAGE_NAME }}
-  STORAGE_ACCOUNT_NAME: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
-  IDENTITY_RESOURCE_ID: ${{ secrets.IDENTITY_RESOURCE_ID }} # For container identity
-  IDENTITY_CLIENT_ID: ${{ secrets.IDENTITY_CLIENT_ID }}     # For ADF authentication
-  TRIGGER_NAME: DailyTrigger
-  ADF_PIPELINE_NAME: RunEphemeralACI
-  ADF_LINKED_SERVICE_NAME: AzureManagementLS
+  IMAGE_TAG: latest
+
+  # ACR credentials for pipeline template hydration
+  ACR_NAME: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
   ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
   ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+
+  # KEY VAULT for building vault URL passed as ENV var to ACI
+  KEY_VAULT_NAME: ${{ secrets.KEY_VAULT_NAME }}
+  STORAGE_ACCOUNT_NAME: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
+  SECRET_NAME_TO_DISPLAY: "blob-storage-connection-string"
+
+  # For Trigger hydration
+  ADF_PIPELINE_NAME: RunEphemeralACI
+
+  # For this workflow script only
+  TRIGGER_NAME: DailyTrigger
+  ADF_NAME: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}-adf
+
+  # Function App details for ACI logs upload
+  FUNCTION_NAME: "save-logs" # Function Directory name in the repo
+  FUNCTION_APP_URL: "https://${{ secrets.TF_VAR_FUNCTION_APP_NAME }}.azurewebsites.net" # For ACI logs upload
+
   PODCASTING_INDEX_API_KEY: ${{ secrets.PODCASTING_INDEX_API_KEY }}
   PODCASTING_INDEX_API_SECRET: ${{ secrets.PODCASTING_INDEX_API_SECRET }}
+
 
 jobs:
   deploy:
@@ -49,26 +67,15 @@ jobs:
     - name: Install jq
       run: sudo apt-get update && sudo apt-get install -y jq
 
-    - name: Set environment variables for container
-      run: |
-        echo "AZURE_CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" >> $GITHUB_ENV
-        echo "AZURE_TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" >> $GITHUB_ENV
-        echo "AZURE_CLIENT_SECRET=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" >> $GITHUB_ENV
 
     - name: Generate pipeline JSON with env vars and create trigger JSON
       run: |
           echo "Generating pipeline.json and trigger.json with environment variables..."
-          # export NOW=$(date -u -d "+2 minutes" +"%Y-%m-%dT%H:%M:%SZ")
-          export NOW=$(date -u -d "+30 seconds" +"%Y-%m-%dT%H:%M:%SZ")
-          export AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
-          export AZURE_TENANT_ID=${AZURE_TENANT_ID}
-          export AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+          export NOW=$(date -u -d "+1 minute" +"%Y-%m-%dT%H:%M:%SZ")
+          echo "Trigger time set to: $NOW"
 
-          echo "Generated NOW: $NOW"
           cat infra/adf-pipelines/RunEphemeralACI.template.json | envsubst > pipeline.json
           cat infra/adf-triggers/DailyTrigger.template.json | envsubst > trigger.json
-          echo "Generated trigger.json:"
-          cat trigger.json
 
     - name: Disable and delete ADF trigger if it exists
       run: |
@@ -112,6 +119,21 @@ jobs:
           echo "Pipeline does not exist, skipping removal step."
         fi
 
+    - name: Remove existing ACI group if it exists
+      run: |
+        if az container show --name "$ACI_NAME" \
+          --resource-group "$RESOURCE_GROUP" \
+          > /dev/null 2>&1; then
+
+          echo "Removing existing ACI group..."
+          az container delete \
+            --name "$ACI_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --yes
+        else
+          echo "ACI group does not exist, skipping removal step."
+        fi
+
     - name: Deploy pipeline to ADF
       run: |
         az datafactory pipeline create \
@@ -134,5 +156,3 @@ jobs:
           --factory-name "$ADF_NAME" \
           --resource-group "$RESOURCE_GROUP" \
           --name "$TRIGGER_NAME"
-
-
