@@ -561,9 +561,9 @@ output "redis_private_ip" {
 }
 
 # Updated worker configuration to use Redis private IP
-resource "azurerm_container_app" "worker" {
+resource "azurerm_container_app" "whisworker" {
   count                        = var.images_ready ? 1 : 1
-  name                         = "whisperer-worker"
+  name                         = "whisper-worker"
   container_app_environment_id = azurerm_container_app_environment.aca_env.id
   resource_group_name          = azurerm_resource_group.rg.name
 

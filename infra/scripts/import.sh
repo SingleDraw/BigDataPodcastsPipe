@@ -116,18 +116,18 @@ RESOURCES+=(
 #   "azurerm_container_app.redis|az containerapp show --name \"$CA_REDIS_N\" --resource-group \"$RG_N\"|$CA_REDIS_ID"
 # )
 
-# Import Azure Container App for Worker
-CA_WORKER_N="whisperer-worker"
-CA_WORKER_ID="$RG_ID/providers/Microsoft.App/containerApps/$CA_WORKER_N"
-RESOURCES+=(
-  "azurerm_container_app.worker|az containerapp show --name \"$CA_WORKER_N\" --resource-group \"$RG_N\"|$CA_WORKER_ID"
-)
+# # Import Azure Container App for Worker
+# CA_WORKER_N="whisperer-worker"
+# CA_WORKER_ID="$RG_ID/providers/Microsoft.App/containerApps/$CA_WORKER_N"
+# RESOURCES+=(
+#   "azurerm_container_app.worker|az containerapp show --name \"$CA_WORKER_N\" --resource-group \"$RG_N\"|$CA_WORKER_ID"
+# )
 
-CA_TEST_N="redis-test"
-CA_TEST_ID="$RG_ID/providers/Microsoft.App/containerApps/$CA_TEST_N"
-RESOURCES+=(
-  "azurerm_container_app.redis_test|az containerapp show --name \"$CA_TEST_N\" --resource-group \"$RG_N\"|$CA_TEST_ID"
-)
+# CA_TEST_N="redis-test"
+# CA_TEST_ID="$RG_ID/providers/Microsoft.App/containerApps/$CA_TEST_N"
+# RESOURCES+=(
+#   "azurerm_container_app.redis_test|az containerapp show --name \"$CA_TEST_N\" --resource-group \"$RG_N\"|$CA_TEST_ID"
+# )
 
 
 
