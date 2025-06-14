@@ -568,9 +568,7 @@ resource "azurerm_container_app" "redis" {
     transport        = "tcp"
 
     traffic_weight {
-      label         = "redis"
-      revision_name = "latest"  # Use the latest revision
-      weight        = 100
+      percentage = 100
     }
   }
 
