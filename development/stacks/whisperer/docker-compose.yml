@@ -60,19 +60,6 @@ services:
       - TZ=Europe/Warsaw
     command: whisperer-worker
 
-  # Flower for monitoring Celery tasks
-  # whisperer-flower:
-  #   image: whisperer-flower:1.0.0
-  #   container_name: whisperer-flower
-  #   depends_on:
-  #     - redis-whisperer
-  #   ports:
-  #     - "5555:5555"
-  #   environment:
-  #     # Allow unauthenticated access to the API
-  #     - FLOWER_UNAUTHENTICATED_API=true                   
-  #     - CELERY_BROKER_URL=redis://redis-whisperer:6379/0
-
 secrets:
   aws_access_key:
     file: ./secrets/s3_access_key.txt

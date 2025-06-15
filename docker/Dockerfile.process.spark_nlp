@@ -1,8 +1,4 @@
-# docker build -t bigdata/spark-nlp -f Dockerfile.spark-nlp ./
-# docker run --rm -it bigdata/spark-nlp
-# docker image inspect bigdata/spark-nlp --format='{{.Size}}' | numfmt --to=iec 
-# Base image with Spark NLP + PySpark + Java
-# FROM bitnami/spark:latest
+# Dockerfile for Spark NLP with Python
 # 814 MB - without storage support and with aws-java-sdk-bundle-1.11.375.jar
 # with AWS S3 support = 988 MB and newer aws-java-sdk-bundle-1.12.262.jar
 FROM openjdk:11-jre-slim
@@ -17,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 python3
     && rm -rf /var/lib/apt/lists/*
 
 # Copy your Spark NLP scripts into the container
-COPY stage_nlp.py . 
+COPY development/playground/stage_nlp.py . 
 
 
 ENV HADOOP_AWS_VERSION=3.3.4
@@ -38,20 +34,9 @@ RUN mkdir -p ${JARS_DIR} && \
 RUN wget https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/${AWS_JAVA_SDK_BUNDLE_VERSION}/aws-java-sdk-bundle-${AWS_JAVA_SDK_BUNDLE_VERSION}.jar -P ${JARS_DIR} && \
     wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/${HADOOP_AWS_VERSION}/hadoop-aws-${HADOOP_AWS_VERSION}.jar -P ${JARS_DIR}
 
-
-# RUN wget https://repo1.maven.org/maven2/io/delta/delta-spark_2.12/3.0.0/delta-spark_2.12-3.0.0.jar -P ${JARS_DIR} && \
-#     wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-azure/3.3.4/hadoop-azure-3.3.4.jar -P ${JARS_DIR} && \
-#     wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-azure-datalake/3.3.4/hadoop-azure-datalake-3.3.4.jar -P ${JARS_DIR} && \
-#     wget https://repo1.maven.org/maven2/com/microsoft/azure/azure-storage/8.6.6/azure-storage-8.6.6.jar -P ${JARS_DIR} && \
-#     wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-common/${HADOOP_AWS_VERSION}/hadoop-common-${HADOOP_AWS_VERSION}.jar -P ${JARS_DIR}
-
-
-
-
-
 # Optional: install additional Python dependencies
-RUN pip install --no-cache-dir setuptools pyspark==3.5.0 spark-nlp==5.1.4 numpy
-
+COPY libs/violet-storage-lib ./violet-storage-lib
+RUN pip install --no-cache-dir setuptools pyspark==3.5.0 spark-nlp==5.1.4 numpy ./violet-storage-lib[parquet]
 
 # Script to build and download Spark NLP models
 RUN cat <<"EOF" > build_models.py && \
@@ -88,6 +73,22 @@ EOF
 RUN python3 build_models.py
 
 
+
+RUN cat <<"EOF" > init_spark.py && \
+    sed -i 's/\r$//' init_spark.py
+import sparknlp
+from sparknlp.base import *
+from sparknlp.annotator import *
+
+# Start Spark NLP session
+spark = sparknlp.start()
+# Start Spark NLP on top of your existing Spark session
+sparknlp.start(spark)
+spark.stop()
+EOF
+
+# Initialize Spark NLP session
+RUN python3 init_spark.py
 
 # Create spark-defaults.conf
 RUN cat <<"EOF" > /usr/local/bin/generate-config.sh && \

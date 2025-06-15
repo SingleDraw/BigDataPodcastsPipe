@@ -1,6 +1,6 @@
 
 x-spark-worker: &x-spark-worker
-  image: bigdata/spark-worker
+  image: violetvi/spark-nlp:1.0.0 
   environment:
       - SPARK_MASTER=spark://spark-master:7077
       - SPARK_WORKER_CORES=2
@@ -10,11 +10,6 @@ x-spark-worker: &x-spark-worker
       - AWS_SECRET_ACCESS_KEY_FILE=/run/secrets/aws_secret_key
       - AWS_ACCESS_KEY_ID_FILE=/run/secrets/aws_access_key
 
-      # # Azurite Blob Storage configuration
-      # - AZURITE_BLOB_URI=http://host.docker.internal:11000
-      # - STORAGE_ACCOUNT=devstoreaccount1
-      # - STORAGE_KEY=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==
-
       # Azure Blob Storage configuration
       - STORAGE_ACCOUNT=${AZURE_STORAGE_ACCOUNT_NAME}
       - STORAGE_KEY=${AZURE_STORAGE_ACCOUNT_KEY}
@@ -23,8 +18,8 @@ x-spark-worker: &x-spark-worker
       - aws_access_key
       - aws_secret_key
   volumes:
-      - ./output:/app/output
-      - ./localvenv/output:/app/input
+      - ./sink:/app/output
+      - ./source:/app/input
       - ./nlp_job.py:/app/nlp_job.py:ro
   depends_on:
       - spark-master
@@ -33,26 +28,6 @@ x-spark-worker: &x-spark-worker
 
 
 services:
-  # S3 SeaweedFS storage
-
-  # Azurite Example blob storage URL:
-  # http://localhost:10000/devstoreaccount1/containername
-  azurite:
-    image: mcr.microsoft.com/azure-storage/azurite
-    container_name: azurite
-    ports:
-      - "11000:10000"  # Blob service
-      - "11001:10001"  # Queue service
-      - "11002:10002"  # Table service
-    environment:
-      - AZURITE_ACCOUNTS=devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==
-      - TZ=Europe/Warsaw
-    volumes:
-      - azurite_data:/data
-    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0"
-
-
-
   # DISTRIBUTED SPARK SETUP FOR NLP PROCESSING
   # Spark Master and Worker setup for distributed processing
   # This setup is for running Spark NLP tasks using Celery workers
@@ -61,7 +36,7 @@ services:
   # thrugh a Python script `stage_nlp.py` calling Spark
 
   spark-master:
-    image: bigdata/spark-master
+    image: violetvi/spark-nlp:1.0.0 
     environment:
       - TZ=Europe/Warsaw
     volumes:
@@ -70,9 +45,9 @@ services:
       - "8080:8080"
       - "7077:7077"
 
-  spark-worker-1:
-    <<: *x-spark-worker
-    container_name: spark-worker-1
+  # spark-worker-1:
+  #   <<: *x-spark-worker
+  #   container_name: spark-worker-1
 
   spark-nlp-celery-worker:
     <<: *x-spark-worker
@@ -80,24 +55,18 @@ services:
     container_name: spark-nlp-worker
     command: >
       spark-submit
-      /app/nlp_job.py --input /app/input/podcast_joe_segmented.json --output abfss://whisper@vincemusteabetterway321.dfs.core.windows.net/output
-    #  /app/nlp_job.py --input /app/input/podcast_joe_segmented.json --output http://host.docker.internal:11000/devstoreaccount1/whisper 
-    # /app/nlp_job.py --input /app/input/podcast_joe_segmented.json --output abfss://whisper@devstoreaccount1.dfs.core.windows.net/output
-    # /app/nlp_job.py --input /app/input/podcast_joe_segmented.json --output wasbs://whisper@devstoreaccount1.blob.core.windows.net/output
-    # /app/nlp_job.py --input /app/input/podcast_joe_segmented.json --output s3a://whisper/spark_parquet/
+      /app/nlp_job.py --input /app/input/podcast_joe_segmented.json --output s3a://whisper/spark_parquet/
 
 
 
-
-
-volumes:
-  azurite_data:
+# volumes:
+#   azurite_data:
 
 secrets:
   aws_access_key:
-    file: ./secrets/aws_access_key
+    file: ./secrets/s3_access_key.txt
   aws_secret_key:
-    file: ./secrets/aws_secret_key
+    file: ./secrets/s3_secret_key.txt
 
 
 

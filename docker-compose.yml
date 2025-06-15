@@ -1,0 +1,15 @@
+services:
+  spark-nlp:
+    image: violetvi/spark-nlp:1.0.0
+    container_name: spark-nlp
+    environment:
+      - S3_ENDPOINT_URL=http://host.docker.internal:8333
+      - AWS_SECRET_ACCESS_KEY=your_access_key
+      - AWS_ACCESS_KEY_ID=your_secret_key
+      - TZ=Europe/Warsaw
+    volumes:
+      - ./source/podcast_joe_segmented.json:/app/input/podcast_joe_segmented.json:ro
+      - ./libs/brick-process-nlp/nlp_processing.py:/app/nlp_processing.py:ro
+    command: >
+      spark-submit
+      /app/nlp_processing.py --input /app/input/podcast_joe_segmented.json --output None

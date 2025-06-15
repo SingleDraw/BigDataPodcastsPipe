@@ -1,6 +1,7 @@
 ### PCASTER - Podcast daily rankings scraper ###
 
 command rule:
+
 if --az-storage-account flag is present azure client is used
     for connection string auth there must be AZURE_STORAGE_KEY env provided
     for DefaultCredential Managed Identity must be properly set
@@ -12,11 +13,10 @@ if --s3-access-key flag is present boto3 client is used
 PCaster prioritizes az storage flag if both are provided
 
 # build image:
-> docker build -t pcaster:1.0.1 -f Dockerfile ./
+> use development.sh script in repo root
 
 
-# check image size [1.5G]:
-> docker image inspect pcaster:1.0.0 --format='{{.Size}}' | numfmt --to=iec 
+# check image size [1.5G]
 
 
 # Example Commands:

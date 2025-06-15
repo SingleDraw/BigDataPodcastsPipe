@@ -60,82 +60,6 @@ RESOURCES+=(
 )
 
 
-
-
-
-
-
-# Import Azure Virtual Network
-# ----------------------------------------------------------
-# VNET_N="aca-vnet"
-# VNET_ID="$RG_ID/providers/Microsoft.Network/virtualNetworks/$VNET_N"
-# RESOURCES+=(
-#   "azurerm_virtual_network.vnet|az network vnet show --name \"$VNET_N\" --resource-group \"$RG_N\"|$VNET_ID"
-# )
-
-
-# SUBNET_N="aca-subnet"
-# SUBNET_ID="$RG_ID/providers/Microsoft.Network/virtualNetworks/$VNET_N/subnets/$SUBNET_N"
-# RESOURCES+=(
-#   "azurerm_subnet.aca_subnet|az network vnet subnet show --name \"$SUBNET_N\" --resource-group \"$RG_N\" --vnet-name \"$VNET_N\"|$SUBNET_ID"
-# )
-
-# # Import Azure Container App for Redis
-# CA_REDIS_N="whisperer-redis"
-# CA_REDIS_ID="$RG_ID/providers/Microsoft.App/containerApps/$CA_REDIS_N"
-# RESOURCES+=(
-#   "azurerm_container_app.redis|az containerapp show --name \"$CA_REDIS_N\" --resource-group \"$RG_N\"|$CA_REDIS_ID"
-# )
-
-# # Import Azure Container App for Worker
-# CA_WORKER_N="whisperer-worker"
-# CA_WORKER_ID="$RG_ID/providers/Microsoft.App/containerApps/$CA_WORKER_N"
-# RESOURCES+=(
-#   "azurerm_container_app.worker|az containerapp show --name \"$CA_WORKER_N\" --resource-group \"$RG_N\"|$CA_WORKER_ID"
-# )
-
-# CA_TEST_N="redis-test"
-# CA_TEST_ID="$RG_ID/providers/Microsoft.App/containerApps/$CA_TEST_N"
-# RESOURCES+=(
-#   "azurerm_container_app.redis_test|az containerapp show --name \"$CA_TEST_N\" --resource-group \"$RG_N\"|$CA_TEST_ID"
-# )
-
-# # Import ACA environment
-# ACA_ENV_N="whisperer-aca-env"
-# ACA_ENV_ID="$RG_ID/providers/Microsoft.App/managedEnvironments/$ACA_ENV_N"
-# RESOURCES+=(
-#   "azurerm_container_app_environment.aca_env|az containerapp env show --name \"$ACA_ENV_N\" --resource-group \"$RG_N\"|$ACA_ENV_ID"
-# )
-
-# # Import user-assigned managed identity for ACA
-# ACA_IDENTITY_N="whisperer-aca-identity"
-# ACA_IDENTITY_ID="$RG_ID/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$ACA_IDENTITY_N"
-# RESOURCES+=(
-#   "azurerm_user_assigned_identity.aca_identity|az identity show --name \"$ACA_IDENTITY_N\" --resource-group \"$RG_N\"|$ACA_IDENTITY_ID"
-# )
-# # Import role assignment for ACR Pull
-# ACR_PULL_ROLE_N="${RG_N}-aca-identity-acr-pull"
-# ACR_PULL_ROLE_ID="$RG_ID/providers/Microsoft.ContainerRegistry/registries/$CR_N/providers/Microsoft.Authorization/roleAssignments/$ACR_PULL_ROLE_N"
-# RESOURCES+=(
-#   "azurerm_role_assignment.aca_identity_acr_pull|az role assignment show --name \"$ACR_PULL_ROLE_N\" --scope \"/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.ContainerRegistry/registries/$CR_N\"|\"$ACR_PULL_ROLE_ID\""
-# )
-# # Import role assignment for Network Contributor
-# NETWORK_ROLE_N="${RG_N}-aca-identity-network"
-# NETWORK_ROLE_ID="$RG_ID/providers/Microsoft.Network/virtualNetworks/$VNET_N/providers/Microsoft.Authorization/roleAssignments/$NETWORK_ROLE_N"
-# RESOURCES+=(
-#   "azurerm_role_assignment.aca_identity_network|az role assignment show --name \"$NETWORK_ROLE_N\" --scope \"/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.Network/virtualNetworks/$VNET_N\"|\"$NETWORK_ROLE_ID\""
-# )
-
-
-
-
-
-
-
-
-
-
-
 # ---------------------------------------------------------
 # Import Azure Function App and related resources
 # ----------------------------------------------------------
@@ -156,24 +80,6 @@ RESOURCES+=(
 )
 
 
-
-
-
-# # Access Policy for Function App to Key Vault
-# resource "azurerm_key_vault_access_policy" "fn_access" {
-#     key_vault_id = var.key_vault_id
-#     tenant_id    = data.azurerm_client_config.current.tenant_id
-#     object_id    = azurerm_linux_function_app.aci_logs_uploader.identity[0].principal_id
-
-#     depends_on = [
-#         azurerm_linux_function_app.aci_logs_uploader,
-#         # azurerm_key_vault.kv
-#         null_resource.dependency_guard
-#     ]
-
-#     secret_permissions = ["Get"]
-# }
-
 # Import Access Policy for Data Factory to Key Vault
 APDFKV_N="${RG_N}-adf-kv-access-policy"
 APDFKV_ID="$RG_ID/providers/Microsoft.KeyVault/vaults/$KV_N/accessPolicies/$APDFKV_N"
@@ -182,18 +88,6 @@ RESOURCES+=(
 )
 
 
-# # Role Assignment for GitHub Actions to Function App
-# # - allows GitHub Actions to authenticate with the Function App
-# resource "azurerm_role_assignment" "github_deploy_rights" {
-#     scope                = azurerm_linux_function_app.aci_logs_uploader.id
-#     role_definition_name = "Contributor"           # Allows deployment rights
-#     principal_id         = var.github_oidc_sp_id   # GitHub OIDC Service Principal ID
-
-#     depends_on = [
-#         azurerm_linux_function_app.aci_logs_uploader
-#     ]
-# }
-
 # Import GitHub Actions role assignment for Function App
 GH_AF_ROLE_N="${RG_N}-gh-actions-fn-role"
 GH_AF_ROLE_ID="$RG_ID/providers/Microsoft.Web/sites/$AF_N/providers/Microsoft.Authorization/roleAssignments/$GH_AF_ROLE_N"
@@ -201,49 +95,12 @@ RESOURCES+=(
   "$MODULE.azurerm_role_assignment.github_actions_function_app|az role assignment show --name \"$GH_AF_ROLE_N\" --scope \"/subscriptions/$SUB_ID/resourceGroups/$RG_N/providers/Microsoft.Web/sites/$AF_N\"|\"$GH_AF_ROLE_ID\""
 )
 
-#  module.aci_logs_uploader.azurerm_service_plan.function_plan already managed. Skipping.
-# Checking module.aci_logs_uploader.azurerm_linux_function_app.aci_logs_uploader...
-# module.aci_logs_uploader.azurerm_linux_function_app.aci_logs_uploader already managed. Skipping.
-# Checking module.aci_logs_uploader.azurerm_key_vault_access_policy.adf_kv_access_policy...
-# module.aci_logs_uploader.azurerm_key_vault_access_policy.adf_kv_access_policy does not exist. Skipping.
-# Checking module.aci_logs_uploader.azurerm_role_assignment.github_actions_function_app...
-# module.aci_logs_uploader.azurerm_role_assignment.github_actions_function_app does not exist. Skipping.
-# Checking azurerm_data_factory_linked_service_azure_function.adf_fn_linked_service...
-# azurerm_data_factory_linked_service_azure_function.adf_fn_linked_service does not exist. Skipping.
-# WARNING: Failed to query 1164d2bf-54d1-4720-830f-185a2ff66ea2 by invoking Graph API. If you don't have permission to query Graph API, please specify --assignee-object-id and --assignee-principal-type.
-# WARNING: Assuming 1164d2bf-54d1-4720-830f-185a2ff66ea2 as an object ID.
-# Checking if module.aci_logs_uploader.azurerm_role_assignment.fn_storage_data_owner is already managed...
-
-# # Linked Service to Azure Data Factory for the Function App
-# resource "azurerm_data_factory_linked_service_azure_function" "aci_logs_fn" {
-#   name                = "AzureFunctionAciLogsLinkedService"
-#   data_factory_id     = azurerm_data_factory.adf.id
-#   url                 = "https://${azurerm_function_app.aci_logs_uploader.default_hostname}"
-
-#   # Option 1: Use direct function key
-#   key             = var.function_key
-
-#   # Option 2 (recommended): Use Key Vault
-#   # key_vault_key {
-#   #   linked_service_name = azurerm_data_factory_linked_service_azure_key_vault.example.name
-#   #   secret_name         = azurerm_key_vault_secret.function_key.name
-#   # }
-
-#   depends_on = [module.aci_logs_uploader]
-# }
 # Import Linked Service for Data Factory to Function App
-
 AF_LS_N="${RG_N}-adf-fn-linked-service"
 AF_LS_ID="$RG_ID/providers/Microsoft.DataFactory/factories/$ADF_N/linkedservices/$AF_LS_N"
 RESOURCES+=(
   "azurerm_data_factory_linked_service_azure_function.adf_fn_linked_service|az datafactory linked-service show --name \"$AF_LS_N\" --factory-name \"$ADF_N\" --resource-group \"$RG_N\"|\"$AF_LS_ID\""
 )
-
-
-
-
-
-
 
 #----------------------------------------------------------
 # > Execute the import commands for each resource
@@ -287,8 +144,6 @@ source "$UTILS_DIR/import-role-asgn-state.sh" "$SP_OBJECT_ID" \
   "aci_logs_uploader"
 
 
-
-
 # ------------------------------------------------
 # Function to import Key Vault secrets into Terraform state
 # ------------------------------------------------
@@ -307,21 +162,19 @@ import_kv_secret() {
     --query "id" -o tsv 2>/dev/null || echo "")
 
   if [[ -z "$secret_id" ]]; then
-    echo "❌ Secret '$secret_name' does not exist. Skipping." # RUNS FOR EVERY SECRET - DEBUG THIS
+    echo "Secret '$secret_name' does not exist. Skipping."
     return
   fi
 
-  echo "✅ Secret '$secret_name' exists in Azure."
+  echo "Secret '$secret_name' exists in Azure."
 
   if terraform state show "azurerm_key_vault_secret.$tf_name" &>/dev/null; then
-    echo "🔁 Secret '$tf_name' already managed by Terraform. Skipping import."
+    echo "Secret '$tf_name' already managed by Terraform. Skipping import."
   else
-    echo "📥 Importing secret '$secret_name' as '$tf_name'..."
+    echo "Importing secret '$secret_name' as '$tf_name'..."
     terraform import "azurerm_key_vault_secret.$tf_name" "$secret_id"
   fi
 }
-
-
 
 # Import ACR username secret
 ACR_USERNAME_SECRET_NAME="acr-admin-username"

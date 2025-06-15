@@ -86,12 +86,6 @@ fi
 
 echo "All prerequisites are met. Proceeding with service principal creation..."
 
-
-
-
-
-
-
 # Create the service principal and set it as a GitHub secret
 # echo "Setting GitHub secret AZURE_CREDENTIALS..."
 # gh secret set AZURE_CREDENTIALS \
@@ -118,7 +112,6 @@ if ! echo "$CREDENTIALS_JSON" | grep -q '"clientId"\s*:\s*"[^"]\+"'; then
 fi
 
 # Extract the values from the JSON output and set them as GitHub secrets
-# Using grep with Perl-compatible regex to extract values
 
 # Subscription ID
 gh secret set AZURE_SUBSCRIPTION_ID \
@@ -150,16 +143,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-
-
-
-
-
-
-# exit 0
-
-# Set credentials JSON as a GitHub secret for bootstrapping - it will be removed after the first run
-# This is useful for the bootstrap workflow to run without needing to manually set the secret
+# Set credentials JSON as a GitHub secret
 gh secret set AZURE_CREDENTIALS \
     --body "$CREDENTIALS_JSON" \
     --repo "$TF_VAR_GITHUB_REPOSITORY"
@@ -252,25 +236,3 @@ fi
 
 echo "Environment 'infra-ready' has been created successfully."
 
-
-
-# echo "Creating the 'images-ready' environment in GitHub repository '$TF_VAR_GITHUB_REPOSITORY'..."
-
-# gh api \
-#   -X PUT \
-#   -H "Accept: application/vnd.github+json" \
-#   repos/$TF_VAR_GITHUB_REPOSITORY/environments/infra-ready
-
-
-# if [ $? -ne 0 ]; then
-#     echo "Error: Failed to create the 'infra-ready' environment. Please check your permissions and try again."
-#     exit 1
-# fi
-
-# gh variable set INFRA_READY --env infra-ready --body "false"
-# if [ $? -ne 0 ]; then
-#     echo "Error: Failed to set the INFRA_READY variable in the 'infra-ready' environment. Please check your permissions and try again."
-#     exit 1
-# fi
-
-# echo "Environment 'infra-ready' has been created successfully."

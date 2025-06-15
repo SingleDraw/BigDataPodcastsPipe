@@ -113,55 +113,8 @@ def transcribe(
         # Upload the output file to the storage sink
         self.upload_output_file()
 
-
-
-
-
-
-
-        # Upload result - always to storage sink
-        # # out_bucket, out_key = parse_s3_uri(output)
-
-        # <optional_conn_name>+<conn_type>://<storage_unit>/<key_path>
-        # example: default+s3://my-bucket/my-key
-        # or: default+az://whisperer/transcriptions/output.txt
-
-            # conn_name, conn_type, storage_unit, key_path = parse_conn_uri(
-            #     uri=self.sink, # output
-            #     allow_http=False  # Output must be a storage URI, not HTTP
-            # )
-
-            # # Use the storage client to download the file
-            # self.sink_storage = self.storages.get_client(
-            #     name=conn_name,
-            #     type=conn_type
-            # )
-
-            # # Upload the output file to the storage sink
-            # self.sink_storage.upload_file(
-            #     source_path=self.local_output,
-            #     storage_unit=storage_unit,
-            #     storage_path=key_path
-            # )
-
-
-        # # Upload result - always to storage sink
-        # self.storage.upload_file(
-        #         source_path=self.local_output, 
-        #         storage_unit=out_bucket, 
-        #         storage_path=out_key
-        # )
+        # Cleanup chunk files
         os.remove(self.local_output)  # Cleanup local output file
-
-
-
-
-
-
-
-
-
-
 
 
         r.set(f"task_progress:{self.task_id}", "--complete")
@@ -171,8 +124,6 @@ def transcribe(
 
 
     # Handle specific exceptions
-
-
     except SoftTimeLimitExceeded as e:
         logger.warning(f"Task {task_id} exceeded soft time limit - NOT completing")
         
@@ -188,15 +139,7 @@ def transcribe(
             )
         else:
             logger.error(f"Task {task_id} timed out after {_max_retries} attempts")
-
-
-
-            # Cleanup any partial work
-            """
-            General cleanup for any partial work
-            """
-
-
+            # TODO: Cleanup any partial work
             raise e
     
     except StorageDownloadError as e:
@@ -206,16 +149,7 @@ def transcribe(
                 countdown=_default_retry_delay * (2 ** self.request.retries),
                 exc=e
             )
-        
-
-
-        # Cleanup any partial work
-        """
-        General cleanup for any partial work
-        """
-
-
-
+        # TODO: Cleanup any partial work
         raise e
 
     except StorageUploadError as e:
@@ -225,15 +159,7 @@ def transcribe(
                 countdown=_default_retry_delay * (2 ** self.request.retries),
                 exc=e
             )
-        # Cleanup any partial work
-
-
-        """
-        General cleanup for any partial work
-        """
-
-
-
+        # TODO: Cleanup any partial work
         raise e
 
     except WorkerLostError:
@@ -253,10 +179,6 @@ def transcribe(
             )
         else:
             logger.error(f"Task {task_id} failed after {_max_retries} retries")
-
-
-
-
 
             """
             General cleanup for any partial work
@@ -288,11 +210,6 @@ def transcribe(
                     os.remove(chunk_file)
                 except Exception as e:
                     logger.warning(f"Failed to remove chunk file {chunk_file}: {e}")
-
-
-
-
-
 
             raise exc  # Fatal error, do not retry
 

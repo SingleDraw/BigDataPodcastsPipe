@@ -8,58 +8,6 @@ from sparknlp.base import *
 from sparknlp.annotator import *
 from pyspark.sql.functions import monotonically_increasing_id
 
-"""
-Spark NLP pipeline for preprocessing paragraphs.
-
-spark-submit \
-  --master spark://<spark-master>:7077 \
-  --deploy-mode cluster \
-  --jars /app/jars/spark-nlp_2.12-5.1.0.jar \
-  nlp_job.py \
-  --input /data/transcriptions/joe.json \
-  --output /data/cleaned/joe_cleaned/
-
-  
-# Option 1: Process All Files in One Spark Job
-spark-submit ... nlp_job.py \
-  --input "/data/transcriptions/*.json" \
-  --output /data/cleaned/all_cleaned/
-
-# Option 2: Process Each File in Its Own Job (Parallel Jobs)
-for f in /data/transcriptions/*.json; do
-  out="/data/cleaned/$(basename "$f" .json)_cleaned/"
-  spark-submit ... nlp_job.py --input "$f" --output "$out" &
-done
-wait
-
-# Option 3: Provide a List of Files
-spark-submit ... nlp_job.py \
-  --inputs "/data/transcriptions/1.json,/data/transcriptions/2.json" \
-  --output /data/cleaned/all_cleaned/
-
-# And parse the list:
-inputs = args.inputs.split(",")
-df = spark.read.json(inputs) # df = spark.read.json(["file1.json", "file2.json", "file3.json"])
-
-## Now Spark treats it as one unified DataFrame. 
-# To distinguish between the original files in the output, 
-# you need to explicitly track file-level metadata, for example:
-
-# Option 1: Add file name as a column
-from pyspark.sql.functions import input_file_name
-df = spark.read.json(["file1.json", "file2.json", "file3.json"])
-df = df.withColumn("source_file", input_file_name())
-
-# Option 2: Add ID inside each file (if you control file content)
-# Each input JSON can contain a field like "file_id": "123", and you simply preserve that during processing.
-
-# Option 3: Partition output by input source
-# This creates folders like output/source_file=file1.json/ etc.
-df.write.partitionBy("source_file").json("output/")
-
-
-"""
-
 
 # Parse CLI arguments
 parser = argparse.ArgumentParser()
@@ -90,23 +38,6 @@ logger.error(f"Reading input from {args.input}...")
 #df = spark.read.json(args.input).withColumn("id", monotonically_increasing_id())
 df = spark.read.option("multiLine", True).json(args.input)
 
-# # df show 5 rows
-# print("Input DataFrame:")
-# df.show(5, truncate=False)
-# if df.isEmpty():
-#     print(f"No data found in {args.input}. Exiting.")
-# print(f"Read from {args.input} successfully.")
-
-# Spark NLP pipeline
-"""
-Set up Spark NLP pipeline stages for:
-    - DocumentAssembler: Converts text to document format (required by Spark NLP)
-    - Tokenizer: Splits text into tokens (words)
-    - Normalizer: Cleans tokens (lowercase, remove punctuation)
-    - StopWordsCleaner: Removes common stopwords (e.g., "the", "is")
-    - Lemmatizer: Reduces words to their base form (e.g., "running" -> "run")
-    - Finisher: Converts annotations back to text format (e.g., list of words)
-"""
 
 document_assembler = (
         DocumentAssembler()
@@ -149,12 +80,6 @@ finisher = (
             .setCleanAnnotations(True)
     )
 
-print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>> Setting up Spark NLP pipeline stages...")
-print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>> Setting up Spark NLP pipeline stages...")
-print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>> Setting up Spark NLP pipeline stages...")
-print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>> Setting up Spark NLP pipeline stages...")
-print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>> Setting up Spark NLP pipeline stages...")
-
 pipeline = Pipeline(stages=[
     document_assembler,
     tokenizer,
@@ -183,6 +108,7 @@ except Exception as e:
 # df.write.parquet("wasb://mycontainer@devstoreaccount1.blob.core.windows.net/output")
 
 ### Write Parquet output
+# args.output = "abfs://whisper@devstoreaccount1.dfs.core.windows.net/output" # Use Azure Blob Storage (ABFS) for output
 
 import os
 import shutil
