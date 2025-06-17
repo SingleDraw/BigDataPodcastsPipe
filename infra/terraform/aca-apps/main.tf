@@ -99,7 +99,10 @@ resource "azurerm_container_app" "redis" {
       }      
       
       # Add Redis configuration for better connectivity
-      args = ["redis-server", "--bind", "0.0.0.0", "--protected-mode", "no"]
+      # args = ["redis-server", "--bind", "0.0.0.0", "--protected-mode", "no"]
+      
+      # Simplified Redis configuration for Container Apps
+      args = ["redis-server", "--bind", "0.0.0.0", "--protected-mode", "no", "--tcp-keepalive", "60"]
     }
 
     min_replicas = 1
@@ -181,7 +184,9 @@ resource "azurerm_container_app" "whisperer_worker" {
       metadata = {
         "type"            = "redis"
         # Use the full internal FQDN for the scaler
-        "address"         = "whisperer-redis.internal.${data.azurerm_container_app_environment.aca_env.default_domain}:6379"
+        "address"         = "whisperer-redis:6379"  # Use consistent addressing
+        "databaseIndex"   = "0"  # Specify database index
+        # "address"         = "whisperer-redis.internal.${data.azurerm_container_app_environment.aca_env.default_domain}:6379"
         "listName"        = "celery"
         "listLength"      = "5"
         "activationValue" = "1"
