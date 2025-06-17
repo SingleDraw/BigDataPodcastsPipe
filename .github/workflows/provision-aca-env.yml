@@ -54,11 +54,28 @@ jobs:
 
     - name: Remove Subnet Delegation
       run: |
-        az network vnet subnet update \
+        SUBNET_EXISTS=$(az network vnet subnet show \
           --name aca-subnet \
           --resource-group ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} \
           --vnet-name aca-vnet \
-          --remove delegations
+          --query "name" -o tsv 2>/dev/null || echo "")
+
+        if [ -n "$SUBNET_EXISTS" ]; then
+          DELEGATIONS=$(az network vnet subnet show \
+            --name aca-subnet \
+            --resource-group ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} \
+            --vnet-name aca-vnet \
+            --query "delegations" -o tsv)
+          
+          if [ "$DELEGATIONS" != "None" ] && [ -n "$DELEGATIONS" ]; then
+            az network vnet subnet update \
+              --name aca-subnet \
+              --resource-group ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} \
+              --vnet-name aca-vnet \
+              --remove delegations
+          fi
+        fi
+
 
     - name: Init main Terraform with remote backend
       run: |
