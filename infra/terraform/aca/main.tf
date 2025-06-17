@@ -32,7 +32,6 @@ data "azuread_service_principal" "github_oidc" {
 data "azurerm_key_vault" "kv" {
   name                = "${var.resource_group_name}-kv"
   resource_group_name = data.azurerm_resource_group.rg.name
-  tenant_id           = data.azurerm_client_config.current.tenant_id
 }
 
 # Store ACR credentials in Key Vault
