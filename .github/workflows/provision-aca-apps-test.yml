@@ -1,7 +1,7 @@
-name: Provision Azure Container Apps Infra
+name: Provision Azure Container Apps Containers For Testing Redis Connectivity
 
 #---------------------------------------------------------------
-# Azure Container Apps (ACA) infrastructure
+# Azure Container Apps (ACA) Test Containers - Test Redis Connectivity
 #
 # It initializes Terraform with a remote backend,
 # runs a script to import existing resources,
@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: infra/terraform/aca-env
+        working-directory: infra/terraform/aca-apps-test
 
     steps:
     - name: Checkout code
@@ -52,47 +52,19 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: Remove Subnet Delegation
-      run: |
-        SUBNET_EXISTS=$(az network vnet subnet show \
-          --name aca-subnet \
-          --resource-group ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} \
-          --vnet-name aca-vnet \
-          --query "name" -o tsv 2>/dev/null || echo "")
-
-        if [ -n "$SUBNET_EXISTS" ]; then
-          DELEGATIONS=$(az network vnet subnet show \
-            --name aca-subnet \
-            --resource-group ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} \
-            --vnet-name aca-vnet \
-            --query "delegations" -o tsv)
-          
-          if [ "$DELEGATIONS" != "None" ] && [ -n "$DELEGATIONS" ]; then
-            az network vnet subnet update \
-              --name aca-subnet \
-              --resource-group ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} \
-              --vnet-name aca-vnet \
-              --remove delegations
-          fi
-        fi
-
-
     - name: Init main Terraform with remote backend
       run: |
         terraform init \
           -backend-config="resource_group_name=${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}" \
           -backend-config="storage_account_name=${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}" \
           -backend-config="container_name=tfstate" \
-          -backend-config="key=aca.tfstate"
-
-    # - name: Unlock Terraform state
-    #   run: terraform force-unlock -force 189ec676-5548-1150-b46e-ef652f70ebdf
+          -backend-config="key=aca_apps.tfstate"
 
     - name: Make script executable
-      run: chmod +x "$PROJECT_ROOT/infra/scripts/import-aca-env.sh"
+      run: chmod +x "$PROJECT_ROOT/infra/scripts/import-aca-apps-test.sh"
 
     - name: Run conditional import script
-      run: "$PROJECT_ROOT/infra/scripts/import-aca-env.sh"
+      run: "$PROJECT_ROOT/infra/scripts/import-aca-apps-test.sh"
       shell: bash
 
     - name: Terraform Plan

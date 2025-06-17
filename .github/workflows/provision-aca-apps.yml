@@ -1,7 +1,7 @@
 name: Provision Azure Container Apps Containers
 
 #---------------------------------------------------------------
-# Azure Container Apps (ACA) containers
+# Azure Container Apps (ACA) Containers
 #
 # It initializes Terraform with a remote backend,
 # runs a script to import existing resources,
@@ -30,13 +30,16 @@ env:
     TF_VAR_azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
     TF_VAR_azure_object_id: ${{ secrets.AZURE_OBJECT_ID }}
     TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+    
+    # Image for ACA Whisperer
+    TF_VAR_brick_whisperer_image_name: ${{ secrets.BRICK_WHISPERER_IMAGE_NAME }}
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: infra/terraform/aca-containers-test
+        working-directory: infra/terraform/aca-apps
 
     steps:
     - name: Checkout code

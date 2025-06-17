@@ -28,13 +28,6 @@ RESOURCES+=(
   "azurerm_container_app.redis_test|az containerapp show --name \"$CA_TEST_N\" --resource-group \"$RG_N\"|$CA_TEST_ID"
 )
 
-# Import Azure Container App for Worker
-CA_WORKER_N="whisperer-worker"
-CA_WORKER_ID="$RG_ID/providers/Microsoft.App/containerApps/$CA_WORKER_N"
-RESOURCES+=(
-  "azurerm_container_app.worker|az containerapp show --name \"$CA_WORKER_N\" --resource-group \"$RG_N\"|$CA_WORKER_ID"
-)
-
 # > Execute the import commands for each resource
 #----------------------------------------------------------
 for entry in "${RESOURCES[@]}"; do

@@ -9,15 +9,16 @@ TAG_MODE="latest" # Default tag mode for build and push workflows
 
 # Map for GitHub Actions workflows
 declare -A workflow_map=(
-    [test]="azurelogin.yml"                                   # -- Login to Azure - test workflow  
-    [cleanacr]="utils.clean-acr-registry.yml"                 # -- Clean up Azure Container Registry
-    [bootstrap]="bootstrap.yml"             # Bootstrap workflow - creates the initial setup    
-    [infra]="provision.yml"                 # Provisioning resources - triggered by bootstrap workflow too
-    [adf]="deploy-adf-pipeline.yml"         # Deploy Azure Data Factory pipeline    
-    [pipetest]="deploy-adf-pipetest.yml"        # -- Deploy ADF pipeline for test
-    [azfnlogs]="deploy-az-fn-logs-uploader.yml" # Deploy Azure Function for logs uploader
-    [aca_env]="provision-aca-env.yml"         # Provision Azure Container Apps environment
-    [aca_apps]="provision-aca-apps.yml"         # Provision Azure Container Apps environment
+    [test]="azurelogin.yml"                             # -- Login to Azure - test workflow  
+    [cleanacr]="utils.clean-acr-registry.yml"           # -- Clean up Azure Container Registry
+    [bootstrap]="bootstrap.yml"                         # Bootstrap workflow - creates the initial setup    
+    [infra]="provision.yml"                             # Provisioning resources - triggered by bootstrap workflow too
+    [adf]="deploy-adf-pipeline.yml"                     # Deploy Azure Data Factory pipeline    
+    [pipetest]="deploy-adf-pipetest.yml"                # -- Deploy ADF pipeline for test
+    [azfnlogs]="deploy-az-fn-logs-uploader.yml"         # Deploy Azure Function for logs uploader
+    [aca_env]="provision-aca-env.yml"                   # Provision Azure Container Apps environment
+    [aca_apps_test]="provision-aca-apps-test.yml"       # -- Spins up 2 ACA apps for testing (Redis and Redis Test - connectivity testing)
+    [aca_apps]="provision-aca-apps.yml"                 # Spins up Whisperer ACA apps (Redis, Submitter, Worker(s))
 )
 
 # Map for build and push workflows - these use tagMode flag
