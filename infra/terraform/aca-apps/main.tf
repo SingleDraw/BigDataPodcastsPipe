@@ -139,10 +139,37 @@ resource "azurerm_container_app" "whisperer_worker" {
       cpu    = 1
       memory = "2.0Gi"
 
+      command = ["whisperer-worker"]
+
       env {
         name  = "CELERY_BROKER_URL"
-        value = "redis://whisperer-redis:6379"
+        value = "redis://whisperer-redis:6379/0"  # Use the internal FQDN for Redis
       }
+
+      env {
+        name  = "AZURE_STORAGE_ACCOUNT_NAME"
+        value = var.storage_account_name
+      }
+      env {
+        # For Connection String approach - refactor Whisperer to use Key Vault or IAM + DefaultCredential
+        name  = "AZURE_STORAGE_ACCOUNT_KEY"
+        value = "placeholder-for-connection-string"  # Replace with actual connection string or use Key Vault
+      }
+
+      # Other environment variables
+      env {
+        name  = "TASK_TIME_LIMIT"
+        value = "1000"
+      }
+      env {
+        name  = "TRANSCRIPTION_LANGUAGE"
+        value = "en"
+      }
+      env {
+        name  = "TZ"
+        value = "Europe/Warsaw"
+      }
+
     }
 
     min_replicas = 0
