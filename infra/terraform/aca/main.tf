@@ -69,7 +69,7 @@ resource "azurerm_subnet" "aca_subnet" {
   name                 = "aca-subnet"
   resource_group_name  = data.azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.0.0.0/27"]
+  address_prefixes     = ["10.0.0.0/21"]
 
   # Delegate the subnet to Azure Container Apps service
   delegation {
