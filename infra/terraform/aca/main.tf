@@ -69,24 +69,24 @@ resource "azurerm_subnet" "aca_subnet" {
   name                 = "aca-subnet"
   resource_group_name  = data.azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.0.0.0/21"]
+  address_prefixes     = ["10.0.0.0/23"]
 
-  # Delegate the subnet to Azure Container Apps service
-  delegation {
-    name = "acaDelegation"
+  # # Delegate the subnet to Azure Container Apps service
+  # delegation {
+  #   name = "acaDelegation"
 
-    service_delegation {
-      name = "Microsoft.App/environments" # - this throws error: 
-      # | 
-      # | Status: "Failed"
-      # | Code: "ManagedEnvironmentSubnetIsDelegated"
-      # | Message: "AgentPoolProfile subnet with id /subscriptions/***/resourceGroups/***/providers/Microsoft.Network/virtualNetworks/aca-vnet/subnets/aca-subnet cannot be used as it's a delegated subnet. Please check https://aka.ms/adv-network-prerequest for more details.\r\nStatus: 400 (Bad Request)\r\nErrorCode: SubnetIsDelegated\r\n\r\nContent:\r\n{\n  \"code\": \"SubnetIsDelegated\",\n  \"details\": null,\n  \"message\": \"AgentPoolProfile subnet with id /subscriptions/***/resourceGroups/***/providers/Microsoft.Network/virtualNetworks/aca-vnet/subnets/aca-subnet cannot be used as it's a delegated subnet. Please check https://aka.ms/adv-network-prerequest for more details.
-      # name = "Microsoft.App/containerApps"
-      actions = [
-        "Microsoft.Network/virtualNetworks/subnets/action"
-      ]
-    }
-  }
+  #   service_delegation {
+  #     name = "Microsoft.App/environments" # - this throws error: 
+  #     # | 
+  #     # | Status: "Failed"
+  #     # | Code: "ManagedEnvironmentSubnetIsDelegated"
+  #     # | Message: "AgentPoolProfile subnet with id /subscriptions/***/resourceGroups/***/providers/Microsoft.Network/virtualNetworks/aca-vnet/subnets/aca-subnet cannot be used as it's a delegated subnet. Please check https://aka.ms/adv-network-prerequest for more details.\r\nStatus: 400 (Bad Request)\r\nErrorCode: SubnetIsDelegated\r\n\r\nContent:\r\n{\n  \"code\": \"SubnetIsDelegated\",\n  \"details\": null,\n  \"message\": \"AgentPoolProfile subnet with id /subscriptions/***/resourceGroups/***/providers/Microsoft.Network/virtualNetworks/aca-vnet/subnets/aca-subnet cannot be used as it's a delegated subnet. Please check https://aka.ms/adv-network-prerequest for more details.
+  #     # name = "Microsoft.App/containerApps"
+  #     actions = [
+  #       "Microsoft.Network/virtualNetworks/subnets/join/action"
+  #     ]
+  #   }
+  # }
 }
 
 # 3. Create ACA environment for Big Data Processing 🌍
