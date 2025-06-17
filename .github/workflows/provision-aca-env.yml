@@ -1,0 +1,76 @@
+name: Provision Azure Container Apps Infra
+
+#---------------------------------------------------------------
+# Azure Container Apps (ACA) infrastructure
+#
+# It initializes Terraform with a remote backend,
+# runs a script to import existing resources,
+# applies the Terraform configuration.
+#---------------------------------------------------------------
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+    TF_LOG: ERROR
+    PROJECT_ROOT: ${{ github.workspace }}
+    TF_VAR_github_token: ${{ secrets.GH_PAT_TOKEN }}
+    TF_VAR_github_owner: ${{ github.repository_owner }}
+    TF_VAR_github_repository: ${{ github.event.repository.name }}
+    TF_VAR_resource_group_name: ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} 
+    TF_VAR_container_registry_name: ${{ secrets.TF_VAR_CONTAINER_REGISTRY_NAME }}
+    TF_VAR_location: ${{ secrets.TF_VAR_LOCATION }}                       
+    TF_VAR_storage_account_name: ${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}
+
+    TF_VAR_subscription_id: ${{ secrets.TF_VAR_SUBSCRIPTION_ID }}
+    TF_VAR_azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+    TF_VAR_azure_object_id: ${{ secrets.AZURE_OBJECT_ID }}
+    TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/terraform/main
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Azure Login via OIDC
+      uses: azure/login@v2 # Use v2 for OIDC support
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Init main Terraform with remote backend
+      run: |
+        terraform init \
+          -backend-config="resource_group_name=${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }}" \
+          -backend-config="storage_account_name=${{ secrets.TF_VAR_STORAGE_ACCOUNT_NAME }}" \
+          -backend-config="container_name=tfstate" \
+          -backend-config="key=aca.tfstate"
+
+    - name: Make script executable
+      run: chmod +x "$PROJECT_ROOT/infra/scripts/import-aca.sh"
+
+    - name: Run conditional import script
+      run: "$PROJECT_ROOT/infra/scripts/import-aca.sh"
+      shell: bash
+
+    - name: Terraform Plan
+      run: terraform plan
+
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
+
+        

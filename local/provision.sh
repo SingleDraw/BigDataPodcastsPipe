@@ -16,6 +16,7 @@ declare -A workflow_map=(
     [adf]="deploy-adf-pipeline.yml"         # Deploy Azure Data Factory pipeline    
     [pipetest]="deploy-adf-pipetest.yml"        # -- Deploy ADF pipeline for test
     [azfnlogs]="deploy-az-fn-logs-uploader.yml" # Deploy Azure Function for logs uploader
+    [aca_env]="provision-aca-env.yml"         # Provision Azure Container Apps environment
 )
 
 # Map for build and push workflows - these use tagMode flag
