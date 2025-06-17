@@ -155,8 +155,9 @@ resource "azurerm_container_app" "redis_test" {
       # Updated command with better error handling and debugging
       command = [
         "sh", "-c", 
-        "apt-get update && apt-get install -y dnsutils netcat && \
         <<-EOT
+        # Install netcat for testing connectivity
+        apt-get update && apt-get install -y dnsutils netcat-openbsd redis-tools
         echo "Starting Redis connectivity test..."
         while true; do 
           echo "Attempting to connect to whisperer-redis:6379..."
