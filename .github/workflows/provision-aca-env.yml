@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: infra/terraform/main
+        working-directory: infra/terraform/aca
 
     steps:
     - name: Checkout code
