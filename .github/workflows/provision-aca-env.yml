@@ -61,7 +61,8 @@ jobs:
           -backend-config="key=aca.tfstate"
 
     - name: Unlock Terraform state
-      run: terraform force-unlock 189ec676-5548-1150-b46e-ef652f70ebdf
+      run: terraform force-unlock -force 189ec676-5548-1150-b46e-ef652f70ebdf
+      # run: echo yes | terraform force-unlock 189ec676-5548-1150-b46e-ef652f70ebdf
 
     - name: Make script executable
       run: chmod +x "$PROJECT_ROOT/infra/scripts/import-aca.sh"
