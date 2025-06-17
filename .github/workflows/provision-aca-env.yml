@@ -58,7 +58,7 @@ jobs:
           --name aca-subnet \
           --resource-group ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} \
           --vnet-name aca-vnet \
-          --clear delegations
+          --remove delegations
 
     - name: Init main Terraform with remote backend
       run: |
