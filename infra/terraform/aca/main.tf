@@ -61,14 +61,14 @@ data "azurerm_key_vault_secret" "blob_connection_string" {
 resource "azurerm_virtual_network" "vnet" {
   name                = "aca-vnet"
   address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location
+  resource_group_name = data.azurerm_resource_group.rg.name
 }
 
 # 2. Create Azure Subnet for ACA 🕸️
 resource "azurerm_subnet" "aca_subnet" {
   name                 = "aca-subnet"
-  resource_group_name  = azurerm_resource_group.rg.name
+  resource_group_name  = data.azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.0.0/23"]
 
@@ -77,7 +77,7 @@ resource "azurerm_subnet" "aca_subnet" {
     name = "acaDelegation"
 
     service_delegation {
-      name = "Microsoft.ContainerInstance/containerGroups"
+      name = "Microsoft.App/environments"  
       actions = [
         "Microsoft.Network/virtualNetworks/subnets/action"
       ]
@@ -109,7 +109,7 @@ resource "azurerm_user_assigned_identity" "aca_identity" {
 
 # Assign AcrPull role to managed identity 🎖️
 resource "azurerm_role_assignment" "aca_identity_acr_pull" {
-  scope                = azurerm_container_registry.acr.id
+  scope                = data.azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_user_assigned_identity.aca_identity.principal_id
 
