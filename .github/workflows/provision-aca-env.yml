@@ -52,6 +52,14 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+    - name: Remove Subnet Delegation
+      run: |
+        az network vnet subnet update \
+          --name aca-subnet \
+          --resource-group ${{ secrets.TF_VAR_RESOURCE_GROUP_NAME }} \
+          --vnet-name aca-vnet \
+          --clear delegations
+
     - name: Init main Terraform with remote backend
       run: |
         terraform init \
