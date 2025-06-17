@@ -28,6 +28,13 @@ RESOURCES+=(
   "azurerm_container_app.redis_test|az containerapp show --name \"$CA_TEST_N\" --resource-group \"$RG_N\"|$CA_TEST_ID"
 )
 
+
+CA_RED_TEST_N="redis_web_test"
+CA_RED_TEST_ID="$RG_ID/providers/Microsoft.App/containerApps/$CA_RED_TEST_N"
+RESOURCES+=(
+  "azurerm_container_app.redis_web_test|az containerapp show --name \"$CA_RED_TEST_N\" --resource-group \"$RG_N\"|$CA_RED_TEST_ID"
+)
+
 # # Import Azure Container App for Worker
 # CA_WORKER_N="whisperer-worker"
 # CA_WORKER_ID="$RG_ID/providers/Microsoft.App/containerApps/$CA_WORKER_N"

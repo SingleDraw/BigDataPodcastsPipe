@@ -155,6 +155,7 @@ resource "azurerm_container_app" "redis_test" {
       # Updated command with better error handling and debugging
       command = [
         "sh", "-c", 
+        "apt-get update && apt-get install -y dnsutils netcat && \
         <<-EOT
         echo "Starting Redis connectivity test..."
         while true; do 
