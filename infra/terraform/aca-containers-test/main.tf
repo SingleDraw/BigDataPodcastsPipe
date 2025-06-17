@@ -62,6 +62,7 @@ data "azurerm_key_vault_secret" "blob_connection_string" {
 # 2. Create Azure Subnet for ACA 🕸️
 data "azurerm_subnet" "aca_subnet" {
   name                 = "aca-subnet"
+  virtual_network_name = "aca-vnet"  # Ensure this matches your VNet name
   resource_group_name  = data.azurerm_resource_group.rg.name
 }
 
