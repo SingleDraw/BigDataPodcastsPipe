@@ -78,13 +78,6 @@ data "azurerm_user_assigned_identity" "aca_identity" {
   resource_group_name = data.azurerm_resource_group.rg.name
 }
 
-
-
-# ------------------------------------------------------------------------
-# ------------------------------------------------------------------------
-# ------------------------------------------------------------------------
-# ------------------------------------------------------------------------
-
 #----------------------------------------------------------------------------------
 # Manage new Azure resources for the BigDataPipe project
 #----------------------------------------------------------------------------------
@@ -113,8 +106,13 @@ resource "azurerm_container_app" "redis" {
       env {
         name  = "ALLOW_EMPTY_PASSWORD"
         value = "yes"
-      }
+      }      
+      
+      # Add Redis configuration for better connectivity
+      args = ["redis-server", "--bind", "0.0.0.0", "--protected-mode", "no"]
     }
+
+
 
     min_replicas = 1
     max_replicas = 1
@@ -129,6 +127,7 @@ resource "azurerm_container_app" "redis" {
   ingress {
     external_enabled = false
     target_port      = 6379
+    transport        = "tcp" # Use TCP for Redis
 
     traffic_weight {
       latest_revision = true
@@ -153,9 +152,35 @@ resource "azurerm_container_app" "redis_test" {
       cpu    = 0.25
       memory = "0.5Gi"
 
+      # Updated command with better error handling and debugging
       command = [
         "sh", "-c", 
-        "while true; do redis-cli -h whisperer-redis -p 6379 ping && echo 'Redis is reachable' || echo 'Redis connection failed'; sleep 10; done"
+        <<-EOT
+        echo "Starting Redis connectivity test..."
+        while true; do 
+          echo "Attempting to connect to whisperer-redis:6379..."
+          
+          # Test basic connectivity first
+          if nc -z whisperer-redis 6379 2>/dev/null; then
+            echo "Port 6379 is reachable on whisperer-redis"
+            
+            # Test Redis ping
+            if redis-cli -h whisperer-redis -p 6379 ping; then
+              echo "Redis PING successful at $(date)"
+            else
+              echo "Redis PING failed at $(date)"
+            fi
+          else
+            echo "Cannot reach whisperer-redis:6379 at $(date)"
+            
+            # Try to resolve the hostname
+            nslookup whisperer-redis || echo "DNS resolution failed"
+          fi
+          
+          echo "Waiting 30 seconds before next test..."
+          sleep 30
+        done
+        EOT
       ]
     }
 
@@ -165,6 +190,92 @@ resource "azurerm_container_app" "redis_test" {
 }
 
 
+# Optional: Add a simple web app to test Redis connectivity via HTTP
+resource "azurerm_container_app" "redis_web_test" {
+  name                         = "redis-web-test"
+  container_app_environment_id = data.azurerm_container_app_environment.aca_env.id
+  resource_group_name          = data.azurerm_resource_group.rg.name
+
+  revision_mode = "Single"
+  depends_on    = [azurerm_container_app.redis]
+
+  template {
+    container {
+      name   = "redis-web-test"
+      image  = "redis:7.2-bookworm"
+      cpu    = 0.25
+      memory = "0.5Gi"
+
+      command = [
+        "sh", "-c", 
+        <<-EOT
+        # Install netcat for testing
+        apt-get update && apt-get install -y netcat-openbsd curl
+        
+        # Create a simple HTTP server that tests Redis
+        cat > /tmp/test_server.py << 'EOF'
+import http.server
+import socketserver
+import subprocess
+import json
+from datetime import datetime
+
+class RedisTestHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/redis-test':
+            try:
+                result = subprocess.run(
+                    ['redis-cli', '-h', 'whisperer-redis', '-p', '6379', 'ping'],
+                    capture_output=True, text=True, timeout=5
+                )
+                
+                response = {
+                    'timestamp': datetime.now().isoformat(),
+                    'redis_host': 'whisperer-redis:6379',
+                    'ping_result': result.stdout.strip(),
+                    'success': result.returncode == 0,
+                    'error': result.stderr if result.stderr else None
+                }
+            except Exception as e:
+                response = {
+                    'timestamp': datetime.now().isoformat(),
+                    'redis_host': 'whisperer-redis:6379',
+                    'success': False,
+                    'error': str(e)
+                }
+            
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(response, indent=2).encode())
+        else:
+            super().do_GET()
+
+PORT = 8080
+with socketserver.TCPServer(("", PORT), RedisTestHandler) as httpd:
+    print(f"Server running on port {PORT}")
+    httpd.serve_forever()
+EOF
+        
+        python3 /tmp/test_server.py
+        EOT
+      ]
+    }
+
+    min_replicas = 1
+    max_replicas = 1
+  }
+
+  ingress {
+    external_enabled = true
+    target_port      = 8080
+
+    traffic_weight {
+      latest_revision = true
+      percentage      = 100
+    }
+  }
+}
 
 
 # 1. ACA - Azure Container Apps for Big Data Processing
