@@ -99,12 +99,7 @@ resource "azurerm_container_app" "redis" {
       }      
       
       # Redis configuration for Container Apps
-      args = [
-        "redis-server", 
-        "--bind", "0.0.0.0", 
-        "--protected-mode", "no", 
-        "--tcp-keepalive", "60"
-      ]
+      args = ["redis-server", "--bind", "0.0.0.0", "--protected-mode", "no", "--tcp-keepalive", "60"]
     }
 
     min_replicas = 1
@@ -139,7 +134,7 @@ resource "azurerm_container_app" "whisperer_worker" {
 
   template {
     container {
-      name   = "worker"
+      name   = "whisperer-worker"
       image  = "${data.azurerm_container_registry.acr.login_server}/${var.brick_whisperer_image_name}:latest"
       cpu    = 1
       memory = "2.0Gi"
