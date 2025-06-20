@@ -99,8 +99,8 @@ resource "azurerm_container_app" "redis" {
       }      
       
       # Redis configuration for Container Apps
-      # args = ["redis-server", "--bind", "0.0.0.0", "--protected-mode", "no", "--tcp-keepalive", "60"]
-      args = ["redis-server", "--protected-mode", "no", "--tcp-keepalive", "60"]
+      args = ["redis-server", "--bind", "0.0.0.0", "--protected-mode", "no", "--tcp-keepalive", "60"]
+      # args = ["redis-server", "--protected-mode", "no", "--tcp-keepalive", "60"]
     }
 
     min_replicas = 1
@@ -108,16 +108,16 @@ resource "azurerm_container_app" "redis" {
 
   }
 
-  ingress {
-    external_enabled = false  # Internal access only
-    target_port      = 6379
-    transport        = "tcp"  # TCP is required for Redis
+  # ingress {
+  #   external_enabled = false  # Internal access only
+  #   target_port      = 6379
+  #   transport        = "tcp"  # TCP is required for Redis
 
-    traffic_weight {
-      latest_revision = true
-      percentage      = 100
-    }
-  }
+  #   traffic_weight {
+  #     latest_revision = true
+  #     percentage      = 100
+  #   }
+  # }
 }
 
 # 2. Create Azure Container App for Whisperer Worker
