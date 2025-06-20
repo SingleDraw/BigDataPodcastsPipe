@@ -146,6 +146,26 @@ resource "azurerm_container_app" "whisperer_worker" {
         value = "redis://whisperer-redis:6379/0"  # Use the internal FQDN for Redis
       }
 
+
+
+
+      # Add explicit Celery configuration for better KEDA integration
+      env {
+        name  = "CELERY_TASK_ROUTES"
+        value = "{\"*\": {\"queue\": \"transcription_queue\"}}"  # Ensure all tasks go to 'celery' queue
+      }
+
+      env {
+        name  = "CELERY_TASK_SERIALIZER"
+        value = "json"
+      }
+
+      env {
+        name  = "CELERY_RESULT_SERIALIZER"  
+        value = "json"
+      }
+
+
       env {
         name  = "REDIS_HOST"
         value = "whisperer-redis"
@@ -204,10 +224,10 @@ resource "azurerm_container_app" "whisperer_worker" {
       name             = "redis-queue-length"
       custom_rule_type = "redis"
       metadata = {
-        "type"            = "redis"
+        # "type"            = "redis"
         # Use the full internal FQDN for the scaler
-        "address"         = "whisperer-redis:6379"  # Use consistent addressing
-        # "address"         = "whisperer-redis.internal.${data.azurerm_container_app_environment.aca_env.default_domain}:6379"
+        # "address"         = "whisperer-redis:6379"  # Use consistent addressing
+        "address"         = "whisperer-redis.internal.${data.azurerm_container_app_environment.aca_env.default_domain}:6379"
         "databaseIndex"   = "0"               # Specify database index
         
         "listName"        = "transcription_queue" # Celery queue name
@@ -226,6 +246,13 @@ resource "azurerm_container_app" "whisperer_worker" {
   depends_on = [
     azurerm_container_app.redis
   ]
+
+  # Add a short delay to ensure Redis is fully ready
+  lifecycle {
+    replace_triggered_by = [
+      azurerm_container_app.redis
+    ]
+  }
 }
 
 
