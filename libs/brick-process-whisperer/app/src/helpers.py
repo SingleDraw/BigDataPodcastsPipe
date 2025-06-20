@@ -1,6 +1,4 @@
-import os
 import sys
-import time
 import glob
 import re
 import subprocess
@@ -104,25 +102,3 @@ def progress_bar_callback(
 
     else:
         print(message)
-
-
-
-def cleanup_old_chunks(
-        expiry_seconds: float
-    ) -> None:
-    """
-    Delete /tmp/chunk_*.mp3 or *.wav files older than expiry_seconds.
-    """
-    patterns = ["/tmp/chunk_*.mp3", "/tmp/chunk_*.wav"]
-    now = time.time()
-
-    for pattern in patterns:
-        for filepath in glob.glob(pattern):
-            try:
-                if os.path.isfile(filepath):
-                    file_age = now - os.path.getmtime(filepath)
-                    if file_age > expiry_seconds:
-                        os.remove(filepath)
-                        print(f"Deleted: {filepath}")
-            except Exception as e:
-                print(f"Error deleting {filepath}: {e}")

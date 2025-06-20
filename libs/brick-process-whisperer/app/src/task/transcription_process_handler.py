@@ -9,10 +9,10 @@ from app.src.helpers import (
     parse_timestamp, get_audio_duration, 
     progress_bar_callback
 )
+from app.settings import max_duration, task_soft_time_limit
 from typing import Optional
 
-_max_duration = float(os.getenv("CHUNK_MAX_DURATION", 600))
-_task_soft_time_limit = float(os.getenv("TASK_SOFT_TIME_LIMIT", 600))   # soft timeout: raises SoftTimeLimitExceeded
+_task_soft_time_limit = task_soft_time_limit
 
 # Set up logging for the module
 logger = logging.getLogger("whisperer")
@@ -27,7 +27,7 @@ class TranscriptionProcessHandler:
             local_input: str = None,
             local_output: str = None,
             _local_output: str = None,
-            max_duration: float = _max_duration,
+            max_duration: float = max_duration,
             language: Optional[str] = None,
             use_gpu: bool = False,
     ):
@@ -129,7 +129,7 @@ class TranscriptionProcessHandler:
         local_input: str = None,
         local_output: str = None,
         _local_output: str = None,
-        max_duration: float = _max_duration,
+        max_duration: float = max_duration,
         language: Optional[str] = None,
         use_gpu: bool = False,
     ) -> str:

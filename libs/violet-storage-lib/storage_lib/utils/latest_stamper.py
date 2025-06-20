@@ -9,7 +9,7 @@ class LatestStamper:
 
     def __init__(
             self,
-            utc_time: datetime.datetime = datetime.datetime.now(datetime.UTC)
+            utc_time: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
         ) -> None:
         self._utc_time = utc_time
 

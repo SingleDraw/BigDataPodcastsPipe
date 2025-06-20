@@ -4,7 +4,7 @@ APP_ROOT_DIR_NAME = 'app'
 
 setup(
     name="whisperer",
-    version="0.1.0",
+    version="1.0.0",
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
@@ -13,9 +13,10 @@ setup(
         "celery",
         "redis",
         "typer[all]",
-        "boto3",
-        "azure-storage-blob",
-        "azure-identity",
+        # -- Storage clients handled by external storage_lib
+        # "boto3",
+        # "azure-storage-blob",
+        # "azure-identity",
         "azure-keyvault-secrets",
         "asyncio",
         "websockets",

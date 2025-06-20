@@ -16,6 +16,8 @@ RUN pip install --upgrade pip setuptools wheel
 
 WORKDIR /app
 
+# Copy storage-lib
+COPY libs/violet-storage-lib ./violet-storage-lib
 # Copy only necessary files
 COPY libs/brick-process-whisperer .
 
@@ -32,7 +34,7 @@ RUN cat <<"EOF" > /usr/local/bin/whisperer-worker && \
 chmod +x /usr/local/bin/whisperer-worker && \
 sed -i 's/\r$//' /usr/local/bin/whisperer-worker
 #!/bin/bash
-celery -A app.worker worker -E \
+celery -A app.worker worker -Q transcription_queue -E \
     --loglevel=info \
     --concurrency=${WORKER_CONCURRENCY:-1} \
     --pool=${WORKER_POOL:-threads} \
@@ -92,6 +94,7 @@ RUN python3 -c "from faster_whisper import WhisperModel; \
     model = WhisperModel('tiny', compute_type='int8'); \
     model.transcribe('/dev/null')" || true
 
+RUN pip install --no-cache-dir ./violet-storage-lib[parquet]
 RUN pip install .
 
 ENTRYPOINT ["/app/whisperer.sh"]

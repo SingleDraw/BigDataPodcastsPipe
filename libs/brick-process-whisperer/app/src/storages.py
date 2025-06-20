@@ -2,8 +2,7 @@
 import os
 import logging
 from typing import List, Dict, Any
-from app.src.storage.client_s3 import S3StorageClient
-from app.src.storage.client_azure import AzureBlobStorageClient
+from storage_lib import StorageClient
 from app.src.utils import str_to_bool, false_or_path, get_file_or_env
 from app.conf.conf import (
     _default_storage_name,
@@ -18,8 +17,6 @@ class Storages:
     Singleton class to manage storage configurations.
     """
     _instance = None
-
-
 
     def __new__(
             cls
@@ -168,22 +165,28 @@ class Storages:
         if conn_type == _s3_storage_type:
             # Amazon S3 or compatible storage
             print(f"Creating S3 client for {config.get('conn.name', 'default')}")
-            return S3StorageClient(
-                s3_access_key=config.get("conn.aws_access_key_id", None),
-                s3_secret_key=config.get("conn.aws_secret_access_key", None),
-                s3_endpoint_url=config.get("conn.endpoint_url", None),
-                s3_use_ssl=str_to_bool(config.get("conn.use_ssl", "true")),
-                s3_region_name=config.get("conn.region_name", None),
-            )
+            credentials = {
+                "s3_access_key": config.get("conn.aws_access_key_id", None),
+                "s3_secret_key": config.get("conn.aws_secret_access_key", None),
+                "s3_endpoint_url": config.get("conn.endpoint_url", None),
+                "s3_use_ssl": str_to_bool(config.get("conn.use_ssl", "true")),
+                "s3_region_name": config.get("conn.region_name", None)
+            }
         
         elif conn_type == _blob_storage_type:
             # Azure Blob Storage
             print(f"Creating Azure Blob Storage client for {config.get('conn.name', 'default')}")
-            return AzureBlobStorageClient(
-                azure_storage_account=config.get("conn.AccountName", None),
-                azure_storage_key=config.get("conn.AccountKey", None),
-                azure_storage_connection_string=config.get("conn.ConnectionString", None)
-            )
+            credentials = {
+                "azure_storage_account": config.get("conn.AccountName", None),
+                "azure_storage_key": config.get("conn.AccountKey", None),
+                "azure_storage_connection_string": config.get("conn.ConnectionString", None)
+            }
+
+        else:
+            raise ValueError(f"Unsupported connection type: {conn_type}. Supported types are: {supported_conn_types}")
+        
+        # Create and return the storage client
+        return StorageClient( credentials=credentials )
 
 
 

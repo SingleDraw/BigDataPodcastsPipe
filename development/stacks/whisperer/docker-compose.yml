@@ -6,6 +6,21 @@ services:
     ports:
       - "6379:6379"
 
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: redisinsight
+    ports:
+      - "5540:5540"
+    # connects to redis://redis-whisperer:6379
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis-whisperer:6379
+    ports:
+      - "8081:8081"
+
   whisperer-submitter:
     image: violetvi/whisperer:1.0.0
     container_name: whisperer-submitter
@@ -18,13 +33,13 @@ services:
       - aws_access_key
       - aws_secret_key
     environment:
-      - AZURE_STORAGE_ACCOUNT_NAME=${AZURE_STORAGE_ACCOUNT_NAME}
-      - AZURE_STORAGE_ACCOUNT_KEY=${AZURE_STORAGE_ACCOUNT_KEY}
-      # # Below config for s3 is just representational, 
-      # # its baked into the image anyway
-      # - S3_ENDPOINT_URL=http://host.docker.internal:8333
-      # - AWS_SECRET_ACCESS_KEY_FILE=/run/secrets/aws_secret_key
-      # - AWS_ACCESS_KEY_ID_FILE=/run/secrets/aws_access_key
+#      - AZURE_STORAGE_ACCOUNT_NAME=${AZURE_STORAGE_ACCOUNT_NAME}
+#      - AZURE_STORAGE_ACCOUNT_KEY=${AZURE_STORAGE_ACCOUNT_KEY}
+      # Below config for s3 is baked into the image as seaweedfs with properties config file
+      # when provided here it will be available as 'deafult' too
+      - S3_ENDPOINT_URL=http://host.docker.internal:8333
+      - AWS_SECRET_ACCESS_KEY_FILE=/run/secrets/aws_secret_key
+      - AWS_ACCESS_KEY_ID_FILE=/run/secrets/aws_access_key
       - CELERY_BROKER_URL=redis://redis-whisperer:6379/0
       - TASK_TIME_LIMIT=1000 # 300 = 5 min
       - REDIS_HOST=redis-whisperer
@@ -45,11 +60,11 @@ services:
       - aws_access_key
       - aws_secret_key
     environment:
-      - AZURE_STORAGE_ACCOUNT_NAME=${AZURE_STORAGE_ACCOUNT_NAME}
-      - AZURE_STORAGE_ACCOUNT_KEY=${AZURE_STORAGE_ACCOUNT_KEY}
-      # - S3_ENDPOINT_URL=http://host.docker.internal:8333
-      # - AWS_SECRET_ACCESS_KEY_FILE=/run/secrets/aws_secret_key
-      # - AWS_ACCESS_KEY_ID_FILE=/run/secrets/aws_access_key
+#      - AZURE_STORAGE_ACCOUNT_NAME=${AZURE_STORAGE_ACCOUNT_NAME}
+#      - AZURE_STORAGE_ACCOUNT_KEY=${AZURE_STORAGE_ACCOUNT_KEY}
+      - S3_ENDPOINT_URL=http://host.docker.internal:8333
+      - AWS_SECRET_ACCESS_KEY_FILE=/run/secrets/aws_secret_key
+      - AWS_ACCESS_KEY_ID_FILE=/run/secrets/aws_access_key
       - CELERY_BROKER_URL=redis://redis-whisperer:6379/0
       - TASK_TIME_LIMIT=1000 # 5 min @ soft will happen 50s earlier
       - REDIS_HOST=redis-whisperer

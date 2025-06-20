@@ -98,11 +98,13 @@ resource "azurerm_container_app" "redis" {
         value = "yes"
       }      
       
-      # Add Redis configuration for better connectivity
-      # args = ["redis-server", "--bind", "0.0.0.0", "--protected-mode", "no"]
-      
-      # Simplified Redis configuration for Container Apps
-      args = ["redis-server", "--bind", "0.0.0.0", "--protected-mode", "no", "--tcp-keepalive", "60"]
+      # Redis configuration for Container Apps
+      args = [
+        "redis-server", 
+        "--bind", "0.0.0.0", 
+        "--protected-mode", "no", 
+        "--tcp-keepalive", "60"
+      ]
     }
 
     min_replicas = 1
@@ -150,6 +152,21 @@ resource "azurerm_container_app" "whisperer_worker" {
       }
 
       env {
+        name  = "REDIS_HOST"
+        value = "whisperer-redis"
+      }
+
+      env {
+        name  = "REDIS_PORT"
+        value = "6379"
+      }
+
+      env {
+        name  = "REDIS_DB"
+        value = "0"
+      }
+
+      env {
         name  = "AZURE_STORAGE_ACCOUNT_NAME"
         value = var.storage_account_name
       }
@@ -178,6 +195,16 @@ resource "azurerm_container_app" "whisperer_worker" {
     min_replicas = 0
     max_replicas = 5
 
+    # Alternative: Scale based on CPU if Redis queue monitoring is problematic
+    # custom_scale_rule {
+    #   name             = "cpu-scaling"
+    #   custom_rule_type = "cpu"
+    #   metadata = {
+    #     "type" = "Utilization"
+    #     "value" = "70"
+    #   }
+    # }
+
     custom_scale_rule {
       name             = "redis-queue-length"
       custom_rule_type = "redis"
@@ -185,11 +212,12 @@ resource "azurerm_container_app" "whisperer_worker" {
         "type"            = "redis"
         # Use the full internal FQDN for the scaler
         "address"         = "whisperer-redis:6379"  # Use consistent addressing
-        "databaseIndex"   = "0"  # Specify database index
         # "address"         = "whisperer-redis.internal.${data.azurerm_container_app_environment.aca_env.default_domain}:6379"
-        "listName"        = "celery"
-        "listLength"      = "5"
-        "activationValue" = "1"
+        "databaseIndex"   = "0"               # Specify database index
+        
+        "listName"        = "transcription_queue" # Celery queue name
+        "listLength"      = "5"                   # Scale when queue has 5+ items 
+        "activationValue" = "1"                   # Activate scaling at 1+ items     
       }
     }
   }

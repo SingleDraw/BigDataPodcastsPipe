@@ -1,9 +1,10 @@
 import asyncio
 from fastapi import FastAPI, Query, WebSocket
-from app.src.transcribe import transcribe
+from app.src import transcribe
 from app.src.broker import broker as r  # Redis client for tracking progress
 
 # --- FastAPI app ---
+
 app = FastAPI()
 
 @app.post("/submit")

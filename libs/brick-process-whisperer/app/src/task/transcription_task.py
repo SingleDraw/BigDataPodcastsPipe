@@ -1,40 +1,35 @@
 import os
 import logging
 import glob
-import sys
+import time
 from celery import Task
 # from faster_whisper import WhisperModel
 from app.src.utils import parse_conn_uri # parse_s3_uri,  - REMOVE
 from app.src.helpers import split_mp3
 from app.src.broker import broker as r  # Redis client for tracking progress
 from app.src.storages import storages   # Storage client provider
-
-# use this download method if source is storage, for links use wget??
-# move parse_s3_uri to s3 storage class or make it universal for all sources
-
-_max_duration = float(os.getenv("CHUNK_MAX_DURATION", 600))
-_task_soft_time_limit = float(os.getenv("TASK_SOFT_TIME_LIMIT", 600))   # soft timeout: raises SoftTimeLimitExceeded
-_default_retry_delay = float(os.getenv("DEFAULT_RETRY_DELAY", 30))      # retry delay in seconds
-_max_retries = int(os.getenv("MAX_RETRIES", 3))                         # max retries
-
-_cleanup_timeout = max(
-    float(os.getenv("CHUNK_CLEANUP_TIMEOUT", 600)), 
-    float(os.getenv("TASK_SOFT_TIME_LIMIT", 600)) + 60
-) 
-
+from app.src.errors import StorageDownloadError, StorageUploadError
+from app.settings import (
+    max_retries,
+    default_retry_delay,
+    cleanup_timeout,
+    max_duration
+)
 # Set up logging for the module
 logger = logging.getLogger("whisperer")
 
-# =============================================================================
-# OPTION 2: Multiprocessing with function reference (for CPU-bound tasks)
-# =============================================================================
-
+# Define the base TranscriptionTask class
+# ---
 class TranscriptionTask(Task):
     abstract = True
     logger = logging.getLogger(__name__)
     broker = r
     storages = storages             # Storage client provider
     parse_conn_uri = parse_conn_uri # Parse connection URI
+    max_retries: int = max_retries
+    max_duration: float = max_duration
+    expiry_seconds: float = cleanup_timeout
+    default_retry_delay: float = default_retry_delay
 
     def __init__(
             self, 
@@ -49,7 +44,6 @@ class TranscriptionTask(Task):
         self._local_output = None
         self.chunk_pattern = None
         self.needs_processing = True
-        self.max_duration = _max_duration
         self.language = None
         self.use_gpu = False
         
@@ -70,7 +64,6 @@ class TranscriptionTask(Task):
         self.task_id = task_id
         self.source = source_uri
         self.sink = sink_uri
-        # self.client = storages.get_client(self.source["type"]) if self.source['type'] == "storage" else None
 
         self.task_id = task_id
 
@@ -80,11 +73,57 @@ class TranscriptionTask(Task):
         self._local_output = f"/tmp/_{task_id}.txt"
         self.chunk_pattern = f"/tmp/chunk_{task_id}*.mp3"
         self._needs_processing = True
-
-        self.max_duration = _max_duration
         self.language = None
         self.use_gpu = False
 
+        self._set_sink_storage()  # Set the storage client for the sink - do it early to avoid redundant transcription attempts
+
+
+    def _set_sink_storage(
+            self
+        ) -> None:
+        """ Set the storage client for the sink.
+        """
+        conn_name, conn_type, _, _ = parse_conn_uri(
+            uri=self.sink,      # output URI
+            allow_http=False    # Output must be a storage URI, not HTTP
+        )
+        # Use the storage client to download the file
+        self.sink_storage = self.storages.get_client(
+            name=conn_name,
+            type=conn_type
+        )
+
+
+    def init_task(
+            self,
+        ) -> None:
+        """
+        Setup the transcription job.
+        This includes downloading the input file and splitting it into chunks.
+        This method is called before the task is executed.
+        Sets flags for processing:
+        > 1. needs_processing: True if the task needs to be processed (no previous output exists)
+        > 2. chunked_source: List of chunk files if the task needs to be processed
+        """
+
+        self.broker.set(f"task_progress:{self.task_id}", "Starting...")  
+
+        self.needs_processing = True
+        self.chunked_source = None
+
+        if self._is_transcription_result_ready():
+            self.needs_processing = False
+
+        elif self._are_audio_chunks_ready():
+            self.chunked_source = self._get_audio_chunk_files_list()
+
+        elif self._is_audio_source_downloaded():
+            self.chunked_source = self._split_audio_into_chunks()
+
+        else:
+            self._download_input_source_file()
+            self.chunked_source = self._split_audio_into_chunks()
 
 
     def _is_transcription_result_ready(
@@ -212,16 +251,19 @@ class TranscriptionTask(Task):
                 type=conn_type
             )
 
-            self.source_storage.download_file(
-                container_name=storage_unit,
-                storage_key=key_path,
-                destination_path=self.local_input
-            )
+            try:
+                self.source_storage.download_file(
+                    container_name=storage_unit,
+                    storage_key=key_path,
+                    destination_path=self.local_input
+                )
+            except Exception as e:
+                raise StorageDownloadError(
+                    f"Failed to download input file from {self.source}: {e}"
+                ) from e
 
         self.logger.info(f"Downloaded input file {os.path.basename(key_path)} to {self.local_input}.")
         self.broker.set(f"task_progress:{self.task_id}", "Input file downloaded...")
-
-
 
 
 
@@ -232,93 +274,102 @@ class TranscriptionTask(Task):
         This method is called after the task is executed.
         It uploads the output file to the storage sink.
         """
-        conn_name, conn_type, storage_unit, key_path = parse_conn_uri(
+        if not self.sink_storage:
+            self._set_sink_storage()
+
+        _, _, storage_unit, key_path = parse_conn_uri(
             uri=self.sink,      # output URI
             allow_http=False    # Output must be a storage URI, not HTTP
         )
-
-        # Use the storage client to download the file
-        self.sink_storage = self.storages.get_client(
-            name=conn_name,
-            type=conn_type
-        )
-
         # Upload the output file to the storage sink
-        self.sink_storage.upload_file(
-            source=self.local_output,
-            container_name=storage_unit,
-            storage_key=key_path,
-            overwrite=True  # Overwrite the file if it already exists
-        )
+        try:
+            self.sink_storage.upload_file(
+                source=self.local_output,
+                container_name=storage_unit,
+                storage_key=key_path,
+                overwrite=True  # Overwrite the file if it already exists
+            )
+        except Exception as e:
+            raise StorageUploadError(
+                f"Failed to upload output file to {self.sink}: {e}"
+            ) from e
 
         self.logger.info(f"Uploaded output file {os.path.basename(key_path)} to {self.sink}.")
 
 
+    def handle_task_failure(
+            self, 
+            exc: Exception
+        ) -> None:
+        """        Handle task failure.
+        This method is called when the task fails.
+        It checks the number of retries and decides whether to retry the task or not.
+        If the maximum number of retries is reached, it cleans up any partial work.
+        """
+        # Determine if we should retry
+        task_id = self.request.id
+        if self.request.retries < self.max_retries:
+            logger.info(f"Retrying task {task_id} (attempt {self.request.retries + 1}/{self.max_retries})")
+            raise self.retry(
+                countdown=self.default_retry_delay * (2 ** self.request.retries),
+                exc=exc
+            )
+        logger.error(f"Task {task_id} failed after {self.max_retries} retries")
+        self.cleanup()  
 
-    def init_task(
-            self,
+
+    def cleanup(
+            self
         ) -> None:
         """
-        Setup the transcription job.
-        This includes downloading the input file and splitting it into chunks.
-        This method is called before the task is executed.
-        Sets flags for processing:
-        > 1. needs_processing: True if the task needs to be processed (no previous output exists)
-        > 2. chunked_source: List of chunk files if the task needs to be processed
+            General cleanup for any partial work
+            This includes:
+            - Removing chunk files
+            - Removing local output file
+            - Removing local input file
+            - Removing temporary chunk files
         """
-
-        self.broker.set(f"task_progress:{self.task_id}", "Starting...")  
-
-        self.needs_processing = True
-        self.chunked_source = None
-
-        if self._is_transcription_result_ready():
-            self.needs_processing = False
-
-        elif self._are_audio_chunks_ready():
-            self.chunked_source = self._get_audio_chunk_files_list()
-
-        elif self._is_audio_source_downloaded():
-            self.chunked_source = self._split_audio_into_chunks()
-
-        else:
-            self._download_input_source_file()
-            self.chunked_source = self._split_audio_into_chunks()
-
-       
-
-
-
-
-
-
-
-
-    def safe_remove_files(
-            self,
-            *paths: str, 
-            glob_patterns: list[str] = []
-        ) -> None:
-        """
-        Safely remove files and directories, 
-        ignoring errors and logging warnings.
-        """
-        
-        for path in paths:
+            
+        for chunk_file in self.chunked_source if self.chunked_source else []:
             try:
-                os.remove(path)
+                os.remove(chunk_file) # Cleanup any partial work
             except Exception as e:
-                logger.warning(
-                    f"Failed to remove {path}: {e}"
-                )
+                logger.warning(f"Failed to remove chunk file {chunk_file}: {e}")
+   
+        try:
+            os.remove(self.local_output) # Cleanup local output file
+        except Exception as e:
+            logger.warning(f"Failed to remove local output file {self.local_output}: {e}")
+            
+        try:
+            os.remove(self.local_input) # Cleanup local input file
+        except Exception as e:
+            logger.warning(f"Failed to remove local input file {self.local_input}: {e}")
+            
+        for chunk_file in glob.glob(self.chunk_pattern) if self.chunk_pattern else []:
+            try:
+                os.remove(chunk_file) # Cleanup temporary chunk files
+            except Exception as e:
+                logger.warning(f"Failed to remove chunk file {chunk_file}: {e}")
 
-        for pattern in glob_patterns:
-            for file in glob.glob(pattern):
+
+
+    def cleanup_old_chunks(
+            self,
+        ) -> None:
+        """
+        Delete /tmp/chunk_*.mp3 or *.wav files older than expiry_seconds.
+        """
+        patterns = ["/tmp/chunk_*.mp3", "/tmp/chunk_*.wav"]
+        now = time.time()
+
+        for pattern in patterns:
+            for filepath in glob.glob(pattern):
                 try:
-                    os.remove(file)
+                    if os.path.isfile(filepath):
+                        file_age = now - os.path.getmtime(filepath)
+                        if file_age > self.expiry_seconds:
+                            os.remove(filepath)
+                            print(f"Deleted: {filepath}")
                 except Exception as e:
-                    logger.warning(
-                        f"Failed to remove globbed file {file}: {e}"
-                    )
-
-
+                    print(f"Error deleting {filepath}: {e}")

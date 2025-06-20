@@ -153,6 +153,23 @@ class StorageClient:
         )
 
     
+    def download_file(
+            self,
+            storage_key: str,
+            container_name: str,
+            destination_path: str,
+            overwrite: bool = True
+        ) -> None:
+        """ Download a file from Storage to a local path.
+        """
+        self.storage_client.download_file(
+            container_name=container_name, 
+            storage_key=storage_key,
+            destination_path=destination_path,
+            overwrite=overwrite
+        )
+
+
     def download_object(
             self, 
             storage_key: str,

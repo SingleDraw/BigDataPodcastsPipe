@@ -1,4 +1,6 @@
 import os
+import time
+from pathlib import Path
 from typing import Optional
 
 class Validate:
@@ -146,3 +148,18 @@ def get_file_or_env(
         return fallback
 
 
+# Periodic cleanup of temporary files
+# This function will run in a separate thread to clean up temporary files
+# as fallback for the main task cleanup
+def cleanup_tmp(
+    chunk_cleanup_timeout: int
+):
+    while True:
+        now = time.time()
+        for f in Path("/tmp").iterdir():
+            try:
+                if f.is_file() and (now - f.stat().st_mtime) > chunk_cleanup_timeout:
+                    f.unlink()
+            except:
+                pass
+        time.sleep(60)
