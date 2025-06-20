@@ -122,15 +122,18 @@ resource "azurerm_container_app" "redis" {
     target_port      = 6379
     transport        = "tcp"  # TCP is required for Redis
 
-    # allow_insecure = true  # Allow insecure connections for internal use
-    allow_insecure_connections = true  # Allow insecure connections for internal use
-
     traffic_weight {
       latest_revision = true
       percentage      = 100
     }
   }
 }
+
+# variable "redis_address" {
+#   description = "Internal address of the Redis container app"
+#   type        = string
+#   default     = "${azurerm_container_app.redis.name}.${data.azurerm_container_app_environment.aca_env.default_domain}:6379"
+# }
 
 # 2. Create Azure Container App for Whisperer Worker
 resource "azurerm_container_app" "whisperer_worker" {
@@ -251,6 +254,25 @@ resource "azurerm_container_app" "whisperer_worker" {
         # Add these additional parameters for better KEDA Redis connectivity
         "enableTLS"       = "false"
         "unsafeSsl"       = "false"
+      }
+
+      fallback {
+        failure_count = 3  # Retry up to 3 times before fallback
+        replicas      = 0  # Fallback to 1 replica if Redis is not available
+
+        ## Uncomment to use fixed scaling as a fallback
+        # type = "fixed"
+        # metadata = {
+        #   "replicas" = "1"  # Fallback to 0 replica if Redis is not available
+        # }
+        
+        ## Uncomment to use CPU scaling as a fallback
+        # type = "cpu"
+        # metadata = {
+        #   "type"  = "Utilization"
+        #   "value" = "70"  # Scale based on CPU utilization if Redis queue is not available
+        # }
+
       }
     }
   }
