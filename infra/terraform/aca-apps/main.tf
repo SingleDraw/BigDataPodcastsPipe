@@ -106,11 +106,6 @@ resource "azurerm_container_app" "redis" {
         "--tcp-keepalive", "60",
         "--port", "6379"
       ]
-      
-      ports {
-        port     = 6379
-        protocol = "TCP"  # Ensure TCP is used for Redis
-      }
 
     }
 
