@@ -226,8 +226,8 @@ resource "azurerm_container_app" "whisperer_worker" {
       metadata = {
         # "type"            = "redis"
         # Use the full internal FQDN for the scaler
-        # "address"         = "whisperer-redis:6379"  # Use consistent addressing
-        "address"         = "whisperer-redis.internal.${data.azurerm_container_app_environment.aca_env.default_domain}:6379"
+        "address"         = "whisperer-redis:6379"  # Use consistent addressing
+        # "address"         = "whisperer-redis.internal.${data.azurerm_container_app_environment.aca_env.default_domain}:6379"
         "databaseIndex"   = "0"               # Specify database index
         
         "listName"        = "transcription_queue" # Celery queue name
