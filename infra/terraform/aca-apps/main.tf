@@ -99,7 +99,8 @@ resource "azurerm_container_app" "redis" {
       }      
       
       # Redis configuration for Container Apps
-      args = ["redis-server", "--bind", "0.0.0.0", "--protected-mode", "no", "--tcp-keepalive", "60"]
+      # args = ["redis-server", "--bind", "0.0.0.0", "--protected-mode", "no", "--tcp-keepalive", "60"]
+      args = ["redis-server", "--protected-mode", "no", "--tcp-keepalive", "60"]
     }
 
     min_replicas = 1
@@ -231,8 +232,13 @@ resource "azurerm_container_app" "whisperer_worker" {
         "databaseIndex"   = "0"               # Specify database index
         
         "listName"        = "transcription_queue" # Celery queue name
-        "listLength"      = "5"                   # Scale when queue has 5+ items 
+        "listLength"      = "1"                   # Scale when queue has 5+ items 
         "activationValue" = "1"                   # Activate scaling at 1+ items     
+
+
+        # Add these additional parameters for better KEDA Redis connectivity
+        "enableTLS"       = "false"
+        "unsafeSsl"       = "false"
       }
     }
   }
