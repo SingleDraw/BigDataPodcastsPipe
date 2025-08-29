@@ -244,38 +244,34 @@ resource "azurerm_container_app" "whisperer_worker" {
         # Use the full internal FQDN for the scaler
         "address"         = "whisperer-redis:6379"  # Use consistent addressing
         # "address"         = "whisperer-redis.internal.${data.azurerm_container_app_environment.aca_env.default_domain}:6379"
-        "databaseIndex"   = "0"               # Specify database index
-        
+        "databaseIndex"   = "0"               # Specify database index  
         "listName"        = "transcription_queue" # Celery queue name
         "listLength"      = "1"                   # Scale when queue has 5+ items 
         "activationValue" = "1"                   # Activate scaling at 1+ items     
-
-
         # Add these additional parameters for better KEDA Redis connectivity
         "enableTLS"       = "false"
         "unsafeSsl"       = "false"
       }
-
-      fallback {
-        failure_count = 3  # Retry up to 3 times before fallback
-        replicas      = 0  # Fallback to 1 replica if Redis is not available
-
-        ## Uncomment to use fixed scaling as a fallback
-        # type = "fixed"
-        # metadata = {
-        #   "replicas" = "1"  # Fallback to 0 replica if Redis is not available
-        # }
-        
-        ## Uncomment to use CPU scaling as a fallback
-        # type = "cpu"
-        # metadata = {
-        #   "type"  = "Utilization"
-        #   "value" = "70"  # Scale based on CPU utilization if Redis queue is not available
-        # }
-
-      }
+      # fallback { #### DOESNT WORK YET
+      #   failure_count = 3  # Retry up to 3 times before fallback
+      #   replicas      = 0  # Fallback to 1 replica if Redis is not available
+      #   ## Uncomment to use fixed scaling as a fallback
+      #   # type = "fixed"
+      #   # metadata = {
+      #   #   "replicas" = "1"  # Fallback to 0 replica if Redis is not available
+      #   # }
+      #   ## Uncomment to use CPU scaling as a fallback
+      #   # type = "cpu"
+      #   # metadata = {
+      #   #   "type"  = "Utilization"
+      #   #   "value" = "70"  # Scale based on CPU utilization if Redis queue is not available
+      #   # }
+      # }
     }
   }
+
+
+
 
   # use ACR for the worker image
   registry {
@@ -291,9 +287,21 @@ resource "azurerm_container_app" "whisperer_worker" {
   lifecycle {
     replace_triggered_by = [
       azurerm_container_app.redis
+    ],
+    ignore_changes = [
+      template[0].min_replicas,  # Ignore min_replicas changes to allow KEDA to manage scaling
     ]
   }
 }
+
+# # Apply KEDA ScaledObject with fallback using kubectl
+# resource "null_resource" "apply_keda_scaledobject" {
+#   provisioner "local-exec" {
+#     command = "kubectl apply -f ${path.module}/keda_scaledobject.yaml"
+#   }
+
+#   depends_on = [azurerm_container_app.whisperer_worker]
+# }
 
 
 # 1. ACA - Azure Container Apps for Big Data Processing

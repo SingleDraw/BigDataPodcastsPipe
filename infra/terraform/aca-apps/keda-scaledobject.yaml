@@ -1,0 +1,23 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: whisperer-worker-scaler
+  # namespace: default  # don't set this for Azure Container Apps, it will be set automatically
+spec:
+  scaleTargetRef:
+    name: whisperer-worker
+  minReplicaCount: 0
+  maxReplicaCount: 5
+  triggers:
+    - type: redis
+      metadata:
+        address: whisperer-redis:6379
+        databaseIndex: "0"
+        listName: transcription_queue
+        listLength: "1"
+        activationValue: "1"
+        enableTLS: "false"
+        unsafeSsl: "false"
+      fallback:
+        failureCount: 3
+        replicas: 0
